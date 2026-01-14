@@ -1,27 +1,62 @@
-import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
 
-// Base Button component
-// TODO: connect to theme tokens (colors, spacing) and add accessibility props.
-export default function ButtonBase({
-  title,
-  onPress,
-}: {
+import React from "react";
+import { Button } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import { useTheme } from "../themes/index"; // importa seu hook
+
+interface CustomButtonProps {
   title: string;
   onPress?: () => void;
-}) {
+  size?: "small" | "medium" | "large";
+  variantType?: "primary" | "secondary" | "danger";
+  mode?: "contained" | "outlined" | "text";
+  disabled?: boolean;
+}
+
+export default function CustomButton({
+  title,
+  onPress,
+  size = "medium",
+  variantType = "primary",
+  mode = "contained",
+  disabled = false,
+}: CustomButtonProps) {
+  const theme = useTheme(); // pega seus tokens
+
+  const sizeStyles = {
+    small: { paddingVertical: theme.spacing.xs, fontSize: 12 },
+    medium: { paddingVertical: theme.spacing.sm, fontSize: theme.typography.body.fontSize },
+    large: { paddingVertical: theme.spacing.md, fontSize: theme.typography.title.fontSize },
+  };
+
+  const variantColors = {
+    primary: theme.colors.primary,
+    secondary: "#6B7280", // pode adicionar no seu tokens
+    danger: "#DC2626", // idem
+  };
+
   return (
-    <TouchableOpacity
+    <Button
+      mode={mode}
       onPress={onPress}
-      style={styles.btn}
-      accessibilityRole="button"
+      disabled={disabled}
+      style={[
+        styles.button,
+        { backgroundColor: mode === "contained" ? variantColors[variantType] : "transparent" },
+        { paddingVertical: sizeStyles[size].paddingVertical },
+      ]}
+      labelStyle={{
+        fontSize: sizeStyles[size].fontSize,
+        color: mode === "contained" ? "#fff" : variantColors[variantType],
+      }}
     >
-      <Text style={styles.label}>{title}</Text>
-    </TouchableOpacity>
+      {title}
+    </Button>
   );
 }
 
 const styles = StyleSheet.create({
-  btn: { padding: 12, backgroundColor: "#007AFF", borderRadius: 6 },
-  label: { color: "#fff", textAlign: "center" },
+  button: {
+    borderRadius: 8,
+  },
 });
