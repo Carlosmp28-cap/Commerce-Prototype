@@ -1,12 +1,18 @@
 import { useState, useEffect, createContext, useContext } from "react";
 
-// Hook + Context: useAuth() exposing user, signIn, signOut, isAuthenticated.
-// TODO: implement using auth service and persist tokens via storage.ts.
+/**
+ * Auth state (prototype).
+ *
+ * Centralizes authentication state so screens/components can reliably check
+ * current user and perform sign-in/sign-out.
+ *
+ * TODO: implement using an auth service and persist tokens via storage.
+ */
 
 const AuthContext = createContext<any>(null);
 
 export function AuthProvider({ children }: { children: any }) {
-  // TODO: wire real state and rehydrate on startup
+  // TODO: wire real state and rehydrate on startup.
   const [user, setUser] = useState(null);
   return (
     <AuthContext.Provider value={{ user, signIn: () => {}, signOut: () => {} }}>

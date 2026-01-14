@@ -1,11 +1,16 @@
 import React, { useMemo } from "react";
-import { FlatList, Image, ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, Image, StyleSheet, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Button, Card, Chip, Text } from "react-native-paper";
 
 import { useTheme } from "../themes";
 import type { RootStackParamList } from "../navigation";
 import { categories, getFeaturedProducts } from "../data/catalog";
+import { ScreenScroll } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
+
+// Home (landing) screen.
+// Uses `ScreenScroll` so content gets footer-aware bottom padding automatically.
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -15,10 +20,7 @@ export default function HomeScreen({ navigation }: Props) {
   const featuredProducts = useMemo(() => getFeaturedProducts(), []);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.content}
-    >
+    <ScreenScroll contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <View style={styles.heroText}>
           <Text style={[styles.heroTitle, { color: theme.colors.text }]}>
@@ -101,9 +103,7 @@ export default function HomeScreen({ navigation }: Props) {
                   € {item.price.toFixed(2)}
                 </Text>
                 <Text style={{ marginTop: 2, opacity: 0.7 }}>
-                  {item.quantityAvailable > 0
-                    ? `${item.quantityAvailable} in stock`
-                    : "Out of stock"}
+                  {getAvailabilityLabel(item.quantityAvailable)}
                 </Text>
               </Card.Content>
             </Card>
@@ -146,13 +146,12 @@ export default function HomeScreen({ navigation }: Props) {
           </Card>
         </View>
       </View>
-    </ScrollView>
+    </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 32 },
+  content: {},
   hero: {
     borderRadius: 16,
     padding: 16,

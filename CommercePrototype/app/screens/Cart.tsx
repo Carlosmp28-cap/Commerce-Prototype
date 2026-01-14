@@ -5,6 +5,10 @@ import { Button, Text } from "react-native-paper";
 
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
+import { Screen } from "../layout/Screen";
+
+// Cart (placeholder).
+// Later this screen should connect to `useCart()` and render real cart items.
 
 type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 
@@ -12,9 +16,7 @@ export default function CartScreen({ navigation }: Props) {
   const theme = useTheme();
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <Screen style={styles.container}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Cart</Text>
       <Text style={[styles.subtitle, { color: theme.colors.text }]}>
         Placeholder — connect to useCart() in the next task.
@@ -27,12 +29,12 @@ export default function CartScreen({ navigation }: Props) {
       >
         Checkout
       </Button>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 12 },
+  container: { gap: 12 },
   title: { fontSize: 18, fontWeight: "900" },
   subtitle: { opacity: 0.8 },
 });

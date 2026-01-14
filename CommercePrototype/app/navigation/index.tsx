@@ -14,6 +14,7 @@ import CartScreen from "../screens/Cart";
 import CheckoutScreen from "../screens/Checkout";
 
 export type RootStackParamList = {
+  // Keep these params in one place so navigation remains type-safe across screens.
   Home: undefined;
   PLP: { q?: string } | undefined;
   PDP: { id: string };
@@ -24,6 +25,7 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking: LinkingOptions<RootStackParamList> = {
+  // Enables web URL sync and deep links (e.g. /pdp/sku123) without expo-router.
   prefixes: [Linking.createURL("/")],
   config: {
     screens: {

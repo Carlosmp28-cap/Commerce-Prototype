@@ -6,6 +6,11 @@ import { List, Text } from "react-native-paper";
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
+import { Screen } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
+
+// PLP (Product Listing Page).
+// Keeps UI simple: filtering is in `catalog.ts` and navigation is via stack params.
 
 type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
 
@@ -16,9 +21,7 @@ export default function PLPScreen({ navigation, route }: Props) {
   const products = useMemo(() => getProductsByQuery(q), [q]);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <Screen>
       <Text style={[styles.subtitle, { color: theme.colors.text }]}>
         Product listing (mock){q ? ` — ${q}` : ""}
       </Text>
@@ -26,6 +29,7 @@ export default function PLPScreen({ navigation, route }: Props) {
       <FlatList
         data={products}
         keyExtractor={(p) => p.id}
+        style={styles.listContainer}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <List.Item
@@ -33,11 +37,9 @@ export default function PLPScreen({ navigation, route }: Props) {
             accessibilityLabel={`Open product ${item.name}`}
             title={item.name}
             titleStyle={{ color: theme.colors.text, fontWeight: "900" }}
-            description={`€ ${item.price.toFixed(2)} • ${
-              item.quantityAvailable > 0
-                ? `${item.quantityAvailable} in stock`
-                : "Out of stock"
-            }`}
+            description={`€ ${item.price.toFixed(2)} • ${getAvailabilityLabel(
+              item.quantityAvailable
+            )}`}
             right={() => (
               <Text style={{ color: theme.colors.primary, fontWeight: "900" }}>
                 View
@@ -47,14 +49,14 @@ export default function PLPScreen({ navigation, route }: Props) {
           />
         )}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
   subtitle: { opacity: 0.8, marginBottom: 10 },
-  list: { gap: 10, paddingBottom: 20 },
+  listContainer: { flex: 1 },
+  list: { gap: 10 },
   row: {
     backgroundColor: "#fff",
     borderRadius: 12,
