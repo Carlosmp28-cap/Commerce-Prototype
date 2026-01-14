@@ -1,31 +1,33 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Button, Text } from "react-native-paper";
 
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
+type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
-export default function CartScreen({ navigation }: Props) {
+export default function CheckoutScreen({ navigation }: Props) {
   const theme = useTheme();
 
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Text style={[styles.title, { color: theme.colors.text }]}>Cart</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>
+        Checkout (placeholder)
+      </Text>
       <Text style={[styles.subtitle, { color: theme.colors.text }]}>
-        Placeholder — connect to useCart() in the next task.
+        Next step: forms, shipping, payment.
       </Text>
 
       <Button
         mode="contained"
-        onPress={() => navigation.navigate("Checkout")}
-        accessibilityLabel="Go to checkout"
+        onPress={() => navigation.goBack()}
+        accessibilityLabel="Back"
       >
-        Checkout
+        Back
       </Button>
     </View>
   );
