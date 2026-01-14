@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { createContext, useContext } from "react";
 
 /**
  * Auth state (prototype).
@@ -9,13 +9,15 @@ import { useState, useEffect, createContext, useContext } from "react";
  * TODO: implement using an auth service and persist tokens via storage.
  */
 
+// Minimal placeholder context.
+// The full auth/login implementation lives on another branch.
 const AuthContext = createContext<any>(null);
 
 export function AuthProvider({ children }: { children: any }) {
-  // TODO: wire real state and rehydrate on startup.
-  const [user, setUser] = useState(null);
   return (
-    <AuthContext.Provider value={{ user, signIn: () => {}, signOut: () => {} }}>
+    <AuthContext.Provider
+      value={{ user: null, signIn: () => {}, signOut: () => {} }}
+    >
       {children}
     </AuthContext.Provider>
   );

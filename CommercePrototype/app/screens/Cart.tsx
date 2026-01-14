@@ -5,7 +5,7 @@ import { Button, Text } from "react-native-paper";
 
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
-import { Screen } from "../layout/Screen";
+import { ScreenScroll } from "../layout/Screen";
 
 // Cart (placeholder).
 // Later this screen should connect to `useCart()` and render real cart items.
@@ -16,7 +16,7 @@ export default function CartScreen({ navigation }: Props) {
   const theme = useTheme();
 
   return (
-    <Screen style={styles.container}>
+    <ScreenScroll contentContainerStyle={styles.container}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Cart</Text>
       <Text style={[styles.subtitle, { color: theme.colors.text }]}>
         Placeholder — connect to useCart() in the next task.
@@ -29,7 +29,7 @@ export default function CartScreen({ navigation }: Props) {
       >
         Checkout
       </Button>
-    </Screen>
+    </ScreenScroll>
   );
 }
 

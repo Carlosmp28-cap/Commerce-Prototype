@@ -5,7 +5,7 @@ import { Button, Text } from "react-native-paper";
 
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
-import { Screen } from "../layout/Screen";
+import { ScreenScroll } from "../layout/Screen";
 
 // Checkout (placeholder).
 // Intended to grow into a multi-step flow (address/shipping/payment).
@@ -16,7 +16,7 @@ export default function CheckoutScreen({ navigation }: Props) {
   const theme = useTheme();
 
   return (
-    <Screen style={styles.container}>
+    <ScreenScroll contentContainerStyle={styles.container}>
       <Text style={[styles.title, { color: theme.colors.text }]}>
         Checkout (placeholder)
       </Text>
@@ -31,7 +31,7 @@ export default function CheckoutScreen({ navigation }: Props) {
       >
         Back
       </Button>
-    </Screen>
+    </ScreenScroll>
   );
 }
 
