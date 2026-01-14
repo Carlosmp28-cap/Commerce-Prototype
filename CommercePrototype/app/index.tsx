@@ -12,13 +12,10 @@ export default function Index() {
     >
       <Text>Hello!</Text>
       
-<CustomButton size="large" variantType="primary">
-  Apagar
-</CustomButton>
 
-<CustomButton size="small" variantType="secondary">
-  Cancelar
-</CustomButton>
+<CustomButton title="Salvar" size="large" variantType="primary" onPress={() => console.log("Salvar")} />
+<CustomButton title="Cancelar" size="small" variantType="secondary" mode="outlined" />
+<CustomButton title="Apagar" size="medium" variantType="danger" disabled />
     </View>
   );
 }
