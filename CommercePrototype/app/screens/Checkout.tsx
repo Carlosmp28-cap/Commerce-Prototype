@@ -1,3 +1,5 @@
+// typescript
+// File: `CommercePrototype/app/screens/Checkout.tsx`
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -109,14 +111,19 @@ export default function CheckoutScreen({ navigation }: Props) {
   const [countryQuery, setCountryQuery] = useState("");
   const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
 
-  // Payment fields
+  // Payment fields (cardNumber stores digits only)
   const [cardName, setCardName] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
+  const [cardNumber, setCardNumber] = useState(""); // digits only
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">(
     "card"
   );
+
+  // payment field errors
+  const [cardNumberError, setCardNumberError] = useState("");
+  const [expiryError, setExpiryError] = useState("");
+  const [cvvError, setCvvError] = useState("");
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -128,7 +135,10 @@ export default function CheckoutScreen({ navigation }: Props) {
     { id: "1", title: "T-Shirt", qty: 2, price: 19.99 },
     { id: "2", title: "Sneakers", qty: 1, price: 69.5 },
   ];
-  const subtotal = mockItems.reduce((s, it) => s + it.qty * it.price, 0);
+  const subtotal = React.useMemo(
+    () => mockItems.reduce((s, it) => s + it.qty * it.price, 0),
+    []
+  );
   const shippingCost = 5.0;
   const total = subtotal + shippingCost;
 
@@ -139,7 +149,7 @@ export default function CheckoutScreen({ navigation }: Props) {
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
-  const debounceRef = useRef<number | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
@@ -152,12 +162,79 @@ export default function CheckoutScreen({ navigation }: Props) {
   const validateShipping = () =>
     Boolean(fullName.trim() && address.trim() && city.trim() && postalCode.trim());
 
+  const luhnCheck = (num: string) => {
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = num.length - 1; i >= 0; i--) {
+      let digit = parseInt(num.charAt(i), 10);
+      if (shouldDouble) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+      shouldDouble = !shouldDouble;
+    }
+    return sum % 10 === 0;
+  };
+
+  const expiryValid = (val: string) => {
+    // MM/YY
+    if (!/^\d{2}\/\d{2}$/.test(val)) return false;
+    const [mmStr, yyStr] = val.split("/");
+    const mm = parseInt(mmStr, 10);
+    const yy = parseInt(yyStr, 10);
+    if (isNaN(mm) || isNaN(yy)) return false;
+    if (mm < 1 || mm > 12) return false;
+    const now = new Date();
+    const currentYY = now.getFullYear() % 100;
+    const currentMM = now.getMonth() + 1;
+    if (yy < currentYY) return false;
+    if (yy === currentYY && mm < currentMM) return false;
+    return true;
+  };
+
+  const validateCardNumber = (num: string) => {
+    const len = num.length;
+    if (len < 13 || len > 19) {
+      setCardNumberError("Card number must be 13 to 19 digits.");
+      return false;
+    }
+    if (!luhnCheck(num)) {
+      setCardNumberError("Invalid card number.");
+      return false;
+    }
+    setCardNumberError("");
+    return true;
+  };
+
+  const validateCvv = (c: string) => {
+    if (!/^\d{3}$/.test(c)) {
+      setCvvError("CVV must be exactly 3 digits.");
+      return false;
+    }
+    setCvvError("");
+    return true;
+  };
+
+  const validateExpiryField = (e: string) => {
+    if (!/^\d{2}\/\d{2}$/.test(e)) {
+      setExpiryError("Expiry must be in MM/YY format.");
+      return false;
+    }
+    if (!expiryValid(e)) {
+      setExpiryError("Card has expired or invalid month.");
+      return false;
+    }
+    setExpiryError("");
+    return true;
+  };
+
   const validatePayment = () =>
     paymentMethod === "paypal" ||
     (cardName.trim() &&
-      cardNumber.trim().length >= 12 &&
-      expiry.trim() &&
-      cvv.trim().length >= 3);
+      validateCardNumber(cardNumber) &&
+      validateExpiryField(expiry) &&
+      validateCvv(cvv));
 
   const next = () => {
     if (step === 0) {
@@ -170,7 +247,14 @@ export default function CheckoutScreen({ navigation }: Props) {
       return;
     }
     if (step === 1) {
-      if (!validatePayment()) {
+      // run validations and show inline errors
+      const ok =
+        paymentMethod === "paypal" ||
+        (cardName.trim() &&
+          validateCardNumber(cardNumber) &&
+          validateExpiryField(expiry) &&
+          validateCvv(cvv));
+      if (!ok) {
         setSnackMessage("Please fill in valid payment details.");
         setSnackbarVisible(true);
         return;
@@ -210,7 +294,7 @@ export default function CheckoutScreen({ navigation }: Props) {
       return;
     }
     setSuggestionsLoading(true);
-    debounceRef.current = (setTimeout(() => {
+    debounceRef.current = setTimeout(() => {
       const q = val.trim().toLowerCase();
       const filtered = MOCK_ADDRESSES.filter((a) =>
         a.displayName.toLowerCase().includes(q) ||
@@ -219,7 +303,7 @@ export default function CheckoutScreen({ navigation }: Props) {
       setAddressSuggestions(filtered);
       setShowAddressSuggestions(filtered.length > 0);
       setSuggestionsLoading(false);
-    }, 300) as unknown) as number;
+    }, 300);
   };
 
   const selectAddressSuggestion = (s: MockAddress) => {
@@ -243,16 +327,58 @@ export default function CheckoutScreen({ navigation }: Props) {
     ).slice(0, 6);
   }, [countryQuery, country]);
 
-  // small helper for masked card number display
+  // small helper for masked card number display and formatted input
   const maskedCard = (num: string) =>
-    num ? `${"•".repeat(Math.max(0, Math.max(0, num.length - 4)))}${num.slice(-4)}` : "";
+    num ? `${"•".repeat(Math.max(0, num.length - 4))}${num.slice(-4)}` : "";
+
+  const formatCardNumber = (digits: string) =>
+    digits.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
+
+  // handle formatted card input: store digits-only, display formatted
+  const onCardNumberChange = (text: string) => {
+    const digits = text.replace(/\D/g, "");
+    // limit to 19 digits
+    const cleaned = digits.slice(0, 19);
+    setCardNumber(cleaned);
+    // live clear error while typing
+    if (cardNumberError) setCardNumberError("");
+  };
+
+  const onCardNumberBlur = () => {
+    validateCardNumber(cardNumber);
+  };
+
+  // expiry auto-insert slash
+  const onExpiryChange = (text: string) => {
+    const digits = text.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 3) {
+      setExpiry(`${digits.slice(0, 2)}/${digits.slice(2)}`);
+    } else {
+      setExpiry(digits);
+    }
+    if (expiryError) setExpiryError("");
+  };
+
+  const onExpiryBlur = () => {
+    validateExpiryField(expiry);
+  };
+
+  const onCvvChange = (t: string) => {
+    const cleaned = t.replace(/\D/g, "").slice(0, 3); // enforce max 3
+    setCvv(cleaned);
+    if (cvvError) setCvvError("");
+  };
+
+  const onCvvBlur = () => {
+    validateCvv(cvv);
+  };
 
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.select({ ios: "padding", android: undefined })}
+      behavior={Platform.select({ ios: "padding", android: "height" })}
     >
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <Title style={{ color: paper.colors.onSurface }}>Checkout</Title>
@@ -285,6 +411,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                     style={styles.input}
                     autoCapitalize="words"
                     placeholder="John Doe"
+                    textContentType="name"
                   />
 
                   <TextInput
@@ -305,6 +432,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                       ) : undefined
                     }
                     placeholder="Street, number, neighbourhood..."
+                    textContentType="streetAddressLine1"
                   />
 
                   {showAddressSuggestions && addressSuggestions.length > 0 && (
@@ -335,6 +463,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                       onChangeText={setCity}
                       mode="outlined"
                       style={[styles.input, { flex: 1, marginRight: 8 }]}
+                      textContentType="addressCity"
                     />
                     <TextInput
                       label="Postal code"
@@ -343,6 +472,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                       mode="outlined"
                       style={[styles.input, { width: 140 }]}
                       keyboardType="numeric"
+                      textContentType="postalCode"
                     />
                   </View>
 
@@ -360,6 +490,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                     }}
                     mode="outlined"
                     style={styles.input}
+                    textContentType="countryName"
                   />
 
                   {showCountrySuggestions && filteredCountries.length > 0 && (
@@ -419,34 +550,64 @@ export default function CheckoutScreen({ navigation }: Props) {
                         mode="outlined"
                         style={styles.input}
                         placeholder="As written on card"
+                        textContentType="name"
+                        onBlur={() => {
+                          /* optional: trim & basic check */
+                          setCardName((s) => s.trim());
+                        }}
                       />
                       <TextInput
                         label="Card number"
-                        value={cardNumber}
-                        onChangeText={(t) => setCardNumber(t.replace(/\s/g, ""))}
+                        value={formatCardNumber(cardNumber)}
+                        onChangeText={onCardNumberChange}
+                        onBlur={onCardNumberBlur}
                         mode="outlined"
                         style={styles.input}
                         keyboardType="numeric"
                         placeholder="1234 5678 9012 3456"
+                        textContentType="creditCardNumber"
                       />
+                      {cardNumberError ? (
+                        <Text style={{ color: paper.colors.error, marginBottom: 8 }}>
+                          {cardNumberError}
+                        </Text>
+                      ) : null}
                       <View style={styles.row}>
                         <TextInput
                           label="Expiry (MM/YY)"
                           value={expiry}
-                          onChangeText={setExpiry}
+                          onChangeText={onExpiryChange}
+                          onBlur={onExpiryBlur}
                           mode="outlined"
                           style={[styles.input, { flex: 1, marginRight: 8 }]}
+                          placeholder="MM/YY"
                         />
                         <TextInput
                           label="CVV"
                           value={cvv}
-                          onChangeText={setCvv}
+                          onChangeText={onCvvChange}
+                          onBlur={onCvvBlur}
                           mode="outlined"
                           style={[styles.input, { width: 120 }]}
                           keyboardType="numeric"
                           secureTextEntry
+                          placeholder="123"
+                          textContentType="password"
                         />
                       </View>
+                      {expiryError ? (
+                        <Text style={{ color: paper.colors.error, marginBottom: 8 }}>
+                          {expiryError}
+                        </Text>
+                      ) : null}
+                      {cvvError ? (
+                        <Text style={{ color: paper.colors.error, marginBottom: 8 }}>
+                          {cvvError}
+                        </Text>
+                      ) : null}
+                      <Paragraph style={{ marginTop: 6, color: paper.colors.onSurfaceVariant }}>
+                        Card will be charged after placing the order.
+                      </Paragraph>
                     </>
                   ) : (
                     <Paragraph style={{ marginTop: 8 }}>
