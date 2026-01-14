@@ -28,7 +28,15 @@ export type CatalogProduct = {
   quantityAvailable: number;
   categoryId: CategoryId;
   image: ImageSourcePropType;
+  images?: ImageSourcePropType[];
   description?: string;
+  rating?: number;
+  reviewCount?: number;
+  features?: string[];
+  shipping?: {
+    shippingType?: string;
+    estimatedDays?: string;
+  };
 };
 
 export const products: CatalogProduct[] = [
@@ -40,6 +48,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 42,
     categoryId: "new",
     image: placeholderImage("sku-new-001"),
+    images: [placeholderImage("sku-new-001-1"), placeholderImage("sku-new-001-2"), placeholderImage("sku-new-001-3"), placeholderImage("sku-new-001-4")],
+    description: "Perfect everyday tee made from premium cotton blend",
+    rating: 4.5,
+    reviewCount: 128,
+    features: ["Breathable", "Lightweight", "Eco-friendly"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-new-002",
@@ -48,6 +62,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 11,
     categoryId: "new",
     image: placeholderImage("sku-new-002"),
+    images: [placeholderImage("sku-new-002-1"), placeholderImage("sku-new-002-2"),placeholderImage("sku-new-002-3"), placeholderImage("sku-new-002-4")],
+    description: "Comfortable hoodie with minimalist design",
+    rating: 4.8,
+    reviewCount: 256,
+    features: ["Comfortable", "Modern design", "Warm"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-new-003",
@@ -56,6 +76,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 6,
     categoryId: "new",
     image: placeholderImage("sku-new-003"),
+    images: [placeholderImage("sku-new-003-1"), placeholderImage("sku-new-003-2"), placeholderImage("sku-new-003-3"), placeholderImage("sku-new-003-4")],
+    description: "High-performance sneakers for running and training",
+    rating: 4.7,
+    reviewCount: 342,
+    features: ["Cushioned", "Durable", "Lightweight"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-new-004",
@@ -64,6 +90,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 19,
     categoryId: "new",
     image: placeholderImage("sku-new-004"),
+    images: [placeholderImage("sku-new-004-1"), placeholderImage("sku-new-004-2"), placeholderImage("sku-new-004-3"), placeholderImage("sku-new-004-4")],
+    description: "Classic fit jeans perfect for any occasion",
+    rating: 4.6,
+    reviewCount: 198,
+    features: ["Classic fit", "Durable", "Comfortable"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-new-005",
@@ -72,6 +104,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 4,
     categoryId: "new",
     image: placeholderImage("sku-new-005"),
+    images: [placeholderImage("sku-new-005-1"), placeholderImage("sku-new-005-2"), placeholderImage("sku-new-005-3"), placeholderImage("sku-new-005-4")],
+    description: "Water-resistant jacket for outdoor activities",
+    rating: 4.4,
+    reviewCount: 89,
+    features: ["Water-resistant", "Lightweight", "Packable"],
+    shipping: { shippingType: "Express shipping", estimatedDays: "1-2 days" },
   },
 
   // Men (5)
@@ -82,6 +120,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 23,
     categoryId: "men",
     image: placeholderImage("sku-men-001"),
+    images: [placeholderImage("sku-men-001-1"), placeholderImage("sku-men-001-2"), placeholderImage("sku-men-001-3"), placeholderImage("sku-men-001-4")],
+    description: "Elegant polo shirt for casual or semi-formal wear",
+    rating: 4.5,
+    reviewCount: 167,
+    features: ["Premium fabric", "Breathable", "Elegant"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-men-002",
@@ -90,6 +134,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 9,
     categoryId: "men",
     image: placeholderImage("sku-men-002"),
+    images: [placeholderImage("sku-men-002-1"), placeholderImage("sku-men-002-2"), placeholderImage("sku-men-002-3"), placeholderImage("sku-men-002-4")],
+    description: "Versatile chino pants for work or casual wear",
+    rating: 4.6,
+    reviewCount: 213,
+    features: ["Comfortable", "Versatile", "Machine washable"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-men-003",
@@ -98,6 +148,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 31,
     categoryId: "men",
     image: placeholderImage("sku-men-003"),
+    images: [placeholderImage("sku-men-003-1"), placeholderImage("sku-men-003-2"), placeholderImage("sku-men-003-3"), placeholderImage("sku-men-003-4")],
+    description: "Premium genuine leather belt with quality buckle",
+    rating: 4.7,
+    reviewCount: 156,
+    features: ["Genuine leather", "Quality buckle", "Durable"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-men-004",
@@ -106,6 +162,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 13,
     categoryId: "men",
     image: placeholderImage("sku-men-004"),
+    images: [placeholderImage("sku-men-004-1"), placeholderImage("sku-men-004-2"), placeholderImage("sku-men-004-3"), placeholderImage("sku-men-004-4")],
+    description: "Classic oxford shirt for formal occasions",
+    rating: 4.8,
+    reviewCount: 234,
+    features: ["Classic style", "Premium cotton", "Easy care"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-men-005",
@@ -114,6 +176,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 0,
     categoryId: "men",
     image: placeholderImage("sku-men-005"),
+    images: [placeholderImage("sku-men-005-1"), placeholderImage("sku-men-005-2"), placeholderImage("sku-men-005-3"), placeholderImage("sku-men-005-4")],
+    description: "Rugged sneakers designed for trail hiking",
+    rating: 4.9,
+    reviewCount: 298,
+    features: ["Grip sole", "Waterproof", "Lightweight"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
 
   // Women (5)
@@ -124,6 +192,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 17,
     categoryId: "women",
     image: placeholderImage("sku-women-001"),
+    images: [placeholderImage("sku-women-001-1"), placeholderImage("sku-women-001-2"), placeholderImage("sku-women-001-3"), placeholderImage("sku-women-001-4")],
+    description: "Elegant blouse perfect for work or special occasions",
+    rating: 4.6,
+    reviewCount: 145,
+    features: ["Elegant", "Breathable", "Professional"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-women-002",
@@ -132,6 +206,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 8,
     categoryId: "women",
     image: placeholderImage("sku-women-002"),
+    images: [placeholderImage("sku-women-002-1"), placeholderImage("sku-women-002-2"), placeholderImage("sku-women-002-3"), placeholderImage("sku-women-002-4")],
+    description: "Trendy high-waist jeans with flattering fit",
+    rating: 4.7,
+    reviewCount: 287,
+    features: ["Flattering fit", "Trendy", "Comfortable"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-women-003",
@@ -140,6 +220,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 5,
     categoryId: "women",
     image: placeholderImage("sku-women-003"),
+    images: [placeholderImage("sku-women-003-1"), placeholderImage("sku-women-003-2"), placeholderImage("sku-women-003-3"), placeholderImage("sku-women-003-4")],
+    description: "Cozy cardigan perfect for layering",
+    rating: 4.8,
+    reviewCount: 176,
+    features: ["Soft fabric", "Warm", "Versatile"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-women-004",
@@ -148,6 +234,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 12,
     categoryId: "women",
     image: placeholderImage("sku-women-004"),
+    images: [placeholderImage("sku-women-004-1"), placeholderImage("sku-women-004-2"), placeholderImage("sku-women-004-3"), placeholderImage("sku-women-004-4")],
+    description: "Comfortable dress suitable for any day",
+    rating: 4.5,
+    reviewCount: 312,
+    features: ["Comfortable", "Versatile", "Stylish"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-women-005",
@@ -156,6 +248,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 2,
     categoryId: "women",
     image: placeholderImage("sku-women-005"),
+    images: [placeholderImage("sku-women-005-1"), placeholderImage("sku-women-005-2"), placeholderImage("sku-women-005-3"), placeholderImage("sku-women-005-4")],
+    description: "All-day comfort sneakers for active women",
+    rating: 4.6,
+    reviewCount: 224,
+    features: ["Cushioned", "Lightweight", "Stylish"],
+    shipping: { shippingType: "Express shipping", estimatedDays: "1-2 days" },
   },
 
   // Sale (5)
@@ -166,6 +264,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 50,
     categoryId: "sale",
     image: placeholderImage("sku-sale-001"),
+    images: [placeholderImage("sku-sale-001-1"), placeholderImage("sku-sale-001-2"), placeholderImage("sku-sale-001-3"), placeholderImage("sku-sale-001-4")],
+    description: "Amazing deal on premium tee shirt",
+    rating: 4.3,
+    reviewCount: 98,
+    features: ["Affordable", "Quality", "Great value"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-sale-002",
@@ -174,6 +278,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 16,
     categoryId: "sale",
     image: placeholderImage("sku-sale-002"),
+    images: [placeholderImage("sku-sale-002-1"), placeholderImage("sku-sale-002-2"), placeholderImage("sku-sale-002-3"), placeholderImage("sku-sale-002-4")],
+    description: "Limited time deal on comfortable hoodie",
+    rating: 4.5,
+    reviewCount: 187,
+    features: ["Warm", "Affordable", "Comfortable"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-sale-003",
@@ -182,6 +292,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 7,
     categoryId: "sale",
     image: placeholderImage("sku-sale-003"),
+    images: [placeholderImage("sku-sale-003-1"), placeholderImage("sku-sale-003-2"), placeholderImage("sku-sale-003-3"), placeholderImage("sku-sale-003-4")],
+    description: "Discounted classic jeans while stock lasts",
+    rating: 4.4,
+    reviewCount: 156,
+    features: ["Classic fit", "Affordable", "Durable"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
   {
     id: "sku-sale-004",
@@ -190,6 +306,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 3,
     categoryId: "sale",
     image: placeholderImage("sku-sale-004"),
+    images: [placeholderImage("sku-sale-004-1"), placeholderImage("sku-sale-004-2"), placeholderImage("sku-sale-004-3"), placeholderImage("sku-sale-004-4")],
+    description: "Last chance to get this jacket at sale price",
+    rating: 4.6,
+    reviewCount: 134,
+    features: ["Stylish", "Affordable", "Quality"],
+    shipping: { shippingType: "Express shipping", estimatedDays: "1-2 days" },
   },
   {
     id: "sku-sale-005",
@@ -198,6 +320,12 @@ export const products: CatalogProduct[] = [
     quantityAvailable: 0,
     categoryId: "sale",
     image: placeholderImage("sku-sale-005"),
+    images: [placeholderImage("sku-sale-005-1"), placeholderImage("sku-sale-005-2"), placeholderImage("sku-sale-005-3"), placeholderImage("sku-sale-005-4")],
+    description: "Out of stock - Check back soon for restocks",
+    rating: 4.7,
+    reviewCount: 267,
+    features: ["Affordable", "Comfortable", "Popular"],
+    shipping: { shippingType: "Standard shipping", estimatedDays: "3-5 days" },
   },
 ];
 
