@@ -6,12 +6,15 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Linking from "expo-linking";
 import { Button } from "react-native-paper";
+import { View } from "react-native";
 
 import HomeScreen from "../screens/Home";
 import PLPScreen from "../screens/PLP";
 import PDPScreen from "../screens/PDP";
 import CartScreen from "../screens/Cart";
 import CheckoutScreen from "../screens/Checkout";
+import LoginScreen from "../screens/Login";
+import { useAuth } from "../hooks/useAuth";
 
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
@@ -20,6 +23,7 @@ export type RootStackParamList = {
   PDP: { id: string };
   Cart: undefined;
   Checkout: undefined;
+  Login: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -34,11 +38,14 @@ const linking: LinkingOptions<RootStackParamList> = {
       PDP: "pdp/:id",
       Cart: "cart",
       Checkout: "checkout",
+      Login: "login",
     },
   },
 };
 
 export default function AppNavigation() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator
@@ -47,15 +54,31 @@ export default function AppNavigation() {
           headerRight: () => {
             if (route.name === "Cart") return null;
 
+            const showLogin = route.name === "Home";
+            const loginLabel = isAuthenticated ? "Account" : "Login";
+
             return (
-              <Button
-                mode="text"
-                compact
-                onPress={() => navigation.navigate("Cart")}
-                accessibilityLabel="Go to cart"
-              >
-                Cart
-              </Button>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {showLogin ? (
+                  <Button
+                    mode="text"
+                    compact
+                    onPress={() => navigation.navigate("Login")}
+                    accessibilityLabel="Go to login"
+                  >
+                    {loginLabel}
+                  </Button>
+                ) : null}
+
+                <Button
+                  mode="text"
+                  compact
+                  onPress={() => navigation.navigate("Cart")}
+                  accessibilityLabel="Go to cart"
+                >
+                  Cart
+                </Button>
+              </View>
             );
           },
         })}
@@ -65,6 +88,7 @@ export default function AppNavigation() {
         <Stack.Screen name="PDP" component={PDPScreen} />
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Checkout" component={CheckoutScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
