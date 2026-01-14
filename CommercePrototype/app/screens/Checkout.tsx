@@ -194,9 +194,10 @@ export default function CheckoutScreen({ navigation }: Props) {
   };
 
   const validateCardNumber = (num: string) => {
+    const REQUIRED_DIGITS = 16; // enforce 16-digit input (adjust if you want to allow AMEX etc)
     const len = num.length;
-    if (len < 13 || len > 19) {
-      setCardNumberError("Card number must be 13 to 19 digits.");
+    if (len !== REQUIRED_DIGITS) {
+      setCardNumberError(`Card number must be ${REQUIRED_DIGITS} digits.`);
       return false;
     }
     if (!luhnCheck(num)) {
@@ -337,10 +338,10 @@ export default function CheckoutScreen({ navigation }: Props) {
   // handle formatted card input: store digits-only, display formatted
   const onCardNumberChange = (text: string) => {
     const digits = text.replace(/\D/g, "");
-    // limit to 19 digits
-    const cleaned = digits.slice(0, 19);
+    const MAX_DIGITS = 16; // enforce typical 16-digit card number
+    const cleaned = digits.slice(0, MAX_DIGITS);
     setCardNumber(cleaned);
-    // live clear error while typing
+    // clear error while typing
     if (cardNumberError) setCardNumberError("");
   };
 
@@ -350,9 +351,12 @@ export default function CheckoutScreen({ navigation }: Props) {
 
   // expiry auto-insert slash
   const onExpiryChange = (text: string) => {
+    // allow only digits, max 4 (MMYY), insert slash after 2 digits
     const digits = text.replace(/\D/g, "").slice(0, 4);
     if (digits.length >= 3) {
       setExpiry(`${digits.slice(0, 2)}/${digits.slice(2)}`);
+    } else if (digits.length >= 2) {
+      setExpiry(`${digits.slice(0, 2)}` + (digits.length === 2 ? "/" : ""));
     } else {
       setExpiry(digits);
     }
@@ -364,7 +368,8 @@ export default function CheckoutScreen({ navigation }: Props) {
   };
 
   const onCvvChange = (t: string) => {
-    const cleaned = t.replace(/\D/g, "").slice(0, 3); // enforce max 3
+    // only digits, max 3 characters
+    const cleaned = t.replace(/\D/g, "").slice(0, 3);
     setCvv(cleaned);
     if (cvvError) setCvvError("");
   };
@@ -566,6 +571,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                         keyboardType="numeric"
                         placeholder="1234 5678 9012 3456"
                         textContentType="creditCardNumber"
+                        maxLength={23} // allow for spaces (e.g. "1234 5678 9012 3456")
                       />
                       {cardNumberError ? (
                         <Text style={{ color: paper.colors.error, marginBottom: 8 }}>
@@ -581,6 +587,8 @@ export default function CheckoutScreen({ navigation }: Props) {
                           mode="outlined"
                           style={[styles.input, { flex: 1, marginRight: 8 }]}
                           placeholder="MM/YY"
+                          keyboardType="numeric"
+                          maxLength={5}
                         />
                         <TextInput
                           label="CVV"
@@ -593,6 +601,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                           secureTextEntry
                           placeholder="123"
                           textContentType="password"
+                          maxLength={3}
                         />
                       </View>
                       {expiryError ? (
@@ -699,36 +708,39 @@ export default function CheckoutScreen({ navigation }: Props) {
             </View>
           </View>
 
-          <View style={[styles.colSummary, isNarrow && styles.colSummaryNarrow]}>
-            <Card style={styles.summaryCard}>
-              <Card.Title title="Order summary" subtitle={`${mockItems.length} items`} />
-              <Card.Content>
-                {mockItems.map((it) => (
-                  <View key={it.id} style={styles.orderRow}>
-                    <Text>{it.title} x{it.qty}</Text>
-                    <Text>${(it.price * it.qty).toFixed(2)}</Text>
+          {/* summary column - hide on final (review) step */}
+          {step !== 2 && (
+            <View style={[styles.colSummary, isNarrow && styles.colSummaryNarrow]}>
+              <Card style={styles.summaryCard}>
+                <Card.Title title="Order summary" subtitle={`${mockItems.length} items`} />
+                <Card.Content>
+                  {mockItems.map((it) => (
+                    <View key={it.id} style={styles.orderRow}>
+                      <Text>{it.title} x{it.qty}</Text>
+                      <Text>${(it.price * it.qty).toFixed(2)}</Text>
+                    </View>
+                  ))}
+                  <Divider style={{ marginVertical: 8 }} />
+                  <View style={styles.orderRow}>
+                    <Text>Subtotal</Text>
+                    <Text>${subtotal.toFixed(2)}</Text>
                   </View>
-                ))}
-                <Divider style={{ marginVertical: 8 }} />
-                <View style={styles.orderRow}>
-                  <Text>Subtotal</Text>
-                  <Text>${subtotal.toFixed(2)}</Text>
-                </View>
-                <View style={styles.orderRow}>
-                  <Text>Shipping</Text>
-                  <Text>${shippingCost.toFixed(2)}</Text>
-                </View>
-                <Divider style={{ marginVertical: 8 }} />
-                <View style={styles.orderRow}>
-                  <Text style={{ fontWeight: "700" }}>Total</Text>
-                  <Text style={{ fontWeight: "700" }}>${total.toFixed(2)}</Text>
-                </View>
-                <Paragraph style={{ marginTop: 12, color: paper.colors.onSurfaceVariant }}>
-                  Free returns within 30 days • Secure payment
-                </Paragraph>
-              </Card.Content>
-            </Card>
-          </View>
+                  <View style={styles.orderRow}>
+                    <Text>Shipping</Text>
+                    <Text>${shippingCost.toFixed(2)}</Text>
+                  </View>
+                  <Divider style={{ marginVertical: 8 }} />
+                  <View style={styles.orderRow}>
+                    <Text style={{ fontWeight: "700" }}>Total</Text>
+                    <Text style={{ fontWeight: "700" }}>${total.toFixed(2)}</Text>
+                  </View>
+                  <Paragraph style={{ marginTop: 12, color: paper.colors.onSurfaceVariant }}>
+                    Free returns within 30 days • Secure payment
+                  </Paragraph>
+                </Card.Content>
+              </Card>
+            </View>
+          )}
         </View>
       </ScrollView>
 
