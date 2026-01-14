@@ -1,17 +1,16 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Button, Card, Text } from "react-native-paper";
 
 import type { RootStackParamList } from "../navigation";
-import { useTheme } from "../themes";
 import type { Product } from "../models/Product";
 import { getProductById } from "../data/catalog";
+import { Screen } from "../layout/Screen";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PDP">;
 
 export default function PDPScreen({ navigation, route }: Props) {
-  const theme = useTheme();
   const { id } = route.params;
 
   const product = useMemo((): Product => {
@@ -27,9 +26,7 @@ export default function PDPScreen({ navigation, route }: Props) {
   }, [id]);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <Screen style={styles.container}>
       <Card>
         {product.image ? (
           <Card.Cover source={product.image} style={styles.image} />
@@ -58,12 +55,12 @@ export default function PDPScreen({ navigation, route }: Props) {
           </Button>
         </Card.Actions>
       </Card>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 10 },
+  container: { gap: 10 },
   image: {
     width: "100%",
     height: 220,

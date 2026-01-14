@@ -6,6 +6,7 @@ import { List, Text } from "react-native-paper";
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
+import { Screen } from "../layout/Screen";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
 
@@ -16,9 +17,7 @@ export default function PLPScreen({ navigation, route }: Props) {
   const products = useMemo(() => getProductsByQuery(q), [q]);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <Screen>
       <Text style={[styles.subtitle, { color: theme.colors.text }]}>
         Product listing (mock){q ? ` — ${q}` : ""}
       </Text>
@@ -26,6 +25,7 @@ export default function PLPScreen({ navigation, route }: Props) {
       <FlatList
         data={products}
         keyExtractor={(p) => p.id}
+        style={styles.listContainer}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <List.Item
@@ -47,14 +47,14 @@ export default function PLPScreen({ navigation, route }: Props) {
           />
         )}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
   subtitle: { opacity: 0.8, marginBottom: 10 },
-  list: { gap: 10, paddingBottom: 20 },
+  listContainer: { flex: 1 },
+  list: { gap: 10 },
   row: {
     backgroundColor: "#fff",
     borderRadius: 12,
