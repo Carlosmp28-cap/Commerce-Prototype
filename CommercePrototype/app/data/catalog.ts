@@ -1,3 +1,11 @@
+/**
+ * In-memory product catalog used by screens.
+ *
+ * This is intentionally local-only for the prototype. When we introduce a real
+ * backend/API, this file becomes either:
+ * - a mock/stub used by tests, or
+ * - a fallback dataset used when offline.
+ */
 import type { ImageSourcePropType } from "react-native";
 
 export type CategoryId = "new" | "men" | "women" | "sale";
@@ -204,6 +212,7 @@ export const products: CatalogProduct[] = [
 export const getProductById = (id: string) => products.find((p) => p.id === id);
 
 export const getProductsByQuery = (q?: string) => {
+  // Simple filtering to keep screens light. Swap for API query params later.
   if (!q) return products;
   const match = categories.find((c) => c.query === q);
   if (!match) return products;

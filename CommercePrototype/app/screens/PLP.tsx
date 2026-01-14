@@ -8,6 +8,9 @@ import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
 import { Screen } from "../layout/Screen";
 
+// PLP (Product Listing Page).
+// Keeps UI simple: filtering is in `catalog.ts` and navigation is via stack params.
+
 type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
 
 export default function PLPScreen({ navigation, route }: Props) {

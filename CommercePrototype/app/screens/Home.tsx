@@ -8,6 +8,9 @@ import type { RootStackParamList } from "../navigation";
 import { categories, getFeaturedProducts } from "../data/catalog";
 import { ScreenScroll } from "../layout/Screen";
 
+// Home (landing) screen.
+// Uses `ScreenScroll` so content gets footer-aware bottom padding automatically.
+
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export default function HomeScreen({ navigation }: Props) {

@@ -7,6 +7,9 @@ import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import { Screen } from "../layout/Screen";
 
+// Cart (placeholder).
+// Later this screen should connect to `useCart()` and render real cart items.
+
 type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 
 export default function CartScreen({ navigation }: Props) {

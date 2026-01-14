@@ -1,8 +1,18 @@
-
 import React from "react";
 import { Button } from "react-native-paper";
 import { StyleSheet } from "react-native";
-import { useTheme } from "../themes/index"; // importa seu hook
+import { useTheme } from "../themes/index";
+
+/**
+ * Small wrapper around Paper's Button.
+ *
+ * Why this exists:
+ * - lets us map our design tokens (spacing/typography/colors) into a consistent
+ *   button style without repeating styling logic everywhere.
+ *
+ * In the future, we may prefer relying on Paper's theme variants instead of
+ * passing custom colors here.
+ */
 
 interface CustomButtonProps {
   title: string;
@@ -21,7 +31,7 @@ export default function CustomButton({
   mode = "contained",
   disabled = false,
 }: CustomButtonProps) {
-  const theme = useTheme(); // pega seus tokens
+  const theme = useTheme();
 
   const sizeStyles = {
     small: { paddingVertical: theme.spacing.xs, fontSize: 12 },
@@ -31,8 +41,9 @@ export default function CustomButton({
 
   const variantColors = {
     primary: theme.colors.primary,
-    secondary: "#6B7280", // pode adicionar no seu tokens
-    danger: "#DC2626", // idem
+    // TODO: move these into `tokens.colors` once we standardize the palette.
+    secondary: "#6B7280",
+    danger: "#DC2626",
   };
 
   return (

@@ -7,6 +7,9 @@ import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import { Screen } from "../layout/Screen";
 
+// Checkout (placeholder).
+// Intended to grow into a multi-step flow (address/shipping/payment).
+
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
 export default function CheckoutScreen({ navigation }: Props) {

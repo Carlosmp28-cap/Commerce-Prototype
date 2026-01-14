@@ -8,6 +8,10 @@ import type { Product } from "../models/Product";
 import { getProductById } from "../data/catalog";
 import { Screen } from "../layout/Screen";
 
+// PDP (Product Details Page).
+// Note: we avoid TSX generic call syntax like `useMemo<Product>(...)` here because
+// Metro can mis-parse it in some setups; a return type annotation is safer.
+
 type Props = NativeStackScreenProps<RootStackParamList, "PDP">;
 
 export default function PDPScreen({ navigation, route }: Props) {

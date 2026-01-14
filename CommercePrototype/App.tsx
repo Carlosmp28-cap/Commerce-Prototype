@@ -25,6 +25,7 @@ const paperTheme = {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* Safe area is required for correct footer spacing on iOS devices with a home indicator. */}
       <SafeAreaProvider>
         <ThemeProvider>
           <PaperProvider theme={paperTheme}>
@@ -34,6 +35,7 @@ export default function App() {
                   <View style={{ flex: 1 }}>
                     <AppNavigation />
                   </View>
+                  {/* Render once globally. Screens use `Screen`/`ScreenScroll` to avoid overlap. */}
                   <Footer />
                 </View>
               </CartProvider>

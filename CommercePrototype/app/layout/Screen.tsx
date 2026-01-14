@@ -9,6 +9,8 @@ import { FOOTER_BASE_HEIGHT } from "../components/Footer";
 const DEFAULT_PADDING = 16;
 
 export function useFooterAwareBottomPadding(extra: number = DEFAULT_PADDING) {
+  // We render a fixed global footer (see `App.tsx`). Screens must reserve enough
+  // space so scrollable content never sits underneath it.
   const insets = useSafeAreaInsets();
   return extra + FOOTER_BASE_HEIGHT + insets.bottom;
 }
@@ -32,6 +34,7 @@ export function Screen({
         {
           flex: 1,
           backgroundColor: theme.colors.background,
+          // Use padding on the container for consistent “page margins”.
           padding,
           paddingBottom,
         },
@@ -62,6 +65,7 @@ export function ScreenScroll({
     <ScrollView
       style={[{ flex: 1, backgroundColor: theme.colors.background }, style]}
       contentContainerStyle={[
+        // ScrollView padding belongs on the content container.
         { padding, paddingBottom },
         contentContainerStyle,
       ]}

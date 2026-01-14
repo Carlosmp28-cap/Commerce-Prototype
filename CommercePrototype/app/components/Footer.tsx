@@ -9,6 +9,7 @@ export default function Footer() {
   const insets = useSafeAreaInsets();
   const paperTheme = useTheme();
 
+  // Ensure the footer never hugs the iOS home indicator (or Android gesture bar).
   const bottomInset = Math.max(insets.bottom, 8);
 
   return (
