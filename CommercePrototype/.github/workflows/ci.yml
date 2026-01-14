@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, staging]
+  pull_request:
+    branches: [main, dev, staging]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.8.0"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn tsc --noEmit
+
+      - name: Run tests
+        run: yarn test --ci --runInBand
+
+      # Optional: Expo/EAS build step (uncomment and provide secrets)
+      # - name: Expo Login
+      #   uses: expo/expo-github-action@v10
+      #   with:
+      #     expo-version: latest
+      #     expo-command: whoami
+      #   env:
+      #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
