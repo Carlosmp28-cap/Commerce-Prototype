@@ -48,3 +48,58 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Testes e CI (projeto)
+
+Instruções rápidas para rodar os testes e o CI localmente nesta cópia do repositório.
+
+- O código fonte da aplicação está dentro da pasta `CommercePrototype`.
+- Comandos abaixo devem ser executados a partir da raiz do projeto `CommercePrototype` (onde existe o `package.json`).
+
+Instalar dependências:
+
+```bash
+npm install
+```
+
+Rodar a app (desenvolvimento):
+
+```bash
+npx expo start
+```
+
+Rodar a suite de testes (Jest + React Native Testing Library):
+
+```bash
+npm test -- --runInBand
+```
+
+Notas sobre a configuração de testes:
+
+- Usamos `jest-expo` como preset, com mocks mínimos para `expo`.
+- Se ocorrerem erros relacionados a versões de `react-test-renderer`, instale a versão compatível com o `react` do projeto (ex.: `npm install -D react-test-renderer@19.1.0`).
+
+CI — GitHub Actions
+
+Há um workflow em `.github/workflows/ci.yml` configurado para executar dentro da pasta `CommercePrototype`:
+
+- Passos: instalar dependências (`npm ci` ou `npm install`), `npm run lint`, `npx tsc --noEmit`, e `npm test`.
+- Para deploys/Expo/EAS adicione secrets no repositório: `EXPO_TOKEN`, `EAS_SERVICE_ACCOUNT`, `FIREBASE_TOKEN`.
+
+Comandos úteis para CI local (simulação rápida):
+
+```bash
+# instalar deps na pasta CommercePrototype
+cd CommercePrototype && npm ci
+
+# rodar lint
+cd CommercePrototype && npm run lint
+
+# rodar typecheck
+cd CommercePrototype && npx tsc --noEmit
+
+# rodar testes
+cd CommercePrototype && npm test -- --runInBand
+```
+
+Se quiser, eu adiciono também um workflow separado para releases via EAS/Expo.
