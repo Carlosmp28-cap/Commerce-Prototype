@@ -7,6 +7,7 @@ import type { RootStackParamList } from "../navigation";
 import type { Product } from "../models/Product";
 import { getProductById } from "../data/catalog";
 import { Screen } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
 
 // PDP (Product Details Page).
 // Note: we avoid TSX generic call syntax like `useMemo<Product>(...)` here because
@@ -43,9 +44,7 @@ export default function PDPScreen({ navigation, route }: Props) {
           <Text style={styles.sku}>SKU: {product.id}</Text>
           <Text style={styles.price}>€ {product.price.toFixed(2)}</Text>
           <Text style={{ opacity: 0.75 }}>
-            {product.quantityAvailable > 0
-              ? `${product.quantityAvailable} in stock`
-              : "Out of stock"}
+            {getAvailabilityLabel(product.quantityAvailable)}
           </Text>
         </Card.Content>
 

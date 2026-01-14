@@ -7,6 +7,7 @@ import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
 import { Screen } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
 
 // PLP (Product Listing Page).
 // Keeps UI simple: filtering is in `catalog.ts` and navigation is via stack params.
@@ -36,11 +37,9 @@ export default function PLPScreen({ navigation, route }: Props) {
             accessibilityLabel={`Open product ${item.name}`}
             title={item.name}
             titleStyle={{ color: theme.colors.text, fontWeight: "900" }}
-            description={`€ ${item.price.toFixed(2)} • ${
-              item.quantityAvailable > 0
-                ? `${item.quantityAvailable} in stock`
-                : "Out of stock"
-            }`}
+            description={`€ ${item.price.toFixed(2)} • ${getAvailabilityLabel(
+              item.quantityAvailable
+            )}`}
             right={() => (
               <Text style={{ color: theme.colors.primary, fontWeight: "900" }}>
                 View

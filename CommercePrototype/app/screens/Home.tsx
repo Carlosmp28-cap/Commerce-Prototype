@@ -7,6 +7,7 @@ import { useTheme } from "../themes";
 import type { RootStackParamList } from "../navigation";
 import { categories, getFeaturedProducts } from "../data/catalog";
 import { ScreenScroll } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
 
 // Home (landing) screen.
 // Uses `ScreenScroll` so content gets footer-aware bottom padding automatically.
@@ -102,9 +103,7 @@ export default function HomeScreen({ navigation }: Props) {
                   € {item.price.toFixed(2)}
                 </Text>
                 <Text style={{ marginTop: 2, opacity: 0.7 }}>
-                  {item.quantityAvailable > 0
-                    ? `${item.quantityAvailable} in stock`
-                    : "Out of stock"}
+                  {getAvailabilityLabel(item.quantityAvailable)}
                 </Text>
               </Card.Content>
             </Card>
