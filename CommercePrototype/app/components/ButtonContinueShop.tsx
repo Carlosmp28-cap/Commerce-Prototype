@@ -1,6 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
-import styles from "../screens/Cart.styles";
+import { Button } from "react-native-paper";
 
 interface ButtonContinueShopProps {
   onPress: () => void;
@@ -12,8 +11,13 @@ export default function ButtonContinueShop({
   title,
 }: ButtonContinueShopProps) {
   return (
-    <TouchableOpacity style={styles.continueShoppingBtn} onPress={onPress}>
-      <Text style={styles.continueShoppingBtnText}>{title}</Text>
-    </TouchableOpacity>
+    <Button
+      icon="shopping"
+      mode="outlined"
+      onPress={onPress}
+      textColor="#000000"
+    >
+      {title}
+    </Button>
   );
 }

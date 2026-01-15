@@ -1,6 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
-import styles from "../screens/Cart.styles";
+import { Button } from "react-native-paper";
 
 interface ButtonCheckoutProps {
   onPress: () => void;
@@ -12,8 +11,14 @@ export default function ButtonCheckout({
   title,
 }: ButtonCheckoutProps) {
   return (
-    <TouchableOpacity style={styles.checkoutBtn} onPress={onPress}>
-      <Text style={styles.checkoutBtnText}>{title}</Text>
-    </TouchableOpacity>
+    <Button
+      icon="cart-check"
+      mode="contained"
+      onPress={onPress}
+      style={{ marginBottom: 10 }}
+      buttonColor="#007AFF"
+    >
+      {title}
+    </Button>
   );
 }
