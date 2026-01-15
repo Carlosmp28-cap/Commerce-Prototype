@@ -3,7 +3,11 @@ import {
   NavigationContainer,
   type LinkingOptions,
 } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import { Button } from "react-native-paper";
 
@@ -41,7 +45,13 @@ export default function AppNavigation() {
     <NavigationContainer linking={linking}>
       <Stack.Navigator
         initialRouteName="Home"
-        screenOptions={({ navigation, route }) => ({
+        screenOptions={({
+          navigation,
+          route,
+        }: {
+          navigation: NativeStackNavigationProp<RootStackParamList>;
+          route: RouteProp<RootStackParamList>;
+        }) => ({
           headerRight: () => {
             if (route.name === "Cart") return null;
 
@@ -59,7 +69,15 @@ export default function AppNavigation() {
         })}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="PLP" component={PLPScreen} />
+        <Stack.Screen
+          name="PLP"
+          component={PLPScreen}
+          options={{
+            headerBackVisible: false,
+            headerLeft: () => null,
+            title: "Product Listing Page",
+          }}
+        />
         <Stack.Screen name="PDP" component={PDPScreen} />
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Checkout" component={CheckoutScreen} />
