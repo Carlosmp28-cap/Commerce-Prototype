@@ -205,61 +205,6 @@ export default function CartScreen({ navigation }: Props) {
         />
       </View>
 
-<<<<<<< Updated upstream
-      {/* Right Side - Summary & Checkout */}
-      {isEmpty ? (
-        <View
-          style={[
-            styles.rightSection,
-            {
-              flex: isSmallScreen ? 1 : 1,
-              justifyContent: "center" as const,
-              alignItems: "center" as const,
-            },
-          ]}
-        >
-          <Text style={styles.emptyText}>Add items to checkout</Text>
-        </View>
-      ) : (
-        <View style={[styles.rightSection, { flex: isSmallScreen ? 1 : 1 }]}>
-          <Text style={styles.summaryTitle}>Order Summary</Text>
-
-          <View style={styles.summaryContent}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal:</Text>
-              <Text style={styles.summaryValue}>${subtotal.toFixed(2)}</Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tax (10%):</Text>
-              <Text style={styles.summaryValue}>${tax.toFixed(2)}</Text>
-            </View>
-
-            <View style={[styles.summaryRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Total:</Text>
-              <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-            </View>
-
-            <Text style={styles.itemCountText}>
-              Items in cart: {cartItems.length}
-            </Text>
-          </View>
-
-          <ButtonCheckout
-            title="Proceed to Checkout"
-            onPress={() => {
-              console.log("Proceeding to checkout...");
-            }}
-          />
-
-          <ButtonContinueShop
-            title="Continue Shopping"
-            onPress={() => {
-              console.log("Continuing shopping...");
-            }}
-          />
-        </View>
-=======
       {/* RIGHT: summary + buttons */}
       {!isEmpty && (
         <View style={styles.rightColumn}>
@@ -294,7 +239,6 @@ export default function CartScreen({ navigation }: Props) {
             />
           </View>
         </View>
->>>>>>> Stashed changes
       )}
     </View>
   );
