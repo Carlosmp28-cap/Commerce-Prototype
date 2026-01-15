@@ -24,45 +24,52 @@ export function HomeHero({
       onPress={onShopAll}
       accessibilityLabel="Open product listing"
     >
-      <ImageBackground
-        source={heroImage}
-        style={styles.heroImageBg}
-        imageStyle={styles.heroImageBgImage}
-      >
-        <View style={styles.heroOverlay} />
-        <Card.Content style={styles.heroContent}>
-          <Text style={styles.heroKicker}>Welcome</Text>
-          <Text variant="headlineSmall" style={styles.heroHeadline}>
-            New season essentials
-          </Text>
-          <Text style={styles.heroBody}>
-            Shop curated picks across New, Men, Women and Sale.
-          </Text>
+      <View style={styles.heroClip}>
+        <ImageBackground
+          source={heroImage}
+          style={styles.heroImageBg}
+          imageStyle={styles.heroImageBgImage}
+        >
+          <View style={styles.heroOverlay} />
+          <Card.Content style={styles.heroContent}>
+            <Text style={styles.heroKicker}>Welcome</Text>
+            <Text variant="headlineSmall" style={styles.heroHeadline}>
+              New season essentials
+            </Text>
+            <Text style={styles.heroBody}>
+              Shop curated picks across New, Men, Women and Sale.
+            </Text>
 
-          <View style={styles.heroCtas}>
-            <Button
-              mode="contained"
-              onPress={onShopAll}
-              accessibilityLabel="Shop all products"
-            >
-              Shop all
-            </Button>
-            <Button
-              mode="outlined"
-              onPress={onShopSale}
-              accessibilityLabel="Shop sale"
-            >
-              Shop sale
-            </Button>
-          </View>
-        </Card.Content>
-      </ImageBackground>
+            <View style={styles.heroCtas}>
+              <Button
+                mode="contained"
+                onPress={onShopAll}
+                accessibilityLabel="Shop all products"
+                style={styles.heroCtaButton}
+              >
+                Shop all
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={onShopSale}
+                accessibilityLabel="Shop sale"
+                style={styles.heroCtaButton}
+              >
+                Shop sale
+              </Button>
+            </View>
+          </Card.Content>
+        </ImageBackground>
+      </View>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
   heroCard: {
+    borderRadius: 16,
+  },
+  heroClip: {
     borderRadius: 16,
     overflow: "hidden",
   },
@@ -103,5 +110,10 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 12,
     flexWrap: "wrap",
+  },
+  heroCtaButton: {
+    // On narrow screens, avoid shrinking (which causes Paper's label to ellipsize).
+    // With flexWrap enabled on the container, this will wrap buttons onto the next line instead.
+    flexShrink: 0,
   },
 });

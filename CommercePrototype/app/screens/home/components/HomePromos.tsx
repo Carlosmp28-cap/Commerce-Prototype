@@ -10,14 +10,21 @@ import {
 export function HomePromos({
   onShopNew,
   onShopSale,
+  layout = "row",
 }: {
   onShopNew: () => void;
   onShopSale: () => void;
+  layout?: "row" | "column";
 }) {
   const paperTheme = usePaperTheme();
 
   return (
-    <View style={styles.promoRow}>
+    <View
+      style={[
+        styles.promoRow,
+        layout === "column" ? styles.promoRowColumn : null,
+      ]}
+    >
       <Card
         style={[
           styles.promoCard,
@@ -71,6 +78,7 @@ export function HomePromos({
 
 const styles = StyleSheet.create({
   promoRow: { flexDirection: "row", gap: 12 },
+  promoRowColumn: { flexDirection: "column" },
   promoCard: { flex: 1, borderRadius: 14 },
   promoContent: { gap: 6, paddingTop: 14 },
   promoTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
