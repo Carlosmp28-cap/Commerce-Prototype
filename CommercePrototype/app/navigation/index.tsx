@@ -20,6 +20,7 @@ import PDPScreen from "../screens/PDP";
 import CartScreen from "../screens/Cart";
 import CheckoutScreen from "../screens/Checkout";
 import LoginScreen from "../screens/Login";
+import { useAuth } from "../hooks/useAuth";
 
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
@@ -181,6 +182,8 @@ export function HeaderActions({
 }
 
 export default function AppNavigation() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <NavigationContainer linking={linkingConfig}>
       <Stack.Navigator
