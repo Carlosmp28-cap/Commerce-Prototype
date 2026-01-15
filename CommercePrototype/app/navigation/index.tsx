@@ -1,27 +1,71 @@
 import React from "react";
-// Navegação base: usar React Navigation v6 (Stack + BottomTabs se desejar).
-// TODO: instalar @react-navigation/native, @react-navigation/native-stack e dependências.
-// Este arquivo expõe um Stack Navigator com as rotas iniciais: Home, PLP, PDP, Cart.
+import {
+  NavigationContainer,
+  type LinkingOptions,
+} from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import * as Linking from "expo-linking";
+import { Button } from "react-native-paper";
 
-// Import statements are left commented to avoid build errors until deps installed.
-// import { NavigationContainer } from '@react-navigation/native'
-// import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import HomeScreen from "../screens/Home";
+import PLPScreen from "../screens/PLP";
+import PDPScreen from "../screens/PDP";
+import CartScreen from "../screens/Cart";
+import CheckoutScreen from "../screens/Checkout";
 
-// const Stack = createNativeStackNavigator()
+export type RootStackParamList = {
+  // Keep these params in one place so navigation remains type-safe across screens.
+  Home: undefined;
+  PLP: { q?: string } | undefined;
+  PDP: { id: string };
+  Cart: undefined;
+  Checkout: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking: LinkingOptions<RootStackParamList> = {
+  // Enables web URL sync and deep links (e.g. /pdp/sku123) without expo-router.
+  prefixes: [Linking.createURL("/")],
+  config: {
+    screens: {
+      Home: "",
+      PLP: "plp",
+      PDP: "pdp/:id",
+      Cart: "cart",
+      Checkout: "checkout",
+    },
+  },
+};
 
 export default function AppNavigation() {
-  // Implement a NavigationContainer + Stack aqui.
-  // Exemplo:
-  // return (
-  //   <NavigationContainer>
-  //     <Stack.Navigator initialRouteName="Home">
-  //       <Stack.Screen name="Home" component={HomeScreen} />
-  //       <Stack.Screen name="PLP" component={PLPScreen} />
-  //       <Stack.Screen name="PDP" component={PDPScreen} />
-  //       <Stack.Screen name="Cart" component={CartScreen} />
-  //     </Stack.Navigator>
-  //   </NavigationContainer>
-  // )
+  return (
+    <NavigationContainer linking={linking}>
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={({ navigation, route }) => ({
+          headerRight: () => {
+            if (route.name === "Cart") return null;
 
-  return null; // placeholder until dependencies are added
+            return (
+              <Button
+                mode="text"
+                compact
+                onPress={() => navigation.navigate("Cart")}
+                accessibilityLabel="Go to cart"
+              >
+                Cart
+              </Button>
+            );
+          },
+        })}
+      >
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="PLP" component={PLPScreen} />
+        <Stack.Screen name="PDP" component={PDPScreen} />
+        <Stack.Screen name="Cart" component={CartScreen} />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }

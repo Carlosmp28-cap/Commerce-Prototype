@@ -1,25 +1,64 @@
-import React from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
-import type { Product } from "../models/Product";
+import React, { useMemo } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { List, Text } from "react-native-paper";
 
-// Product List Page (PLP): lista de produtos com cache-first strategy.
-// TODO: integrar com useApi/useCache para buscar produtos e paginação.
-const mockProducts: Product[] = [];
+import type { RootStackParamList } from "../navigation";
+import { useTheme } from "../themes";
+import { getProductsByQuery } from "../data/catalog";
+import { Screen } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
 
-export default function PLPScreen({ navigation }: any) {
+// PLP (Product Listing Page).
+// Keeps UI simple: filtering is in `catalog.ts` and navigation is via stack params.
+
+type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
+
+export default function PLPScreen({ navigation, route }: Props) {
+  const theme = useTheme();
+  const q = route.params?.q;
+
+  const products = useMemo(() => getProductsByQuery(q), [q]);
+
   return (
-    <View style={{ flex: 1 }}>
+    <Screen>
+      <Text style={[styles.subtitle, { color: theme.colors.text }]}>
+        Product listing (mock){q ? ` — ${q}` : ""}
+      </Text>
+
       <FlatList
-        data={mockProducts}
-        keyExtractor={(item) => item.id}
+        data={products}
+        keyExtractor={(p) => p.id}
+        style={styles.listContainer}
+        contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <List.Item
             onPress={() => navigation.navigate("PDP", { id: item.id })}
-          >
-            <Text>{item.name}</Text>
-          </TouchableOpacity>
+            accessibilityLabel={`Open product ${item.name}`}
+            title={item.name}
+            titleStyle={{ color: theme.colors.text, fontWeight: "900" }}
+            description={`€ ${item.price.toFixed(2)} • ${getAvailabilityLabel(
+              item.quantityAvailable
+            )}`}
+            right={() => (
+              <Text style={{ color: theme.colors.primary, fontWeight: "900" }}>
+                View
+              </Text>
+            )}
+            style={styles.row}
+          />
         )}
       />
-    </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  subtitle: { opacity: 0.8, marginBottom: 10 },
+  listContainer: { flex: 1 },
+  list: { gap: 10 },
+  row: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+});
