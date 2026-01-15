@@ -5,7 +5,13 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Linking from "expo-linking";
-import { Pressable, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { IconButton, Text, useTheme } from "react-native-paper";
 
 import HomeScreen from "../screens/Home";
@@ -38,7 +44,19 @@ export function HeaderHomeButton({
   };
 }) {
   const paperTheme = useTheme();
+  const { width } = useWindowDimensions();
   const textColor = paperTheme.colors.onSurface;
+
+  // Native headers center the title independently of the right actions.
+  // Constrain width on small screens so the title never overlaps headerRight icons.
+  const isNative = Platform.OS !== "web";
+  // Most phones end up truncating "Commerce Prototype" to "Commerce Proto…".
+  // Prefer a stacked 2-line title on native/mobile sizes to avoid ellipsis.
+  const useTwoLineTitle = isNative && width < 500;
+  const maxTitleWidth = isNative ? Math.max(140, width - 200) : undefined;
+  const fontSize =
+    Platform.OS === "web" ? 16 : useTwoLineTitle ? (width < 380 ? 12 : 13) : 15;
+  const lineHeight = Math.round(fontSize * 1.15);
 
   return (
     <Pressable
@@ -55,12 +73,52 @@ export function HeaderHomeButton({
       hitSlop={10}
       style={({ pressed }) => [
         styles.headerHomeButton,
+        useTwoLineTitle ? { paddingVertical: 2 } : null,
+        maxTitleWidth ? { maxWidth: maxTitleWidth } : null,
         pressed ? styles.headerHomeButtonPressed : null,
       ]}
     >
-      <Text style={[styles.headerHomeButtonText, { color: textColor }]}>
-        {HOME_TITLE}
-      </Text>
+      {useTwoLineTitle ? (
+        <View style={styles.headerHomeButtonTextStack}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.headerHomeButtonText,
+              {
+                color: textColor,
+                fontSize,
+                lineHeight,
+              },
+            ]}
+          >
+            Commerce
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.headerHomeButtonText,
+              {
+                color: textColor,
+                fontSize,
+                lineHeight,
+              },
+            ]}
+          >
+            Prototype
+          </Text>
+        </View>
+      ) : (
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={[
+            styles.headerHomeButtonText,
+            { color: textColor, fontSize, lineHeight },
+          ]}
+        >
+          {HOME_TITLE}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -89,16 +147,23 @@ export function HeaderActions({
   };
   routeName: keyof RootStackParamList;
 }) {
+  const { width } = useWindowDimensions();
+  const isNative = Platform.OS !== "web";
+  const isCompact = isNative && width < 390;
+  const iconSize = isNative ? (isCompact ? 20 : 22) : 24;
+
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
       <IconButton
         icon="magnify"
+        size={iconSize}
         onPress={() => navigation.navigate("PLP")}
         accessibilityLabel="Search"
       />
 
       <IconButton
         icon="account"
+        size={iconSize}
         onPress={() => navigation.navigate("Login")}
         accessibilityLabel="Account"
       />
@@ -106,6 +171,7 @@ export function HeaderActions({
       {routeName === "Cart" ? null : (
         <IconButton
           icon="cart"
+          size={iconSize}
           onPress={() => navigation.navigate("Cart")}
           accessibilityLabel="Cart"
         />
@@ -150,11 +216,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 10,
+    flexShrink: 1,
   },
   headerHomeButtonPressed: {
     opacity: 0.6,
   },
+  headerHomeButtonTextStack: {
+    alignItems: "center",
+  },
   headerHomeButtonText: {
     fontWeight: "700",
+    flexShrink: 1,
+    textAlign: "center",
   },
 });
