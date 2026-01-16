@@ -1,20 +1,19 @@
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  StyleSheet,
-  ScrollView,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   useWindowDimensions,
-  Keyboard,
+  View,
 } from "react-native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
+  Avatar,
+  Button,
+  Paragraph,
   Snackbar,
   Title,
-  Paragraph,
-  Button,
-  Avatar,
   useTheme as usePaperTheme,
 } from "react-native-paper";
 
@@ -22,11 +21,21 @@ import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
 import styles from "./styles";
 
-import { ShippingForm, PaymentForm, ReviewCard, OrderSummary } from "./components";
+import {
+  OrderSummary,
+  PaymentForm,
+  ReviewCard,
+  ShippingForm,
+} from "./components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
-export default function CheckoutScreen({ navigation }: Props) {
+export default function CheckoutScreen({ route, navigation }: Props) {
+  const { items, subtotalCart, tax, totalCart } = route.params;
+
+  const safeItems = Array.isArray(items) ? items : [];
+
+  console.log("cartItems:", safeItems);
   const theme = useTheme();
   const paper = usePaperTheme();
   const { width } = useWindowDimensions();
@@ -55,14 +64,19 @@ export default function CheckoutScreen({ navigation }: Props) {
   const [expiryError, setExpiryError] = useState("");
   const [cvvError, setCvvError] = useState("");
 
-  // cart (mock)
-  const mockItems = [
-    { id: "1", title: "T-Shirt", qty: 2, price: 19.99 },
-    { id: "2", title: "Sneakers", qty: 1, price: 69.5 },
-  ];
+  const orderSummaryItems = React.useMemo(
+    () =>
+      items.map((i) => ({
+        id: i.id,
+        title: i.name,
+        qty: i.quantity,
+        price: i.price,
+      })),
+    [items]
+  );
 
   const subtotal = React.useMemo(
-    () => mockItems.reduce((s, it) => s + it.qty * it.price, 0),
+    () => orderSummaryItems.reduce((s, it) => s + it.qty * it.price, 0),
     []
   );
   const shippingCost = 5.0;
@@ -81,16 +95,18 @@ export default function CheckoutScreen({ navigation }: Props) {
   }, []);
 
   const validateShipping = () =>
-    Boolean(fullName.trim() && address.trim() && city.trim() && postalCode.trim());
+    Boolean(
+      fullName.trim() && address.trim() && city.trim() && postalCode.trim()
+    );
 
   const validatePayment = () => {
     if (paymentMethod === "paypal") return true;
     // basic checks (detailed validators can be moved to helpers)
     return Boolean(
       cardName.trim() &&
-      cardNumber.length >= 12 &&
-      expiry.length === 5 &&
-      cvv.length === 3
+        cardNumber.length >= 12 &&
+        expiry.length === 5 &&
+        cvv.length === 3
     );
   };
 
@@ -126,7 +142,10 @@ export default function CheckoutScreen({ navigation }: Props) {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.select({ ios: "padding", android: "height" })}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <Title style={{ color: paper.colors.onSurface }}>Checkout</Title>
@@ -145,36 +164,63 @@ export default function CheckoutScreen({ navigation }: Props) {
           <View style={styles.colMain}>
             {step === 0 && (
               <ShippingForm
-                fullName={fullName} setFullName={setFullName}
-                address={address} setAddress={setAddress}
-                city={city} setCity={setCity}
-                postalCode={postalCode} setPostalCode={setPostalCode}
-                country={country} countryQuery={countryQuery} setCountry={setCountry} setCountryQuery={setCountryQuery}
-                addressSuggestions={addressSuggestions} setAddressSuggestions={setAddressSuggestions}
-                showAddressSuggestions={showAddressSuggestions} setShowAddressSuggestions={setShowAddressSuggestions}
-                suggestionsLoading={suggestionsLoading} setSuggestionsLoading={setSuggestionsLoading}
+                fullName={fullName}
+                setFullName={setFullName}
+                address={address}
+                setAddress={setAddress}
+                city={city}
+                setCity={setCity}
+                postalCode={postalCode}
+                setPostalCode={setPostalCode}
+                country={country}
+                countryQuery={countryQuery}
+                setCountry={setCountry}
+                setCountryQuery={setCountryQuery}
+                addressSuggestions={addressSuggestions}
+                setAddressSuggestions={setAddressSuggestions}
+                showAddressSuggestions={showAddressSuggestions}
+                setShowAddressSuggestions={setShowAddressSuggestions}
+                suggestionsLoading={suggestionsLoading}
+                setSuggestionsLoading={setSuggestionsLoading}
                 debounceRef={debounceRef}
               />
             )}
 
             {step === 1 && (
               <PaymentForm
-                paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-                cardName={cardName} setCardName={setCardName}
-                cardNumber={cardNumber} setCardNumber={setCardNumber}
-                expiry={expiry} setExpiry={setExpiry}
-                cvv={cvv} setCvv={setCvv}
-                cardNumberError={cardNumberError} setCardNumberError={setCardNumberError}
-                expiryError={expiryError} setExpiryError={setExpiryError}
-                cvvError={cvvError} setCvvError={setCvvError}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                cardName={cardName}
+                setCardName={setCardName}
+                cardNumber={cardNumber}
+                setCardNumber={setCardNumber}
+                expiry={expiry}
+                setExpiry={setExpiry}
+                cvv={cvv}
+                setCvv={setCvv}
+                cardNumberError={cardNumberError}
+                setCardNumberError={setCardNumberError}
+                expiryError={expiryError}
+                setExpiryError={setExpiryError}
+                cvvError={cvvError}
+                setCvvError={setCvvError}
               />
             )}
 
             {step === 2 && (
               <ReviewCard
-                fullName={fullName} address={address} city={city} postalCode={postalCode} country={country}
-                paymentMethod={paymentMethod} cardName={cardName} cardNumber={cardNumber}
-                mockItems={mockItems} subtotal={subtotal} shippingCost={shippingCost} total={total}
+                fullName={fullName}
+                address={address}
+                city={city}
+                postalCode={postalCode}
+                country={country}
+                paymentMethod={paymentMethod}
+                cardName={cardName}
+                cardNumber={cardNumber}
+                mockItems={orderSummaryItems}
+                subtotal={subtotal}
+                shippingCost={shippingCost}
+                total={total}
               />
             )}
 
@@ -186,25 +232,50 @@ export default function CheckoutScreen({ navigation }: Props) {
                 {step < 2 ? (
                   <ButtonCompact label="Next" onPress={next} primary />
                 ) : (
-                  <ButtonCompact label="Place order" onPress={placeOrder} primary />
+                  <ButtonCompact
+                    label="Place order"
+                    onPress={placeOrder}
+                    primary
+                  />
                 )}
               </View>
             </View>
           </View>
 
           {step !== 2 && (
-            <View style={[styles.colSummary, isNarrow && styles.colSummaryNarrow]}>
-              <OrderSummary mockItems={mockItems} subtotal={subtotal} shippingCost={shippingCost} total={total} />
+            <View
+              style={[styles.colSummary, isNarrow && styles.colSummaryNarrow]}
+            >
+              <OrderSummary
+                mockItems={orderSummaryItems}
+                subtotal={subtotal}
+                shippingCost={shippingCost}
+                total={total}
+              />
             </View>
           )}
         </View>
       </ScrollView>
 
-      <Snackbar visible={false} onDismiss={() => {}} duration={3000}> </Snackbar>
+      <Snackbar visible={false} onDismiss={() => {}} duration={3000}>
+        {" "}
+      </Snackbar>
     </KeyboardAvoidingView>
   );
 }
 
-function ButtonCompact({ label, onPress, primary }: { label: string; onPress: () => void; primary?: boolean }) {
-  return <Button mode={primary ? "contained" : "outlined"} onPress={onPress}>{label}</Button>;
+function ButtonCompact({
+  label,
+  onPress,
+  primary,
+}: {
+  label: string;
+  onPress: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <Button mode={primary ? "contained" : "outlined"} onPress={onPress}>
+      {label}
+    </Button>
+  );
 }

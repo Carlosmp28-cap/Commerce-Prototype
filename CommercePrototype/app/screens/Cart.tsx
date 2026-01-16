@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import { create } from "zustand";
 import ButtonCheckout from "../components/ButtonCheckout";
 import ButtonContinueShop from "../components/ButtonContinueShop";
 import type { RootStackParamList } from "../navigation";
@@ -86,13 +87,28 @@ const INITIAL_CART_ITEMS = [
   { id: "20", name: "Ethernet Cable", price: 7.99, quantity: 3, image: "🔌" },
 ];
 
-interface CartItem {
+export interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
   image: string;
 }
+
+interface CartState {
+  cartItems: CartItem[];
+  setCartItems: (fn: (items: CartItem[]) => CartItem[]) => void;
+  clearCart: () => void;
+}
+
+export const useCartStore = create<CartState>()((set) => ({
+  cartItems: [],
+  setCartItems: (fn) =>
+    set((state) => ({
+      cartItems: fn(state.cartItems),
+    })),
+  clearCart: () => set({ cartItems: [] }),
+}));
 
 export default function CartScreen({ navigation }: Props) {
   const [cartItems, setCartItems] =
@@ -232,7 +248,18 @@ export default function CartScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.actionsContainer}>
-            <ButtonCheckout title="Proceed to Checkout" onPress={() => {}} />
+            <ButtonCheckout
+              title="Proceed to Checkout"
+              onPress={() => {
+                navigation.navigate("Checkout", {
+                  items: cartItems,
+                  subtotalCart: subtotal,
+                  tax,
+                  totalCart: total,
+                });
+              }}
+            />
+
             <ButtonContinueShop
               title="Continue Shopping"
               onPress={() => navigation.navigate("PLP")}

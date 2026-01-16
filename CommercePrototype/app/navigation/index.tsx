@@ -14,6 +14,7 @@ import {
 import { IconButton, Text, useTheme } from "react-native-paper";
 
 import { useAuth } from "../hooks/useAuth";
+import type { CartItem } from "../screens/Cart";
 import CartScreen from "../screens/Cart";
 import CheckoutScreen from "../screens/Checkout/Checkout";
 import HomeScreen from "../screens/Home";
@@ -27,7 +28,12 @@ export type RootStackParamList = {
   PLP: { q?: string } | undefined;
   PDP: { id: string };
   Cart: undefined;
-  Checkout: undefined;
+  Checkout: {
+    items: CartItem[];
+    subtotalCart: number;
+    tax: number;
+    totalCart: number;
+  };
   Login: undefined;
 };
 
