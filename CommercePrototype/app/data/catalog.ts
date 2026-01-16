@@ -213,10 +213,15 @@ export const getProductById = (id: string) => products.find((p) => p.id === id);
 
 export const getProductsByQuery = (q?: string) => {
   // Simple filtering to keep screens light. Swap for API query params later.
-  if (!q) return products;
-  const match = categories.find((c) => c.query === q);
-  if (!match) return products;
-  return products.filter((p) => p.categoryId === match.id);
+  const normalized = (q ?? "").trim().toLowerCase();
+  if (!normalized) return products;
+
+  // Category query (e.g. "men", "sale")
+  const match = categories.find((c) => c.query === normalized);
+  if (match) return products.filter((p) => p.categoryId === match.id);
+
+  // Free-text search (e.g. from Home Searchbar)
+  return products.filter((p) => p.name.toLowerCase().includes(normalized));
 };
 
 export const getFeaturedProducts = () => {
