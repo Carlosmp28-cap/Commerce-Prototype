@@ -11,7 +11,7 @@ import HomeScreen from "../screens/Home";
 import PLPScreen from "../screens/PLP";
 import PDPScreen from "../screens/PDP";
 import CartScreen from "../screens/Cart";
-import CheckoutScreen from "../screens/Checkout";
+import CheckoutScreen from "../screens/Checkout/Checkout";
 
 export type RootStackParamList = {
   Home: undefined;
