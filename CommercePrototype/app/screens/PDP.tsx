@@ -1,17 +1,21 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Button, Card, Text } from "react-native-paper";
 
 import type { RootStackParamList } from "../navigation";
-import { useTheme } from "../themes";
 import type { Product } from "../models/Product";
 import { getProductById } from "../data/catalog";
+import { ScreenScroll } from "../layout/Screen";
+import { getAvailabilityLabel } from "../utils/stock";
+
+// PDP (Product Details Page).
+// Note: we avoid TSX generic call syntax like `useMemo<Product>(...)` here because
+// Metro can mis-parse it in some setups; a return type annotation is safer.
 
 type Props = NativeStackScreenProps<RootStackParamList, "PDP">;
 
 export default function PDPScreen({ navigation, route }: Props) {
-  const theme = useTheme();
   const { id } = route.params;
 
   const product = useMemo((): Product => {
@@ -27,9 +31,7 @@ export default function PDPScreen({ navigation, route }: Props) {
   }, [id]);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <ScreenScroll contentContainerStyle={styles.container}>
       <Card>
         {product.image ? (
           <Card.Cover source={product.image} style={styles.image} />
@@ -42,9 +44,7 @@ export default function PDPScreen({ navigation, route }: Props) {
           <Text style={styles.sku}>SKU: {product.id}</Text>
           <Text style={styles.price}>€ {product.price.toFixed(2)}</Text>
           <Text style={{ opacity: 0.75 }}>
-            {product.quantityAvailable > 0
-              ? `${product.quantityAvailable} in stock`
-              : "Out of stock"}
+            {getAvailabilityLabel(product.quantityAvailable)}
           </Text>
         </Card.Content>
 
@@ -58,12 +58,12 @@ export default function PDPScreen({ navigation, route }: Props) {
           </Button>
         </Card.Actions>
       </Card>
-    </View>
+    </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 10 },
+  container: { gap: 10 },
   image: {
     width: "100%",
     height: 220,

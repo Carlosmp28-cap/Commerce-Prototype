@@ -1,6 +1,8 @@
 import React from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MD3LightTheme, Provider as PaperProvider } from "react-native-paper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ThemeProvider, tokens } from "./app/themes";
 import { AuthProvider } from "./app/hooks/useAuth";
@@ -22,15 +24,18 @@ const paperTheme = {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <PaperProvider theme={paperTheme}>
-          <AuthProvider>
-            <CartProvider>
-              <AppNavigation />
-            </CartProvider>
-          </AuthProvider>
-        </PaperProvider>
-      </ThemeProvider>
+      {/* Safe area is required for correct spacing on iOS devices with a home indicator. */}
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <PaperProvider theme={paperTheme}>
+            <AuthProvider>
+              <CartProvider>
+                <AppNavigation />
+              </CartProvider>
+            </AuthProvider>
+          </PaperProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
