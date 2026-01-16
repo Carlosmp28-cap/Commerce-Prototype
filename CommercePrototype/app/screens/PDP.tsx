@@ -6,7 +6,7 @@ import { Button, Card, Text } from "react-native-paper";
 import type { RootStackParamList } from "../navigation";
 import type { Product } from "../models/Product";
 import { getProductById } from "../data/catalog";
-import { Screen } from "../layout/Screen";
+import { ScreenScroll } from "../layout/Screen";
 import { getAvailabilityLabel } from "../utils/stock";
 
 // PDP (Product Details Page).
@@ -31,7 +31,7 @@ export default function PDPScreen({ navigation, route }: Props) {
   }, [id]);
 
   return (
-    <Screen style={styles.container}>
+    <ScreenScroll contentContainerStyle={styles.container}>
       <Card>
         {product.image ? (
           <Card.Cover source={product.image} style={styles.image} />
@@ -58,7 +58,7 @@ export default function PDPScreen({ navigation, route }: Props) {
           </Button>
         </Card.Actions>
       </Card>
-    </Screen>
+    </ScreenScroll>
   );
 }
 

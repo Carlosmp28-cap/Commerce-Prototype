@@ -8,6 +8,7 @@ import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
 import { Screen } from "../layout/Screen";
 import { getAvailabilityLabel } from "../utils/stock";
+import Footer from "../components/Footer";
 
 // PLP (Product Listing Page).
 // Keeps UI simple: filtering is in `catalog.ts` and navigation is via stack params.
@@ -30,7 +31,7 @@ export default function PLPScreen({ navigation, route }: Props) {
         data={products}
         keyExtractor={(p) => p.id}
         style={styles.listContainer}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { flexGrow: 1 }]}
         renderItem={({ item }) => (
           <List.Item
             onPress={() => navigation.navigate("PDP", { id: item.id })}
@@ -48,6 +49,8 @@ export default function PLPScreen({ navigation, route }: Props) {
             style={styles.row}
           />
         )}
+        ListFooterComponent={<Footer />}
+        ListFooterComponentStyle={styles.footer}
       />
     </Screen>
   );
@@ -60,5 +63,11 @@ const styles = StyleSheet.create({
   row: {
     backgroundColor: "#fff",
     borderRadius: 12,
+  },
+  footer: {
+    // Screen applies horizontal padding; cancel it so the footer is full width.
+    marginTop: "auto",
+    paddingTop: 12,
+    marginHorizontal: -16,
   },
 });
