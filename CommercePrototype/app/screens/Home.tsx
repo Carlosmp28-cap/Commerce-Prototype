@@ -1,8 +1,7 @@
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useMemo } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTheme as usePaperTheme } from "react-native-paper";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { useTheme } from "../themes";
 import type { RootStackParamList } from "../navigation";
