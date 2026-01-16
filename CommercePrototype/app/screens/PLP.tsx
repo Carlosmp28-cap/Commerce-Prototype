@@ -1,73 +1,110 @@
-import React, { useMemo } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { useMemo, useCallback, useState } from "react";
+import { FlatList, View, useWindowDimensions, Platform } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { List, Text } from "react-native-paper";
-
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
-import { Screen } from "../layout/Screen";
-import { getAvailabilityLabel } from "../utils/stock";
-import Footer from "../components/Footer";
+import type { CatalogProduct } from "../data/catalog";
+import { createStyles } from "./PLP.styles";
+import ProductCard from "./productListingPage/components/ProductCard";
+import EmptyState from "./productListingPage/components/EmptyState";
+import { sortProducts, type SortOption } from "../scripts/helpers/productHelpers";
 
-// PLP (Product Listing Page).
-// Keeps UI simple: filtering is in `catalog.ts` and navigation is via stack params.
+const PLPHeader = Platform.OS === "web"
+  ? require("./productListingPage/PLPHeader.web").default
+  : require("./productListingPage/PLPHeader.native").default;
 
 type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
 
 export default function PLPScreen({ navigation, route }: Props) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
   const q = route.params?.q;
 
-  const products = useMemo(() => getProductsByQuery(q), [q]);
+  const numColumns = useMemo(() => {
+    if (Platform.OS === "web") return 4;
+    if (width >= 720) return 3;
+    if (width >= 540) return 3;
+    return 2;
+  }, [width]);
+
+  const [selectedSort, setSelectedSort] = useState<SortOption>("name-asc");
+
+  const rawProducts = useMemo(() => getProductsByQuery(q), [q]);
+  const products = useMemo(
+    () => sortProducts(rawProducts, selectedSort),
+    [rawProducts, selectedSort]
+  );
+  const styles = useMemo(
+    () => createStyles(theme, width, numColumns),
+    [theme, width, numColumns]
+  );
+
+  const handleProductPress = useCallback(
+    (id: string) => {
+      navigation.navigate("PDP", { id });
+    },
+    [navigation]
+  );
+
+  const handleBackPress = useCallback(() => {
+    navigation.navigate("Home");
+  }, [navigation]);
+
+  const handleCategorySelect = useCallback(
+    (query: string) => {
+      navigation.setParams({ q: query || undefined });
+    },
+    [navigation]
+  );
+
+  const renderProduct = useCallback(
+    ({ item }: { item: CatalogProduct }) => (
+      <ProductCard
+        product={item}
+        onPress={() => handleProductPress(item.id)}
+        imageStyle={styles.image}
+        containerStyle={styles.itemContainer}
+      />
+    ),
+    [handleProductPress, styles.image, styles.itemContainer]
+  );
+
+  const renderEmpty = useCallback(
+    () => (
+      <EmptyState
+        query={q}
+        containerStyle={styles.emptyContainer}
+        textStyle={styles.emptyText}
+      />
+    ),
+    [q, styles.emptyContainer, styles.emptyText]
+  );
 
   return (
-    <Screen>
-      <Text style={[styles.subtitle, { color: theme.colors.text }]}>
-        Product listing (mock){q ? ` — ${q}` : ""}
-      </Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <PLPHeader
+        query={q}
+        productCount={products.length}
+        headerStyle={styles.header}
+        titleStyle={styles.title}
+        countStyle={styles.resultCount}
+        onBackPress={handleBackPress}
+        selectedSort={selectedSort}
+        onSortChange={setSelectedSort}
+        onCategorySelect={handleCategorySelect}
+      />
 
       <FlatList
+        key={`flatlist-${numColumns}-${Math.floor(width / 50)}`}
         data={products}
         keyExtractor={(p) => p.id}
-        style={styles.listContainer}
-        contentContainerStyle={[styles.list, { flexGrow: 1 }]}
-        renderItem={({ item }) => (
-          <List.Item
-            onPress={() => navigation.navigate("PDP", { id: item.id })}
-            accessibilityLabel={`Open product ${item.name}`}
-            title={item.name}
-            titleStyle={{ color: theme.colors.text, fontWeight: "900" }}
-            description={`€ ${item.price.toFixed(2)} • ${getAvailabilityLabel(
-              item.quantityAvailable
-            )}`}
-            right={() => (
-              <Text style={{ color: theme.colors.primary, fontWeight: "900" }}>
-                View
-              </Text>
-            )}
-            style={styles.row}
-          />
-        )}
-        ListFooterComponent={<Footer />}
-        ListFooterComponentStyle={styles.footer}
+        numColumns={numColumns}
+        contentContainerStyle={styles.list}
+        columnWrapperStyle={styles.row}
+        renderItem={renderProduct}
+        ListEmptyComponent={renderEmpty}
       />
-    </Screen>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  subtitle: { opacity: 0.8, marginBottom: 10 },
-  listContainer: { flex: 1 },
-  list: { gap: 10 },
-  row: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-  },
-  footer: {
-    // Screen applies horizontal padding; cancel it so the footer is full width.
-    marginTop: "auto",
-    paddingTop: 12,
-    marginHorizontal: -16,
-  },
-});
