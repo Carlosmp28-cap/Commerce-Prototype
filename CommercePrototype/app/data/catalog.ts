@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 
-export type CategoryId = "new" | "men" | "women" | "sale";
+export type CategoryId = "new" | "men" | "women" | "sale" | "new arrivals";
 
 export type Category = {
   id: CategoryId;
@@ -13,6 +13,7 @@ export const categories: Category[] = [
   { id: "men", label: "Men", query: "men" },
   { id: "women", label: "Women", query: "women" },
   { id: "sale", label: "Sale", query: "sale" },
+  { id: "new arrivals", label: "New Arrivals", query: "arrivals" },
 ];
 
 const placeholderImage = (seed: string): ImageSourcePropType => ({

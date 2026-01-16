@@ -35,7 +35,12 @@ export default function PLPHeader({
   } = usePLPHeaderLogic(query, productCount, selectedSort, onSortChange, onCategorySelect);
 
   return (
-    <View style={headerStyle}>
+    <View 
+      style={headerStyle}
+      accessible={true}
+      accessibilityRole="header"
+      accessibilityLabel="Product Listing Page Header"
+    >
       <PLPHeaderTitle
         title={title}
         countText={countText}

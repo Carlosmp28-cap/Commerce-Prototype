@@ -1,4 +1,4 @@
-import { Image, TouchableOpacity } from "react-native";
+import { Image, TouchableOpacity, type ImageStyle, type ViewStyle } from "react-native";
 import type { CatalogProduct } from "../../../data/catalog";
 import { categories } from "../../../data/catalog";
 import { useTheme } from "../../../themes";
@@ -16,8 +16,8 @@ import { styles } from "./ProductCard.styles";
 type ProductCardProps = {
   product: CatalogProduct;
   onPress: () => void;
-  imageStyle: any;
-  containerStyle: any;
+  imageStyle: ImageStyle;
+  containerStyle: ViewStyle;
 };
 
 /**
@@ -44,6 +44,8 @@ export default function ProductCard({ product, onPress, imageStyle, containerSty
           source={product.image}
           style={imageStyle}
           resizeMode="cover"
+          accessible={true}
+          accessibilityLabel={`Product image of ${product.name}`}
         />
         <Text style={styles.productName} numberOfLines={2}>
           {product.name}

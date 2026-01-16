@@ -1,6 +1,6 @@
 module.exports = {
   preset: "jest-expo",
-  testEnvironment: "node",
+  testEnvironment: "jsdom",
   setupFiles: [
     "<rootDir>/node_modules/react-native-gesture-handler/jestSetup.js",
   ],
