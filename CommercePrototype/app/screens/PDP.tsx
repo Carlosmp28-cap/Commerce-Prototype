@@ -5,7 +5,6 @@ import { Button, Card, Text, Chip, IconButton, Menu } from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import type { RootStackParamList } from "../navigation";
-import { useTheme } from "../themes";
 import type { Product } from "../models/Product";
 import { getProductById, products, categories } from "../data/catalog";
 import { useCart } from "../hooks/useCart";

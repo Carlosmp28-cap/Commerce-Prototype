@@ -1,6 +1,11 @@
 import React, { createContext, useContext } from "react";
 
-// Design tokens example: colors, typography, spacing.
+/**
+ * Design tokens (prototype).
+ *
+ * These tokens are our “source of truth” for spacing/typography/colors.
+ * React Native Paper is also themed from these tokens in App.tsx.
+ */
 export const tokens = {
   colors: {
     primary: "#007AFF",
@@ -14,7 +19,7 @@ export const tokens = {
   },
 };
 
-// Theme provider skeleton. Use React Context + hook useTheme() for access.
+// Theme provider skeleton. Screens use `useTheme()` for token access.
 const ThemeContext = createContext(tokens);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
