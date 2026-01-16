@@ -8,7 +8,7 @@ import React, { createContext, useContext } from "react";
  */
 export const tokens = {
   colors: {
-    primary: "#007AFF",
+    primary: "#275790",
     background: "#F2F2F7",
     text: "#111827",
   },

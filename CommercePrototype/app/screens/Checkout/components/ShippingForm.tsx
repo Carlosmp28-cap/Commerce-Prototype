@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Keyboard } from "react-native";
+import { View, ScrollView, TouchableOpacity, Keyboard } from "react-native";
 import { Card, TextInput, Text, Paragraph, ActivityIndicator } from "react-native-paper";
 import styles from "../styles";
 
@@ -59,8 +59,8 @@ export default function ShippingForm(props: {
         <Text style={styles.sectionTitle}>Shipping information</Text>
         <Paragraph style={styles.hint}>Enter the address where you want to receive the order.</Paragraph>
 
-        <TextInput label="Full name" value={fullName} onChangeText={setFullName} mode="outlined" style={styles.input} />
-        <TextInput label="Address" value={address} onChangeText={onAddressChange} mode="outlined" style={styles.input}
+        <TextInput label="Full name" value={fullName} onChangeText={setFullName} mode="outlined" style={styles.input} accessibilityLabel="Enter your full name" />
+        <TextInput label="Address" value={address} onChangeText={onAddressChange} mode="outlined" style={styles.input} accessibilityLabel="Enter your address"
           right={ suggestionsLoading ? <TextInput.Icon name={() => <ActivityIndicator size={18} />} /> : undefined } />
 
         {showAddressSuggestions && addressSuggestions.length > 0 && (
@@ -79,11 +79,11 @@ export default function ShippingForm(props: {
         )}
 
         <View style={styles.row}>
-          <TextInput label="City" value={city} onChangeText={setCity} mode="outlined" style={[styles.input, { flex: 1, marginRight: 8 }]} />
-          <TextInput label="Postal code" value={postalCode} onChangeText={setPostalCode} mode="outlined" style={[styles.input, { width: 140 }]} keyboardType="numeric" />
+          <TextInput label="City" value={city} onChangeText={setCity} mode="outlined" style={[styles.input, { flex: 1, marginRight: 8 }]} accessibilityLabel="Enter your city"/>
+          <TextInput label="Postal code" value={postalCode} onChangeText={setPostalCode} mode="outlined" style={[styles.input, { width: 140 }]} keyboardType="numeric" accessibilityLabel="Enter your postal code"/>
         </View>
 
-        <TextInput label="Country" value={countryQuery || country} onChangeText={(t) => { setCountryQuery(t); setCountry(t); }} mode="outlined" style={styles.input} />
+        <TextInput label="Country" value={countryQuery || country} onChangeText={(t) => { setCountryQuery(t); setCountry(t); }} mode="outlined" style={styles.input} accessibilityLabel="Enter your country"/>
       </Card.Content>
     </Card>
   );
