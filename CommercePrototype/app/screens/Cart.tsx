@@ -13,9 +13,12 @@ export default function CartScreen({ navigation }: Props) {
   const { items, removeItem, updateQuantity } = useCart();
 
   // Functional updates to avoid stale state when tapping fast
-  const handleRemoveItem = React.useCallback((id: string) => {
-    removeItem(id);
-  }, [removeItem]);
+  const handleRemoveItem = React.useCallback(
+    (id: string) => {
+      removeItem(id);
+    },
+    [removeItem]
+  );
 
   const handleUpdateQuantity = React.useCallback(
     (id: string, newQuantity: number) => {
@@ -25,14 +28,15 @@ export default function CartScreen({ navigation }: Props) {
   );
 
   const subtotal = React.useMemo(
-    () => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    () =>
+      items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
     [items]
   );
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
   const renderCartItem = React.useCallback(
-    ({ item }: { item: typeof items[0] }) => (
+    ({ item }: { item: (typeof items)[0] }) => (
       <View style={styles.cartItemWrapper}>
         <View style={styles.cartItem}>
           <View style={styles.itemImageContainer}>
@@ -41,21 +45,27 @@ export default function CartScreen({ navigation }: Props) {
 
           <View style={styles.itemContent}>
             <Text style={styles.itemName}>{item.product.name}</Text>
-            <Text style={styles.itemPrice}>${item.product.price.toFixed(2)}</Text>
+            <Text style={styles.itemPrice}>
+              ${item.product.price.toFixed(2)}
+            </Text>
           </View>
 
           <View style={styles.itemActions}>
             <View style={styles.quantityControl}>
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
+                onPress={() =>
+                  handleUpdateQuantity(item.product.id, item.quantity - 1)
+                }
               >
                 <Text style={styles.quantityBtnText}>−</Text>
               </TouchableOpacity>
               <Text style={styles.quantityValue}>{item.quantity}</Text>
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
+                onPress={() =>
+                  handleUpdateQuantity(item.product.id, item.quantity + 1)
+                }
               >
                 <Text style={styles.quantityBtnText}>+</Text>
               </TouchableOpacity>
