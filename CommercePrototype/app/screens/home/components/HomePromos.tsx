@@ -36,7 +36,7 @@ export function HomePromos({
         <Card.Content style={styles.promoContent}>
           <View style={styles.promoTitleRow}>
             <Icon
-              source="sparkles"
+              source="star-four-points"
               size={18}
               color={paperTheme.colors.primary}
             />

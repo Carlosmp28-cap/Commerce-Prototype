@@ -24,7 +24,7 @@ describe("Login (skeleton)", () => {
       <LoginScreen navigation={navigation} route={route} />
     );
 
-    fireEvent.press(getByLabelText("Back"));
+    fireEvent.press(getByLabelText("Continue as guest"));
     expect(navigation.goBack).toHaveBeenCalled();
   });
 });
