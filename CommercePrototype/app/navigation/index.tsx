@@ -1,13 +1,8 @@
-import React from "react";
 import {
   NavigationContainer,
   type LinkingOptions,
 } from "@react-navigation/native";
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationProp,
-} from "@react-navigation/native-stack";
-import type { RouteProp } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Linking from "expo-linking";
 import {
   Platform,
@@ -18,13 +13,13 @@ import {
 } from "react-native";
 import { IconButton, Text, useTheme } from "react-native-paper";
 
-import HomeScreen from "../screens/Home";
-import PLPScreen from "../screens/PLP";
-import PDPScreen from "../screens/PDP";
-import CartScreen from "../screens/Cart";
-import CheckoutScreen from "../screens/Checkout";
-import LoginScreen from "../screens/Login";
 import { useAuth } from "../hooks/useAuth";
+import CartScreen from "../screens/Cart";
+import CheckoutScreen from "../screens/Checkout/Checkout";
+import HomeScreen from "../screens/Home";
+import LoginScreen from "../screens/Login";
+import PDPScreen from "../screens/PDP";
+import PLPScreen from "../screens/PLP";
 
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
