@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   Platform,
   useWindowDimensions,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
@@ -22,7 +23,10 @@ import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
 import styles from "./styles";
 
-import { ShippingForm, PaymentForm, ReviewCard, OrderSummary } from "./components";
+const ShippingForm = React.lazy(() => import("./components/ShippingForm"));
+const PaymentForm = React.lazy(() => import("./components/PaymentForm"));
+const ReviewCard = React.lazy(() => import("./components/ReviewCard"));
+const OrderSummary = React.lazy(() => import("./components/OrderSummary"));
 
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
@@ -68,11 +72,43 @@ export default function CheckoutScreen({ navigation }: Props) {
   const shippingCost = 5.0;
   const total = subtotal + shippingCost;
 
-  // suggestions (local mock logic moved to ShippingForm but parent keeps selected data)
+
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  
+useEffect(() => {
+  if (typeof document !== "undefined") {
+    document.title = "Checkout — CommercePrototype";
+
+    let meta = document.querySelector("meta[name='description']");
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute(
+      "content",
+      "Finalizar encomenda — pagamento seguro e envio rápido."
+    );
+
+    const ensure = (name: string, content: string) => {
+      let tag = document.querySelector(`meta[property='${name}']`);
+      if (!tag) {
+        tag = document.createElement("meta");
+        tag.setAttribute("property", name);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute("content", content);
+    };
+
+    ensure("og:title", "Checkout — CommercePrototype");
+    ensure("og:description", "Finalizar encomenda — pagamento seguro e envio rápido.");
+  }
+}, []);
+
 
   useEffect(() => {
     return () => {
@@ -121,6 +157,26 @@ export default function CheckoutScreen({ navigation }: Props) {
     setTimeout(() => navigation.goBack(), 900);
   };
 
+  useEffect(() => {
+    // Add page visibility handlers only on web where window.events are meaningful.
+    if (typeof window === "undefined" || !window.addEventListener) return;
+    const onPageShow = (e: any) => {
+      // restore state if persisted in bfcache
+      if (e?.persisted) {
+        // TODO: restore any transient UI state if needed
+      }
+    };
+    const onPageHide = () => {
+      // TODO: save transient state if needed
+    };
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -129,8 +185,17 @@ export default function CheckoutScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Title style={{ color: paper.colors.onSurface }}>Checkout</Title>
-            <Paragraph style={{ color: paper.colors.onSurfaceVariant }}>
+            <Title
+              style={{ color: paper.colors.onSurface }}
+              accessibilityRole="header"
+              accessibilityLabel="Checkout page title"
+            >
+              Checkout
+            </Title>
+            <Paragraph
+              style={{ color: paper.colors.onSurfaceVariant }}
+              accessibilityLabel="Checkout subtitle"
+            >
               Complete your purchase — secure payment and fast delivery
             </Paragraph>
           </View>
@@ -138,45 +203,49 @@ export default function CheckoutScreen({ navigation }: Props) {
             size={48}
             label="CP"
             style={{ backgroundColor: paper.colors.primary }}
+            accessibilityLabel="Commerce Prototype logo"
+            accessibilityRole="image"
           />
         </View>
 
         <View style={[styles.grid, isNarrow && styles.gridColumn]}>
           <View style={styles.colMain}>
-            {step === 0 && (
-              <ShippingForm
-                fullName={fullName} setFullName={setFullName}
-                address={address} setAddress={setAddress}
-                city={city} setCity={setCity}
-                postalCode={postalCode} setPostalCode={setPostalCode}
-                country={country} countryQuery={countryQuery} setCountry={setCountry} setCountryQuery={setCountryQuery}
-                addressSuggestions={addressSuggestions} setAddressSuggestions={setAddressSuggestions}
-                showAddressSuggestions={showAddressSuggestions} setShowAddressSuggestions={setShowAddressSuggestions}
-                suggestionsLoading={suggestionsLoading} setSuggestionsLoading={setSuggestionsLoading}
-                debounceRef={debounceRef}
-              />
-            )}
+            <Suspense fallback={<View style={{ height: 200, justifyContent: "center" }}><ActivityIndicator /></View>}>
+              {step === 0 && (
+                <ShippingForm
+                  fullName={fullName} setFullName={setFullName}
+                  address={address} setAddress={setAddress}
+                  city={city} setCity={setCity}
+                  postalCode={postalCode} setPostalCode={setPostalCode}
+                  country={country} countryQuery={countryQuery} setCountry={setCountry} setCountryQuery={setCountryQuery}
+                  addressSuggestions={addressSuggestions} setAddressSuggestions={setAddressSuggestions}
+                  showAddressSuggestions={showAddressSuggestions} setShowAddressSuggestions={setShowAddressSuggestions}
+                  suggestionsLoading={suggestionsLoading} setSuggestionsLoading={setSuggestionsLoading}
+                  debounceRef={debounceRef}
+                />
+              )}
 
-            {step === 1 && (
-              <PaymentForm
-                paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-                cardName={cardName} setCardName={setCardName}
-                cardNumber={cardNumber} setCardNumber={setCardNumber}
-                expiry={expiry} setExpiry={setExpiry}
-                cvv={cvv} setCvv={setCvv}
-                cardNumberError={cardNumberError} setCardNumberError={setCardNumberError}
-                expiryError={expiryError} setExpiryError={setExpiryError}
-                cvvError={cvvError} setCvvError={setCvvError}
-              />
-            )}
+              {step === 1 && (
+                <PaymentForm
+                  paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
+                  cardName={cardName} setCardName={setCardName}
+                  cardNumber={cardNumber} setCardNumber={setCardNumber}
+                  expiry={expiry} setExpiry={setExpiry}
+                  cvv={cvv} setCvv={setCvv}
+                  cardNumberError={cardNumberError} setCardNumberError={setCardNumberError}
+                  expiryError={expiryError} setExpiryError={setExpiryError}
+                  cvvError={cvvError} setCvvError={setCvvError}
+                />
+              )}
 
-            {step === 2 && (
-              <ReviewCard
-                fullName={fullName} address={address} city={city} postalCode={postalCode} country={country}
-                paymentMethod={paymentMethod} cardName={cardName} cardNumber={cardNumber}
-                mockItems={mockItems} subtotal={subtotal} shippingCost={shippingCost} total={total}
-              />
-            )}
+              {step === 2 && (
+                <ReviewCard
+                  fullName={fullName} address={address} city={city} postalCode={postalCode} country={country}
+                  paymentMethod={paymentMethod} cardName={cardName} cardNumber={cardNumber}
+                  mockItems={mockItems} subtotal={subtotal} shippingCost={shippingCost} total={total}
+                />
+              )}
+            </Suspense>
 
             <View style={styles.actions}>
               <View style={{ flex: 1, marginRight: 8 }}>
@@ -206,5 +275,14 @@ export default function CheckoutScreen({ navigation }: Props) {
 }
 
 function ButtonCompact({ label, onPress, primary }: { label: string; onPress: () => void; primary?: boolean }) {
-  return <Button mode={primary ? "contained" : "outlined"} onPress={onPress}>{label}</Button>;
+  return (
+    <Button
+      mode={primary ? "contained" : "outlined"}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      {label}
+    </Button>
+  );
 }

@@ -1,5 +1,4 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { Card, TextInput, Text, Paragraph, RadioButton } from "react-native-paper";
 import styles from "../styles";
 
@@ -45,12 +44,12 @@ export default function PaymentForm(props: {
 
         {paymentMethod === "card" ? (
           <>
-            <TextInput label="Name on card" value={cardName} onChangeText={setCardName} mode="outlined" style={styles.input} />
-            <TextInput label="Card number" value={formatCardNumber(cardNumber)} onChangeText={onCardNumberChange} mode="outlined" style={styles.input} keyboardType="numeric" />
+            <TextInput label="Name on card" value={cardName} onChangeText={setCardName} mode="outlined" style={styles.input} accessibilityLabel="Enter your name on the card" />
+            <TextInput label="Card number" value={formatCardNumber(cardNumber)} onChangeText={onCardNumberChange} mode="outlined" style={styles.input} keyboardType="numeric" accessibilityLabel="Enter your card number" />
             {cardNumberError ? <Text style={{color:"red"}}>{cardNumberError}</Text> : null}
             <View style={styles.row}>
-              <TextInput label="Expiry (MM/YY)" value={expiry} onChangeText={onExpiryChange} mode="outlined" style={[styles.input, {flex:1, marginRight:8}]} keyboardType="numeric" maxLength={5} />
-              <TextInput label="CVV" value={cvv} onChangeText={onCvvChange} mode="outlined" style={[styles.input, {width:120}]} keyboardType="numeric" secureTextEntry maxLength={3} />
+              <TextInput label="Expiry (MM/YY)" value={expiry} onChangeText={onExpiryChange} mode="outlined" style={[styles.input, {flex:1, marginRight:8}]} keyboardType="numeric" maxLength={5} accessibilityLabel="Enter your card expiry date" />
+              <TextInput label="CVV" value={cvv} onChangeText={onCvvChange} mode="outlined" style={[styles.input, {width:120}]} keyboardType="numeric" secureTextEntry maxLength={3} accessibilityLabel="Enter your card CVV" />
             </View>
             {expiryError ? <Text style={{color:"red"}}>{expiryError}</Text> : null}
             {cvvError ? <Text style={{color:"red"}}>{cvvError}</Text> : null}
