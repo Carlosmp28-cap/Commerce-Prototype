@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { usePLPHeaderLogic } from "./shared/usePLPHeaderLogic";
 import type { PLPHeaderProps } from "./shared/types/PLPHeaderProps";
-import { PLPHeaderWebTitle } from "./web/components/PLPHeaderWeb";
+import { PLPHeaderWebTitle } from "./web/components/PLPHeaderWebTitle";
 import { PLPHeaderWebControls } from "./web/components/PLPHeaderWebControls";
 import { styles } from "./web/styles/PLPHeader.web.styles";
 
