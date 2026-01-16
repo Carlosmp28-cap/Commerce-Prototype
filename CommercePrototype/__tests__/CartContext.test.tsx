@@ -1,5 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react-native";
 import { CartProvider, useCart } from "../app/store/CartContext";
 import type { Product } from "../app/models/Product";
 import { View, Text, Pressable } from "react-native";
@@ -9,11 +14,19 @@ const mockProduct: Product = {
   name: "Test Product",
   price: 99.99,
   quantityAvailable: 10,
-  categoryId: "test",
+  categoryId: "new",
 };
 
 function TestComponent() {
-  const { items, addItem, removeItem, updateQuantity, totalPrice, totalQuantity, itemCount } = useCart();
+  const {
+    items,
+    addItem,
+    removeItem,
+    updateQuantity,
+    totalPrice,
+    totalQuantity,
+    itemCount,
+  } = useCart();
 
   return (
     <View>
@@ -74,7 +87,7 @@ describe("CartContext - Add to Cart", () => {
       );
 
       const addButton = screen.getByTestId("add-btn");
-      
+
       fireEvent.press(addButton);
       await waitFor(() => {
         expect(screen.getByTestId("total-quantity")).toHaveTextContent("1");

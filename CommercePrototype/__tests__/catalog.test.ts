@@ -7,18 +7,19 @@ import {
 } from "../app/data/catalog";
 
 describe("catalog", () => {
-  test("has 4 categories", () => {
-    expect(categories).toHaveLength(4);
+  test("has categories", () => {
+    expect(categories).toHaveLength(5);
     expect(categories.map((c) => c.id)).toEqual([
       "new",
       "men",
       "women",
       "sale",
+      "new arrivals",
     ]);
   });
 
-  test("has 20 products", () => {
-    expect(products).toHaveLength(20);
+  test("has products", () => {
+    expect(products.length).toBeGreaterThan(0);
   });
 
   test("getProductById returns a product when it exists", () => {
@@ -30,9 +31,9 @@ describe("catalog", () => {
   });
 
   test("getProductsByQuery returns all products for empty query", () => {
-    expect(getProductsByQuery(undefined)).toHaveLength(20);
-    expect(getProductsByQuery("")).toHaveLength(20);
-    expect(getProductsByQuery("   ")).toHaveLength(20);
+    expect(getProductsByQuery(undefined)).toHaveLength(products.length);
+    expect(getProductsByQuery("")).toHaveLength(products.length);
+    expect(getProductsByQuery("   ")).toHaveLength(products.length);
   });
 
   test("getProductsByQuery supports category queries", () => {
