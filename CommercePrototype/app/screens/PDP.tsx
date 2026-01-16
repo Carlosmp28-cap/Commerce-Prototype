@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from "react";
-import { StyleSheet, View, Image, ScrollView, FlatList, TouchableOpacity, Modal, Pressable } from "react-native";
+import React, { useMemo, useState, useRef } from "react";
+import { StyleSheet, View, Image, ScrollView, FlatList, TouchableOpacity, Modal, Pressable, useWindowDimensions } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Button, Card, Text, Chip, IconButton } from "react-native-paper";
+import { Button, Card, Text, Chip, IconButton, Menu } from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
 import type { Product } from "../models/Product";
-import { getProductById, products } from "../data/catalog";
+import { getProductById, products, categories } from "../data/catalog";
 import { useCart } from "../hooks/useCart";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PDP">;
@@ -16,11 +16,16 @@ export default function PDPScreen({ navigation, route }: Props) {
   const theme = useTheme();
   const { addItem } = useCart();
   const { id } = route.params;
+  const { width } = useWindowDimensions();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [quantityMenuVisible, setQuantityMenuVisible] = useState(false);
+  const quantityAnchorRef = useRef(null);
+
+  const isDesktop = width > 768;
 
   const product = useMemo((): Product => {
     return (
@@ -34,14 +39,12 @@ export default function PDPScreen({ navigation, route }: Props) {
     );
   }, [id]);
 
-  // Produtos relacionados (mesma categoria, excluindo o produto atual)
   const relatedProducts = useMemo(() => {
     return products
       .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
-      .slice(0, 4); // Mostrar no máximo 4 produtos relacionados
+      .slice(0, 10);
   }, [product]);
 
-  // Galeria de imagens
   const galleryImages = product.images && product.images.length > 0 
     ? product.images 
     : product.image 
@@ -50,7 +53,6 @@ export default function PDPScreen({ navigation, route }: Props) {
 
   const currentImage = galleryImages[selectedImageIndex];
 
-  // Renderizar estrelas
   const renderStars = (rating: number = 0) => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
@@ -79,21 +81,10 @@ export default function PDPScreen({ navigation, route }: Props) {
     }
   };
 
-  const handleIncreaseQuantity = () => {
-    if (quantity < product.quantityAvailable) {
-      setQuantity(quantity + 1);
-    }
-  };
-
-  const handleDecreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
-
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={styles.scrollContent}
     >
       {/* Modal de Zoom */}
       <Modal
@@ -125,55 +116,213 @@ export default function PDPScreen({ navigation, route }: Props) {
         </Pressable>
       </Modal>
 
-      <View style={styles.contentRow}>
-        {/* Coluna Esquerda - Galeria de Imagens */}
-        <View style={styles.imageColumn}>
-          {/* Imagem Principal */}
-          <TouchableOpacity
-            onPress={() => setIsZoomed(true)}
-            activeOpacity={0.9}
-          >
-            <Card style={styles.imageCard}>
-              {currentImage ? (
-                <Image source={currentImage} style={styles.mainImage} />
-              ) : (
-                <View style={[styles.mainImage, { backgroundColor: "#E5E5EA" }]} />
-              )}
-            </Card>
-          </TouchableOpacity>
+      {/* Breadcrumbs */}
+      <View style={styles.breadcrumbContainer}>
+        <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+          <Text style={styles.breadcrumbCurrent}>Home</Text>
+        </TouchableOpacity>
+        <Text style={styles.breadcrumbSeparator}> › </Text>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate("PLP", { 
+            q: categories.find(c => c.id === product.categoryId)?.query 
+          })}
+        >
+          <Text style={styles.breadcrumbCurrent}>
+            {categories.find(c => c.id === product.categoryId)?.label || "Products"}
+          </Text>
+        </TouchableOpacity>
+        <Text style={styles.breadcrumbSeparator}> › </Text>
+        <Text style={styles.breadcrumbCurrent}>{product.name}</Text>
+      </View>
 
-          {/* Thumbnails */}
-          {galleryImages.length > 1 && (
-            <FlatList
-              data={galleryImages}
-              renderItem={({ item, index }) => (
+      {isDesktop ? (
+        /* Layout Desktop - 3 Colunas */
+        <View style={styles.contentRow}>
+          {/* Coluna Esquerda - Thumbnails Verticais */}
+          <View style={styles.thumbnailsColumn}>
+            {galleryImages.map((item, index) => (
+              <TouchableOpacity
+                key={`thumb-${index}`}
+                onPress={() => setSelectedImageIndex(index)}
+                activeOpacity={0.7}
+              >
                 <Card
                   style={[
                     styles.thumbnailCard,
                     selectedImageIndex === index && styles.thumbnailCardActive,
                   ]}
-                  onPress={() => setSelectedImageIndex(index)}
                 >
                   <Image
                     source={item}
                     style={styles.thumbnail}
+                    resizeMode="cover"
                   />
                 </Card>
-              )}
-              keyExtractor={(_, index) => `thumb-${index}`}
-              scrollEnabled={false}
-              numColumns={4}
-              columnWrapperStyle={styles.thumbnailRow}
-            />
-          )}
-        </View>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        {/* Coluna Direita - Info Produto */}
-        <View style={styles.rightColumn}>
-          {/* Título do Produto */}
-          <Text variant="headlineSmall" style={styles.productTitle}>
-            {product.name}
-          </Text>
+          {/* Coluna Central - Imagem Principal */}
+          <View style={styles.imageColumn}>
+            <TouchableOpacity
+              onPress={() => setIsZoomed(true)}
+              activeOpacity={0.9}
+            >
+              <Card style={styles.imageCard}>
+                {currentImage ? (
+                  <Image source={currentImage} style={styles.mainImageDesktop} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.mainImageDesktop, { backgroundColor: "#E5E5EA" }]} />
+                )}
+              </Card>
+            </TouchableOpacity>
+          </View>
+
+          {/* Coluna Direita - Info Produto */}
+          <View style={styles.rightColumn}>
+            {/* Título + Wishlist */}
+            <View style={styles.titleRow}>
+              <Text variant="headlineSmall" style={styles.productTitleDesktop}>
+                {product.name}
+              </Text>
+              <IconButton
+                icon={isFavorite ? "heart" : "heart-outline"}
+                size={24}
+                onPress={() => setIsFavorite(!isFavorite)}
+                style={styles.favoriteIcon}
+                iconColor={isFavorite ? "#000000" : "#1a1a1a"}
+              />
+            </View>
+
+            {/* Rating e Reviews */}
+            {product.rating && (
+              <View style={styles.ratingContainer}>
+                <View style={styles.starsContainer}>
+                  {renderStars(product.rating)}
+                </View>
+                <Text style={styles.reviewCount}>({product.reviewCount || 0})</Text>
+              </View>
+            )}
+
+            {/* Preço e Stock */}
+            <View style={styles.priceStockRow}>
+              <Text style={styles.priceDesktop}>€ {product.price.toFixed(2)}</Text>
+              <Text
+                style={[
+                  styles.stock,
+                  {
+                    color:
+                      product.quantityAvailable > 0 ? "#34C759" : "#FF3B30",
+                  },
+                ]}
+              >
+                {product.quantityAvailable > 0 ? "In stock" : "Out of stock"}
+              </Text>
+            </View>
+
+            {/* Descrição */}
+            {product.description && (
+              <Text style={styles.description}>{product.description}</Text>
+            )}
+
+            {/* Informações Extra */}
+            <View style={styles.extraInfoCard}>
+              <Text style={styles.extraInfoTitle}>Detalhes que importam</Text>
+              <Text style={styles.extraInfoText}>
+                Construído para conforto diário com materiais macios e respiráveis, inspirado no look esportivo premium da Nike.
+              </Text>
+              <Text style={styles.extraInfoText}>
+                Ajuste: fiel ao tamanho • Amortecimento: responsivo • Uso: cotidiano e treinos leves.
+              </Text>
+            </View>
+
+            {/* Features */}
+            {product.features && product.features.length > 0 && (
+              <View style={styles.featuresContainer}>
+                {product.features.map((feature, index) => (
+                  <Chip
+                    key={index}
+                    style={styles.featureChip}
+                    textStyle={styles.featureChipText}
+                  >
+                    {feature}
+                  </Chip>
+                ))}
+              </View>
+            )}
+
+            {/* Quantidade + Adicionar ao Carrinho */}
+            {product.quantityAvailable > 0 && (
+              <>
+                <View style={styles.quantityActionRow}>
+                  <View style={styles.quantitySelectorWrapper}>
+                    <Text style={styles.quantityPickerLabel}>Quantity</Text>
+                    <Menu
+                      visible={quantityMenuVisible}
+                      onDismiss={() => setQuantityMenuVisible(false)}
+                      anchor={
+                        <TouchableOpacity
+                          ref={quantityAnchorRef}
+                          style={styles.quantitySelector}
+                          onPress={() => setQuantityMenuVisible(true)}
+                        >
+                          <Text style={styles.quantitySelectorText}>{quantity}</Text>
+                          <MaterialIcons name="expand-more" size={20} color="#007AFF" />
+                        </TouchableOpacity>
+                      }
+                    >
+                      {Array.from({ length: Math.min(product.quantityAvailable, 10) }, (_, i) => i + 1).map((num) => (
+                        <Menu.Item
+                          key={num}
+                          onPress={() => {
+                            setQuantity(num);
+                            setQuantityMenuVisible(false);
+                          }}
+                          title={`${num}`}
+                        />
+                      ))}
+                    </Menu>
+                  </View>
+
+                  <Button
+                    mode="contained"
+                    onPress={handleAddToCart}
+                    disabled={isAdding}
+                    style={styles.addToCartButton}
+                    labelStyle={styles.addToCartLabel}
+                  >
+                    {isAdding ? "Adding..." : "Add to Cart"}
+                  </Button>
+                </View>
+
+                {product.shipping && (
+                  <View style={styles.shippingContainer}>
+                    <MaterialIcons name="local-shipping" size={16} color="#666" />
+                    <Text style={styles.shippingText}>
+                      {product.shipping.shippingType || "Standard shipping"} • {product.shipping.estimatedDays || "3-5 days"}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      ) : (
+        /* Layout Mobile - Vertical */
+        <>
+          {/* Título + Wishlist */}
+          <View style={styles.titleRow}>
+            <Text variant="headlineSmall" style={styles.productTitleMobile}>
+              {product.name}
+            </Text>
+            <IconButton
+              icon={isFavorite ? "heart" : "heart-outline"}
+              size={24}
+              onPress={() => setIsFavorite(!isFavorite)}
+              style={styles.favoriteIcon}
+              iconColor={isFavorite ? "#FF3B30" : "#1a1a1a"}
+            />
+          </View>
 
           {/* Rating e Reviews */}
           {product.rating && (
@@ -187,7 +336,7 @@ export default function PDPScreen({ navigation, route }: Props) {
 
           {/* Preço e Stock */}
           <View style={styles.priceStockRow}>
-            <Text style={styles.price}>€ {product.price.toFixed(2)}</Text>
+            <Text style={styles.priceMobile}>€ {product.price.toFixed(2)}</Text>
             <Text
               style={[
                 styles.stock,
@@ -197,98 +346,146 @@ export default function PDPScreen({ navigation, route }: Props) {
                 },
               ]}
             >
-              {product.quantityAvailable > 0
-                ? `Only ${product.quantityAvailable} in stock`
-                : "Out of stock"}
+              {product.quantityAvailable > 0 ? "In stock" : "Out of stock"}
             </Text>
           </View>
 
-          {/* Descrição */}
+          {/* Descrição curta */}
           {product.description && (
-            <Text style={styles.description}>{product.description}</Text>
+            <Text style={styles.descriptionMobileTop}>{product.description}</Text>
           )}
 
-          {/* Features/Características */}
-          {product.features && product.features.length > 0 && (
-            <View style={styles.featuresContainer}>
-              {product.features.map((feature, index) => (
-                <Chip
-                  key={index}
-                  label={feature}
-                  style={styles.featureChip}
-                  textStyle={styles.featureChipText}
-                />
-              ))}
+          {/* Imagem Principal */}
+          <TouchableOpacity
+            onPress={() => setIsZoomed(true)}
+            activeOpacity={0.9}
+          >
+            <Card style={styles.imageCard}>
+              {currentImage ? (
+                <Image source={currentImage} style={styles.mainImageMobile} resizeMode="cover" />
+              ) : (
+                <View style={[styles.mainImageMobile, { backgroundColor: "#E5E5EA" }]} />
+              )}
+            </Card>
+          </TouchableOpacity>
+
+          {/* Galeria de Thumbnails - Por baixo da imagem principal */}
+          {galleryImages.length > 1 && (
+            <View style={styles.thumbnailsRowContainer}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.thumbnailsContent}
+              >
+                {galleryImages.map((item, index) => (
+                  <TouchableOpacity
+                    key={`thumb-${index}`}
+                    onPress={() => setSelectedImageIndex(index)}
+                    activeOpacity={0.7}
+                  >
+                    <Card
+                      style={[
+                        styles.thumbnailCardMobile,
+                        selectedImageIndex === index && styles.thumbnailCardActive,
+                      ]}
+                    >
+                      <Image
+                        source={item}
+                        style={styles.thumbnailMobile}
+                        resizeMode="cover"
+                      />
+                    </Card>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           )}
 
-          {/* Quantidade + Adicionar ao Carrinho + Wishlist */}
-          {product.quantityAvailable > 0 && (
-            <>
-              {/* Card Quantidade */}
-              <Card style={styles.quantityCard}>
-                <Card.Content style={styles.quantityContent}>
-                  <Text style={styles.quantityLabel}>Qty:</Text>
-                  <View style={styles.quantityButtons}>
-                    <Button
-                      mode="outlined"
-                      onPress={handleDecreaseQuantity}
-                      disabled={quantity <= 1}
-                      style={styles.quantityBtn}
-                      labelStyle={styles.quantityBtnLabel}
-                    >
-                      −
-                    </Button>
-                    <Text style={styles.quantityValue}>{quantity}</Text>
-                    <Button
-                      mode="outlined"
-                      onPress={handleIncreaseQuantity}
-                      disabled={quantity >= product.quantityAvailable}
-                      style={styles.quantityBtn}
-                      labelStyle={styles.quantityBtnLabel}
-                    >
-                      +
-                    </Button>
-                  </View>
-                </Card.Content>
-              </Card>
+          {/* Info do Produto */}
+          <View style={styles.productInfo}>
+            {/* Informações Extra */}
+            <View style={styles.extraInfoCard}>
+              <Text style={styles.extraInfoTitle}>Detalhes que importam</Text>
+              <Text style={styles.extraInfoText}>
+                Construído para conforto diário com materiais macios e respiráveis, inspirado no look esportivo premium da Nike.
+              </Text>
+              <Text style={styles.extraInfoText}>
+                Ajuste: fiel ao tamanho • Amortecimento: responsivo • Uso: cotidiano e treinos leves.
+              </Text>
+            </View>
 
-              {/* Carrinho + Wishlist */}
-              <View style={styles.actionRow}>
-                {/* Botão Adicionar ao Carrinho */}
-                <Button
-                  mode="contained"
-                  onPress={handleAddToCart}
-                  disabled={isAdding}
-                  style={styles.addToCartBtn}
-                  labelStyle={styles.addToCartBtnLabel}
-                >
-                  {isAdding ? "Adding..." : "Add to cart"}
-                </Button>
-
-                {/* Wishlist */}
-                <IconButton
-                  icon={isFavorite ? "heart" : "heart-outline"}
-                  size={24}
-                  iconColor={isFavorite ? "#FF3B30" : "#999"}
-                  onPress={() => setIsFavorite(!isFavorite)}
-                  style={styles.wishlistBtn}
-                />
+            {/* Features */}
+            {product.features && product.features.length > 0 && (
+              <View style={styles.featuresContainer}>
+                {product.features.map((feature, index) => (
+                  <Chip
+                    key={index}
+                    style={styles.featureChip}
+                    textStyle={styles.featureChipText}
+                  >
+                    {feature}
+                  </Chip>
+                ))}
               </View>
+            )}
 
-              {/* Shipping Info */}
-              {product.shipping && (
-                <View style={styles.shippingContainer}>
-                  <MaterialIcons name="local-shipping" size={16} color="#666" />
-                  <Text style={styles.shippingText}>
-                    {product.shipping.shippingType || "Standard shipping"} • {product.shipping.estimatedDays || "3-5 days"}
-                  </Text>
+            {/* Quantidade + Adicionar ao Carrinho */}
+            {product.quantityAvailable > 0 && (
+              <>
+                <View style={styles.quantityActionRow}>
+                  <View style={styles.quantitySelectorWrapper}>
+                    <Text style={styles.quantityPickerLabel}>Quantity</Text>
+                    <Menu
+                      visible={quantityMenuVisible}
+                      onDismiss={() => setQuantityMenuVisible(false)}
+                      anchor={
+                        <TouchableOpacity
+                          ref={quantityAnchorRef}
+                          style={styles.quantitySelector}
+                          onPress={() => setQuantityMenuVisible(true)}
+                        >
+                          <Text style={styles.quantitySelectorText}>{quantity}</Text>
+                          <MaterialIcons name="expand-more" size={20} color="#007AFF" />
+                        </TouchableOpacity>
+                      }
+                    >
+                      {Array.from({ length: Math.min(product.quantityAvailable, 10) }, (_, i) => i + 1).map((num) => (
+                        <Menu.Item
+                          key={num}
+                          onPress={() => {
+                            setQuantity(num);
+                            setQuantityMenuVisible(false);
+                          }}
+                          title={`${num}`}
+                        />
+                      ))}
+                    </Menu>
+                  </View>
+
+                  <Button
+                    mode="contained"
+                    onPress={handleAddToCart}
+                    disabled={isAdding}
+                    style={styles.addToCartButton}
+                    labelStyle={styles.addToCartLabel}
+                  >
+                    {isAdding ? "Adding..." : "Add to Cart"}
+                  </Button>
                 </View>
-              )}
-            </>
-          )}
-        </View>
-      </View>
+
+                {product.shipping && (
+                  <View style={styles.shippingContainer}>
+                    <MaterialIcons name="local-shipping" size={16} color="#666" />
+                    <Text style={styles.shippingText}>
+                      {product.shipping.shippingType || "Standard shipping"} • {product.shipping.estimatedDays || "3-5 days"}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </>
+      )}
 
       {/* Produtos Relacionados */}
       {relatedProducts.length > 0 && (
@@ -333,103 +530,365 @@ export default function PDPScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  contentRow: { flexDirection: "row", gap: 16, marginBottom: 16 },
+  container: { 
+    flex: 1, 
+    padding: 16,
+  },
+  scrollContent: { 
+    paddingBottom: 32,
+  },
   
-  // Imagens - Left Column
-  imageColumn: { width: "45%", gap: 12 },
-  imageCard: { borderRadius: 12, overflow: "hidden", cursor: "zoom-in" },
-  mainImage: { width: "100%", height: 350, backgroundColor: "#fff" },
-  thumbnailRow: { gap: 8 },
+  // Breadcrumbs
+  breadcrumbContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  breadcrumbSeparator: {
+    fontSize: 14,
+    color: "#CCC",
+    marginHorizontal: 4,
+  },
+  breadcrumbCurrent: {
+    fontSize: 14,
+    color: "#4e4e4e",
+    fontWeight: "500",
+  },
+
+  // Desktop Layout
+  contentRow: { 
+    flexDirection: "row", 
+    gap: 50, 
+    marginBottom: 64,
+  },
+  thumbnailsColumn: { 
+    width: 50, 
+    gap: 12, 
+    flexDirection: "column",
+  },
+  imageColumn: { 
+    flex: 0.65, 
+    gap: 16,
+  },
+  rightColumn: { 
+    flex: 1, 
+    gap: 0,
+  },
+
+  // Mobile Layout - Thumbnails Horizontal
+  thumbnailsRowContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    marginTop: 0,
+  },
+  thumbnailsContent: {
+    paddingHorizontal: 8,
+    gap: 8,
+  },
+  
+  // Thumbnails (ambos)
   thumbnailCard: {
-    flex: 1,
+    width: 70,
+    height: 70,
     borderRadius: 8,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "transparent",
+    borderColor: "#E8E8E8",
+    marginRight: 8,
   },
-  thumbnailCardActive: { borderColor: "#007AFF" },
-  thumbnail: { width: "100%", height: 70 },
-
-  // Info direita - Right Column
-  rightColumn: { flex: 1, gap: 14 },
+  thumbnailCardMobile: {
+    width: 50,
+    height: 50,
+    borderRadius: 6,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "#E8E8E8",
+  },
+  thumbnailCardActive: { 
+    borderColor: "#007AFF",
+  },
+  thumbnail: { 
+    width: 70, 
+    height: 70,
+  },
+  thumbnailMobile: { 
+    width: 50, 
+    height: 50,
+  },
   
-  // Product Title
-  productTitle: { fontWeight: "bold", fontSize: 22, lineHeight: 28 },
+  // Imagem Principal
+  imageCard: { 
+    borderRadius: 12, 
+    overflow: "hidden",
+    marginBottom: 8,
+    elevation: 2, 
+    shadowColor: "#000", 
+    shadowOpacity: 0.1, 
+    shadowRadius: 5, 
+    shadowOffset: { width: 0, height: 2 },
+  },
+  mainImageMobile: { 
+    width: "100%", 
+    height: 300,
+    backgroundColor: "#f5f5f5",
+  },
+  mainImageDesktop: { 
+    width: "100%", 
+    height: 600,
+    backgroundColor: "#f5f5f5",
+  },
+
+  // Info do Produto
+  productInfo: {
+    paddingHorizontal: 4,
+  },
+  
+  titleRow: { 
+    flexDirection: "row", 
+    alignItems: "flex-start", 
+    justifyContent: "space-between", 
+    marginBottom: 8,
+  },
+  productTitleMobile: { 
+    fontWeight: "700", 
+    fontSize: 24, 
+    lineHeight: 32,
+    flex: 1,
+    color: "#0f172a",
+  },
+  productTitleDesktop: { 
+    fontWeight: "800", 
+    fontSize: 38, 
+    lineHeight: 46,
+    marginBottom: 5,
+    flex: 1,
+    color: "#0f172a",
+  },
+  favoriteIcon: { 
+    margin: 0,
+  },
   
   // Rating
-  ratingContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
-  starsContainer: { flexDirection: "row", alignItems: "center" },
-  reviewCount: { fontSize: 13, opacity: 0.6 },
+  ratingContainer: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 4, 
+    marginBottom: 22,
+  },
+  starsContainer: { 
+    flexDirection: "row", 
+    alignItems: "center",
+  },
+  reviewCount: { 
+    fontSize: 13, 
+    color: "#666",
+    fontWeight: "600",
+  },
 
   // Price and Stock
-  priceStockRow: { gap: 6 },
-  price: { fontSize: 20, fontWeight: "bold", color: "#007AFF" },
-  stock: { fontSize: 12, fontWeight: "600" },
+  priceStockRow: { 
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12, 
+    marginBottom: 16,
+  },
+  priceMobile: { 
+    fontSize: 28, 
+    fontWeight: "800", 
+    color: "#0f172a",
+  },
+  priceDesktop: { 
+    fontSize: 38, 
+    fontWeight: "800", 
+    color: "#0f172a",
+  },
+  stock: { 
+    fontSize: 13, 
+    fontWeight: "700", 
+    paddingVertical: 4, 
+    paddingHorizontal: 12, 
+    borderRadius: 6,
+    backgroundColor: "#F2F7F3",
+  },
 
   // Description
-  description: { fontSize: 13, opacity: 0.75, lineHeight: 18 },
+  description: { 
+    fontSize: 15, 
+    lineHeight: 22, 
+    marginBottom: 16,
+    color: "#4b5563",
+  },
+  descriptionMobileTop: { 
+    fontSize: 14, 
+    lineHeight: 20, 
+    marginBottom: 16,
+    marginTop: 4,
+    color: "#4b5563",
+  },
+
+  // Extra Info
+  extraInfoCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    marginBottom: 16,
+  },
+  extraInfoTitle: { 
+    fontSize: 15, 
+    fontWeight: "700", 
+    color: "#0f172a",
+    marginBottom: 8,
+  },
+  extraInfoText: { 
+    fontSize: 14, 
+    lineHeight: 20, 
+    color: "#374151",
+    marginBottom: 6,
+  },
 
   // Features
-  featuresContainer: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  featureChip: { backgroundColor: "#F0F0F0", height: 28 },
-  featureChipText: { fontSize: 11 },
+  featuresContainer: { 
+    flexDirection: "row", 
+    gap: 8, 
+    flexWrap: "wrap", 
+    marginBottom: 20,
+  },
+  featureChip: { 
+    backgroundColor: "#FFFFFF", 
+    height: 36, 
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E2E2E2",
+  },
+  featureChipText: { 
+    fontSize: 13, 
+    fontWeight: "600", 
+    color: "#0f172a",
+  },
 
-  // Action Row
-  actionRow: { flexDirection: "row", gap: 10, alignItems: "center" },
-  quantityCard: { borderRadius: 8, width: "100%" },
-  quantityContent: { gap: 6, paddingVertical: 6, paddingHorizontal: 8 },
-  quantityLabel: { fontSize: 11, fontWeight: "600" },
-  quantityButtons: { flexDirection: "row", alignItems: "center", gap: 4 },
-  quantityBtn: { flex: 1, borderRadius: 6, minHeight: 32 },
-  quantityBtnLabel: { fontSize: 12 },
-  quantityValue: {
+  // Quantity + Action
+  quantityActionRow: { 
+    flexDirection: "row", 
+    gap: 12, 
+    marginBottom: 12,
+    alignItems: "flex-end",
+  },
+  quantitySelectorWrapper: {
     flex: 1,
-    textAlign: "center",
-    fontSize: 13,
-    fontWeight: "bold",
+  },
+  quantityPickerLabel: { 
+    fontSize: 12, 
+    fontWeight: "700", 
+    marginBottom: 6,
+    color: "#4b5563",
+  },
+  quantitySelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  quantitySelectorText: {
+    fontSize: 16,
+    color: "#000000",
+    fontWeight: "700",
   },
 
   // Add to Cart Button
-  addToCartBtn: { flex: 1, borderRadius: 8 },
-  addToCartBtnLabel: { fontSize: 12, fontWeight: "bold" },
-
-  // Wishlist Button
-  wishlistBtn: { margin: 0, padding: 8 },
+  addToCartButton: {
+    flex: 2,
+    borderRadius: 10,
+    backgroundColor: "#000000",
+    paddingVertical: 6,
+  },
+  addToCartLabel: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
 
   // Shipping
   shippingContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#F9F9F9",
-    borderRadius: 8,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F5F7FA",
+    borderRadius: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: "#000000",
+    marginBottom: 20,
   },
-  shippingText: { fontSize: 12, color: "#666", flex: 1 },
+  shippingText: { 
+    fontSize: 14, 
+    color: "#2d3748",
+    flex: 1,
+    fontWeight: "600",
+  },
 
   // Related Products
-  relatedSection: { marginTop: 32, marginBottom: 16 },
-  relatedTitle: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
-    marginBottom: 16,
-    paddingHorizontal: 4,
+  relatedSection: { 
+    marginTop: 32,
+    marginBottom: 20,
   },
-  relatedList: { paddingHorizontal: 4 },
-  relatedProductCard: { marginRight: 16 },
+  relatedTitle: { 
+    fontSize: 18, 
+    fontWeight: "700", 
+    marginBottom: 16,
+    color: "#000000",
+  },
+  relatedList: { 
+    paddingRight: 16,
+  },
+  relatedProductCard: { 
+    marginRight: 12,
+  },
   relatedCard: { 
-    width: 180, 
+    width: 200, 
     borderRadius: 12, 
     overflow: "hidden",
+    backgroundColor: "#FFFFFF",
   },
-  relatedImage: { width: "100%", height: 180, backgroundColor: "#fff" },
-  relatedInfo: { padding: 12, gap: 4 },
-  relatedName: { fontSize: 14, fontWeight: "600", lineHeight: 18 },
-  relatedPrice: { fontSize: 16, fontWeight: "bold", color: "#007AFF" },
-  relatedRating: { flexDirection: "row", alignItems: "center", gap: 4 },
-  relatedRatingText: { fontSize: 12, color: "#666" },
+  relatedImage: { 
+    width: "100%", 
+    height: 200,
+    backgroundColor: "#f5f5f5",
+  },
+  relatedInfo: { 
+    padding: 12,
+  },
+  relatedName: { 
+    fontSize: 13, 
+    fontWeight: "600",
+    marginBottom: 4,
+    color: "#1a1a1a",
+  },
+  relatedPrice: { 
+    fontSize: 15, 
+    fontWeight: "700", 
+    color: "#000000",
+    marginBottom: 4,
+  },
+  relatedRating: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 4,
+  },
+  relatedRatingText: { 
+    fontSize: 12, 
+    color: "#999",
+  },
 
   // Zoom Modal
   zoomModal: {
