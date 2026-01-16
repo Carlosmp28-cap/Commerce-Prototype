@@ -1,60 +1,18 @@
-# Welcome to your Expo app 👋
+# Commerce Prototype (Expo + React Native)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Protótipo de e-commerce em Expo/React Native com uma estrutura inspirada em SFRA.
 
-## Get started
+## Stack
 
-1. Install dependencies
+- Expo SDK 54 + React Native
+- TypeScript
+- React Navigation (native-stack) com deep linking (web)
+- React Native Paper (Material Design 3)
+- Testes: Jest (`jest-expo`) + React Native Testing Library
 
-   ```bash
-   npm install
-   ```
+Nota: este projeto **não usa** `expo-router` (sem file-based routing). O diretório `app/` aqui é apenas uma convenção interna do protótipo.
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-
-## Testes e CI (projeto)
-
-Instruções rápidas para rodar os testes e o CI localmente nesta cópia do repositório.
-
-- O código fonte da aplicação está dentro da pasta `CommercePrototype`.
-- Comandos abaixo devem ser executados a partir da raiz do projeto `CommercePrototype` (onde existe o `package.json`).
+## Rodar localmente
 
 Instalar dependências:
 
@@ -62,44 +20,62 @@ Instalar dependências:
 npm install
 ```
 
-Rodar a app (desenvolvimento):
+Iniciar app:
 
 ```bash
 npx expo start
 ```
 
-Rodar a suite de testes (Jest + React Native Testing Library):
+Atalhos úteis:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+## Qualidade (lint/typecheck/tests)
+
+Lint:
+
+```bash
+npm run lint
+```
+
+Typecheck:
+
+```bash
+npx tsc --noEmit
+```
+
+Testes:
 
 ```bash
 npm test -- --runInBand
 ```
 
-Notas sobre a configuração de testes:
+### Onde ficam os testes e por quê existe `test/testUtils.tsx`
 
-- Usamos `jest-expo` como preset, com mocks mínimos para `expo`.
-- Se ocorrerem erros relacionados a versões de `react-test-renderer`, instale a versão compatível com o `react` do projeto (ex.: `npm install -D react-test-renderer@19.1.0`).
+- As suites de teste ficam em `__tests__/` e seguem `*.test.ts(x)`.
+- O arquivo `test/testUtils.tsx` existe para centralizar o setup de render:
+  - `renderWithProviders()` já envolve os componentes com providers usados no app (tokens/tema + Paper Provider).
+  - Também define settings/mocks necessários para testes (ex.: ícones do Paper em ambiente Jest).
 
-CI — GitHub Actions
+Manter esse helper fora de `__tests__/` evita que o Jest tente executá-lo como uma suite.
 
-Há um workflow em `.github/workflows/ci.yml` configurado para executar dentro da pasta `CommercePrototype`:
+## Navegação
 
-- Passos: instalar dependências (`npm ci` ou `npm install`), `npm run lint`, `npx tsc --noEmit`, e `npm test`.
-- Para deploys/Expo/EAS adicione secrets no repositório: `EXPO_TOKEN`, `EAS_SERVICE_ACCOUNT`, `FIREBASE_TOKEN`.
+A navegação fica em `app/navigation/index.tsx`:
 
-Comandos úteis para CI local (simulação rápida):
+- Stack: `Home`, `PLP`, `PDP`, `Cart`, `Checkout`, `Login`
+- O título do header é clicável e sempre leva para `Home`.
+- Linking configurado via `expo-linking` (URLs tipo `/pdp/:id`, `/cart`, etc.).
 
-```bash
-# instalar deps na pasta CommercePrototype
-cd CommercePrototype && npm ci
+## UI / Responsividade (web)
 
-# rodar lint
-cd CommercePrototype && npm run lint
+- O `Home` mantém o layout perfeito no mobile.
+- Em telas largas (web), o topo do Home vira 2 colunas (hero/search à esquerda, promos à direita) para reduzir “espaço vazio” nas laterais.
 
-# rodar typecheck
-cd CommercePrototype && npx tsc --noEmit
+## CI (GitHub Actions)
 
-# rodar testes
-cd CommercePrototype && npm test -- --runInBand
-```
-
-Se quiser, eu adiciono também um workflow separado para releases via EAS/Expo.
+Há um workflow em `.github/workflows/ci.yml` na raiz do repo que executa lint, typecheck e testes.
