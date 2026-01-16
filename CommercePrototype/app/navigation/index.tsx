@@ -1,4 +1,3 @@
-import React from "react";
 import {
   NavigationContainer,
   type LinkingOptions,
@@ -14,13 +13,13 @@ import {
 } from "react-native";
 import { IconButton, Text, useTheme } from "react-native-paper";
 
-import HomeScreen from "../screens/Home";
-import PLPScreen from "../screens/PLP";
-import PDPScreen from "../screens/PDP";
-import CartScreen from "../screens/Cart";
-import CheckoutScreen from "../screens/Checkout";
-import LoginScreen from "../screens/Login";
 import { useAuth } from "../hooks/useAuth";
+import CartScreen from "../screens/Cart";
+import CheckoutScreen from "../screens/Checkout/Checkout";
+import HomeScreen from "../screens/Home";
+import LoginScreen from "../screens/Login";
+import PDPScreen from "../screens/PDP";
+import PLPScreen from "../screens/PLP";
 
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
@@ -204,7 +203,15 @@ export default function AppNavigation() {
         })}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="PLP" component={PLPScreen} />
+        <Stack.Screen
+          name="PLP"
+          component={PLPScreen}
+          options={{
+            headerBackVisible: false,
+            headerLeft: () => null,
+            title: "Product Listing Page",
+          }}
+        />
         <Stack.Screen name="PDP" component={PDPScreen} />
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Checkout" component={CheckoutScreen} />
