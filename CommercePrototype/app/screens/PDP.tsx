@@ -21,7 +21,6 @@ import {
   useTheme,
 } from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-
 import type { RootStackParamList } from "../navigation";
 import type { Product } from "../models/Product";
 import { getProductById, products, categories } from "../data/catalog";
