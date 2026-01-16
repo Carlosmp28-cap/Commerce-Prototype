@@ -1,7 +1,25 @@
 import React, { useMemo, useState, useRef } from "react";
-import { StyleSheet, View, Image, ScrollView, FlatList, TouchableOpacity, Modal, Pressable, useWindowDimensions } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  ScrollView,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  useWindowDimensions,
+} from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Button, Card, Text, Chip, IconButton, Menu } from "react-native-paper";
+import {
+  Button,
+  Card,
+  Text,
+  Chip,
+  IconButton,
+  Menu,
+  useTheme,
+} from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import type { RootStackParamList } from "../navigation";
@@ -44,11 +62,12 @@ export default function PDPScreen({ navigation, route }: Props) {
       .slice(0, 10);
   }, [product]);
 
-  const galleryImages = product.images && product.images.length > 0 
-    ? product.images 
-    : product.image 
-    ? [product.image] 
-    : [];
+  const galleryImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : product.image
+      ? [product.image]
+      : [];
 
   const currentImage = galleryImages[selectedImageIndex];
 
@@ -92,10 +111,7 @@ export default function PDPScreen({ navigation, route }: Props) {
         animationType="fade"
         onRequestClose={() => setIsZoomed(false)}
       >
-        <Pressable 
-          style={styles.zoomModal}
-          onPress={() => setIsZoomed(false)}
-        >
+        <Pressable style={styles.zoomModal} onPress={() => setIsZoomed(false)}>
           <View style={styles.zoomContainer}>
             <IconButton
               icon="close"
@@ -121,13 +137,16 @@ export default function PDPScreen({ navigation, route }: Props) {
           <Text style={styles.breadcrumbCurrent}>Home</Text>
         </TouchableOpacity>
         <Text style={styles.breadcrumbSeparator}> › </Text>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate("PLP", { 
-            q: categories.find(c => c.id === product.categoryId)?.query 
-          })}
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("PLP", {
+              q: categories.find((c) => c.id === product.categoryId)?.query,
+            })
+          }
         >
           <Text style={styles.breadcrumbCurrent}>
-            {categories.find(c => c.id === product.categoryId)?.label || "Products"}
+            {categories.find((c) => c.id === product.categoryId)?.label ||
+              "Products"}
           </Text>
         </TouchableOpacity>
         <Text style={styles.breadcrumbSeparator}> › </Text>
@@ -169,9 +188,18 @@ export default function PDPScreen({ navigation, route }: Props) {
             >
               <Card style={styles.imageCard}>
                 {currentImage ? (
-                  <Image source={currentImage} style={styles.mainImageDesktop} resizeMode="cover" />
+                  <Image
+                    source={currentImage}
+                    style={styles.mainImageDesktop}
+                    resizeMode="cover"
+                  />
                 ) : (
-                  <View style={[styles.mainImageDesktop, { backgroundColor: "#E5E5EA" }]} />
+                  <View
+                    style={[
+                      styles.mainImageDesktop,
+                      { backgroundColor: "#E5E5EA" },
+                    ]}
+                  />
                 )}
               </Card>
             </TouchableOpacity>
@@ -199,13 +227,17 @@ export default function PDPScreen({ navigation, route }: Props) {
                 <View style={styles.starsContainer}>
                   {renderStars(product.rating)}
                 </View>
-                <Text style={styles.reviewCount}>({product.reviewCount || 0})</Text>
+                <Text style={styles.reviewCount}>
+                  ({product.reviewCount || 0})
+                </Text>
               </View>
             )}
 
             {/* Preço e Stock */}
             <View style={styles.priceStockRow}>
-              <Text style={styles.priceDesktop}>€ {product.price.toFixed(2)}</Text>
+              <Text style={styles.priceDesktop}>
+                € {product.price.toFixed(2)}
+              </Text>
               <Text
                 style={[
                   styles.stock,
@@ -228,10 +260,12 @@ export default function PDPScreen({ navigation, route }: Props) {
             <View style={styles.extraInfoCard}>
               <Text style={styles.extraInfoTitle}>Detalhes que importam</Text>
               <Text style={styles.extraInfoText}>
-                Construído para conforto diário com materiais macios e respiráveis, inspirado no look esportivo premium da Nike.
+                Construído para conforto diário com materiais macios e
+                respiráveis, inspirado no look esportivo premium da Nike.
               </Text>
               <Text style={styles.extraInfoText}>
-                Ajuste: fiel ao tamanho • Amortecimento: responsivo • Uso: cotidiano e treinos leves.
+                Ajuste: fiel ao tamanho • Amortecimento: responsivo • Uso:
+                cotidiano e treinos leves.
               </Text>
             </View>
 
@@ -265,12 +299,21 @@ export default function PDPScreen({ navigation, route }: Props) {
                           style={styles.quantitySelector}
                           onPress={() => setQuantityMenuVisible(true)}
                         >
-                          <Text style={styles.quantitySelectorText}>{quantity}</Text>
-                          <MaterialIcons name="expand-more" size={20} color="#007AFF" />
+                          <Text style={styles.quantitySelectorText}>
+                            {quantity}
+                          </Text>
+                          <MaterialIcons
+                            name="expand-more"
+                            size={20}
+                            color="#007AFF"
+                          />
                         </TouchableOpacity>
                       }
                     >
-                      {Array.from({ length: Math.min(product.quantityAvailable, 10) }, (_, i) => i + 1).map((num) => (
+                      {Array.from(
+                        { length: Math.min(product.quantityAvailable, 10) },
+                        (_, i) => i + 1
+                      ).map((num) => (
                         <Menu.Item
                           key={num}
                           onPress={() => {
@@ -296,9 +339,14 @@ export default function PDPScreen({ navigation, route }: Props) {
 
                 {product.shipping && (
                   <View style={styles.shippingContainer}>
-                    <MaterialIcons name="local-shipping" size={16} color="#666" />
+                    <MaterialIcons
+                      name="local-shipping"
+                      size={16}
+                      color="#666"
+                    />
                     <Text style={styles.shippingText}>
-                      {product.shipping.shippingType || "Standard shipping"} • {product.shipping.estimatedDays || "3-5 days"}
+                      {product.shipping.shippingType || "Standard shipping"} •{" "}
+                      {product.shipping.estimatedDays || "3-5 days"}
                     </Text>
                   </View>
                 )}
@@ -329,7 +377,9 @@ export default function PDPScreen({ navigation, route }: Props) {
               <View style={styles.starsContainer}>
                 {renderStars(product.rating)}
               </View>
-              <Text style={styles.reviewCount}>({product.reviewCount || 0})</Text>
+              <Text style={styles.reviewCount}>
+                ({product.reviewCount || 0})
+              </Text>
             </View>
           )}
 
@@ -340,8 +390,7 @@ export default function PDPScreen({ navigation, route }: Props) {
               style={[
                 styles.stock,
                 {
-                  color:
-                    product.quantityAvailable > 0 ? "#34C759" : "#FF3B30",
+                  color: product.quantityAvailable > 0 ? "#34C759" : "#FF3B30",
                 },
               ]}
             >
@@ -351,7 +400,9 @@ export default function PDPScreen({ navigation, route }: Props) {
 
           {/* Descrição curta */}
           {product.description && (
-            <Text style={styles.descriptionMobileTop}>{product.description}</Text>
+            <Text style={styles.descriptionMobileTop}>
+              {product.description}
+            </Text>
           )}
 
           {/* Imagem Principal */}
@@ -361,9 +412,18 @@ export default function PDPScreen({ navigation, route }: Props) {
           >
             <Card style={styles.imageCard}>
               {currentImage ? (
-                <Image source={currentImage} style={styles.mainImageMobile} resizeMode="cover" />
+                <Image
+                  source={currentImage}
+                  style={styles.mainImageMobile}
+                  resizeMode="cover"
+                />
               ) : (
-                <View style={[styles.mainImageMobile, { backgroundColor: "#E5E5EA" }]} />
+                <View
+                  style={[
+                    styles.mainImageMobile,
+                    { backgroundColor: "#E5E5EA" },
+                  ]}
+                />
               )}
             </Card>
           </TouchableOpacity>
@@ -371,8 +431,8 @@ export default function PDPScreen({ navigation, route }: Props) {
           {/* Galeria de Thumbnails - Por baixo da imagem principal */}
           {galleryImages.length > 1 && (
             <View style={styles.thumbnailsRowContainer}>
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.thumbnailsContent}
               >
@@ -385,7 +445,8 @@ export default function PDPScreen({ navigation, route }: Props) {
                     <Card
                       style={[
                         styles.thumbnailCardMobile,
-                        selectedImageIndex === index && styles.thumbnailCardActive,
+                        selectedImageIndex === index &&
+                          styles.thumbnailCardActive,
                       ]}
                     >
                       <Image
@@ -406,10 +467,12 @@ export default function PDPScreen({ navigation, route }: Props) {
             <View style={styles.extraInfoCard}>
               <Text style={styles.extraInfoTitle}>Detalhes que importam</Text>
               <Text style={styles.extraInfoText}>
-                Construído para conforto diário com materiais macios e respiráveis, inspirado no look esportivo premium da Nike.
+                Construído para conforto diário com materiais macios e
+                respiráveis, inspirado no look esportivo premium da Nike.
               </Text>
               <Text style={styles.extraInfoText}>
-                Ajuste: fiel ao tamanho • Amortecimento: responsivo • Uso: cotidiano e treinos leves.
+                Ajuste: fiel ao tamanho • Amortecimento: responsivo • Uso:
+                cotidiano e treinos leves.
               </Text>
             </View>
 
@@ -443,12 +506,21 @@ export default function PDPScreen({ navigation, route }: Props) {
                           style={styles.quantitySelector}
                           onPress={() => setQuantityMenuVisible(true)}
                         >
-                          <Text style={styles.quantitySelectorText}>{quantity}</Text>
-                          <MaterialIcons name="expand-more" size={20} color="#007AFF" />
+                          <Text style={styles.quantitySelectorText}>
+                            {quantity}
+                          </Text>
+                          <MaterialIcons
+                            name="expand-more"
+                            size={20}
+                            color="#007AFF"
+                          />
                         </TouchableOpacity>
                       }
                     >
-                      {Array.from({ length: Math.min(product.quantityAvailable, 10) }, (_, i) => i + 1).map((num) => (
+                      {Array.from(
+                        { length: Math.min(product.quantityAvailable, 10) },
+                        (_, i) => i + 1
+                      ).map((num) => (
                         <Menu.Item
                           key={num}
                           onPress={() => {
@@ -474,9 +546,14 @@ export default function PDPScreen({ navigation, route }: Props) {
 
                 {product.shipping && (
                   <View style={styles.shippingContainer}>
-                    <MaterialIcons name="local-shipping" size={16} color="#666" />
+                    <MaterialIcons
+                      name="local-shipping"
+                      size={16}
+                      color="#666"
+                    />
                     <Text style={styles.shippingText}>
-                      {product.shipping.shippingType || "Standard shipping"} • {product.shipping.estimatedDays || "3-5 days"}
+                      {product.shipping.shippingType || "Standard shipping"} •{" "}
+                      {product.shipping.estimatedDays || "3-5 days"}
                     </Text>
                   </View>
                 )}
@@ -500,19 +577,20 @@ export default function PDPScreen({ navigation, route }: Props) {
                 style={styles.relatedProductCard}
               >
                 <Card style={styles.relatedCard}>
-                  <Image
-                    source={item.image}
-                    style={styles.relatedImage}
-                  />
+                  <Image source={item.image} style={styles.relatedImage} />
                   <View style={styles.relatedInfo}>
                     <Text style={styles.relatedName} numberOfLines={2}>
                       {item.name}
                     </Text>
-                    <Text style={styles.relatedPrice}>€ {item.price.toFixed(2)}</Text>
+                    <Text style={styles.relatedPrice}>
+                      € {item.price.toFixed(2)}
+                    </Text>
                     {item.rating && (
                       <View style={styles.relatedRating}>
                         <MaterialIcons name="star" size={12} color="#FFB800" />
-                        <Text style={styles.relatedRatingText}>{item.rating}</Text>
+                        <Text style={styles.relatedRatingText}>
+                          {item.rating}
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -529,14 +607,14 @@ export default function PDPScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     padding: 16,
   },
-  scrollContent: { 
+  scrollContent: {
     paddingBottom: 32,
   },
-  
+
   // Breadcrumbs
   breadcrumbContainer: {
     flexDirection: "row",
@@ -557,22 +635,22 @@ const styles = StyleSheet.create({
   },
 
   // Desktop Layout
-  contentRow: { 
-    flexDirection: "row", 
-    gap: 50, 
+  contentRow: {
+    flexDirection: "row",
+    gap: 50,
     marginBottom: 64,
   },
-  thumbnailsColumn: { 
-    width: 50, 
-    gap: 12, 
+  thumbnailsColumn: {
+    width: 50,
+    gap: 12,
     flexDirection: "column",
   },
-  imageColumn: { 
-    flex: 0.65, 
+  imageColumn: {
+    flex: 0.65,
     gap: 16,
   },
-  rightColumn: { 
-    flex: 1, 
+  rightColumn: {
+    flex: 1,
     gap: 0,
   },
 
@@ -587,7 +665,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     gap: 8,
   },
-  
+
   // Thumbnails (ambos)
   thumbnailCard: {
     width: 70,
@@ -606,36 +684,36 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#E8E8E8",
   },
-  thumbnailCardActive: { 
+  thumbnailCardActive: {
     borderColor: "#007AFF",
   },
-  thumbnail: { 
-    width: 70, 
+  thumbnail: {
+    width: 70,
     height: 70,
   },
-  thumbnailMobile: { 
-    width: 50, 
+  thumbnailMobile: {
+    width: 50,
     height: 50,
   },
-  
+
   // Imagem Principal
-  imageCard: { 
-    borderRadius: 12, 
+  imageCard: {
+    borderRadius: 12,
     overflow: "hidden",
     marginBottom: 8,
-    elevation: 2, 
-    shadowColor: "#000", 
-    shadowOpacity: 0.1, 
-    shadowRadius: 5, 
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
   },
-  mainImageMobile: { 
-    width: "100%", 
+  mainImageMobile: {
+    width: "100%",
     height: 300,
     backgroundColor: "#f5f5f5",
   },
-  mainImageDesktop: { 
-    width: "100%", 
+  mainImageDesktop: {
+    width: "100%",
     height: 600,
     backgroundColor: "#f5f5f5",
   },
@@ -644,85 +722,85 @@ const styles = StyleSheet.create({
   productInfo: {
     paddingHorizontal: 4,
   },
-  
-  titleRow: { 
-    flexDirection: "row", 
-    alignItems: "flex-start", 
-    justifyContent: "space-between", 
+
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
-  productTitleMobile: { 
-    fontWeight: "700", 
-    fontSize: 24, 
+  productTitleMobile: {
+    fontWeight: "700",
+    fontSize: 24,
     lineHeight: 32,
     flex: 1,
     color: "#0f172a",
   },
-  productTitleDesktop: { 
-    fontWeight: "800", 
-    fontSize: 38, 
+  productTitleDesktop: {
+    fontWeight: "800",
+    fontSize: 38,
     lineHeight: 46,
     marginBottom: 5,
     flex: 1,
     color: "#0f172a",
   },
-  favoriteIcon: { 
+  favoriteIcon: {
     margin: 0,
   },
-  
+
   // Rating
-  ratingContainer: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    gap: 4, 
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     marginBottom: 22,
   },
-  starsContainer: { 
-    flexDirection: "row", 
+  starsContainer: {
+    flexDirection: "row",
     alignItems: "center",
   },
-  reviewCount: { 
-    fontSize: 13, 
+  reviewCount: {
+    fontSize: 13,
     color: "#666",
     fontWeight: "600",
   },
 
   // Price and Stock
-  priceStockRow: { 
+  priceStockRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12, 
+    gap: 12,
     marginBottom: 16,
   },
-  priceMobile: { 
-    fontSize: 28, 
-    fontWeight: "800", 
+  priceMobile: {
+    fontSize: 28,
+    fontWeight: "800",
     color: "#0f172a",
   },
-  priceDesktop: { 
-    fontSize: 38, 
-    fontWeight: "800", 
+  priceDesktop: {
+    fontSize: 38,
+    fontWeight: "800",
     color: "#0f172a",
   },
-  stock: { 
-    fontSize: 13, 
-    fontWeight: "700", 
-    paddingVertical: 4, 
-    paddingHorizontal: 12, 
+  stock: {
+    fontSize: 13,
+    fontWeight: "700",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
     borderRadius: 6,
     backgroundColor: "#F2F7F3",
   },
 
   // Description
-  description: { 
-    fontSize: 15, 
-    lineHeight: 22, 
+  description: {
+    fontSize: 15,
+    lineHeight: 22,
     marginBottom: 16,
     color: "#4b5563",
   },
-  descriptionMobileTop: { 
-    fontSize: 14, 
-    lineHeight: 20, 
+  descriptionMobileTop: {
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 16,
     marginTop: 4,
     color: "#4b5563",
@@ -737,52 +815,52 @@ const styles = StyleSheet.create({
     borderColor: "#E6E6E6",
     marginBottom: 16,
   },
-  extraInfoTitle: { 
-    fontSize: 15, 
-    fontWeight: "700", 
+  extraInfoTitle: {
+    fontSize: 15,
+    fontWeight: "700",
     color: "#0f172a",
     marginBottom: 8,
   },
-  extraInfoText: { 
-    fontSize: 14, 
-    lineHeight: 20, 
+  extraInfoText: {
+    fontSize: 14,
+    lineHeight: 20,
     color: "#374151",
     marginBottom: 6,
   },
 
   // Features
-  featuresContainer: { 
-    flexDirection: "row", 
-    gap: 8, 
-    flexWrap: "wrap", 
+  featuresContainer: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
     marginBottom: 20,
   },
-  featureChip: { 
-    backgroundColor: "#FFFFFF", 
-    height: 36, 
+  featureChip: {
+    backgroundColor: "#FFFFFF",
+    height: 36,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E2E2E2",
   },
-  featureChipText: { 
-    fontSize: 13, 
-    fontWeight: "600", 
+  featureChipText: {
+    fontSize: 13,
+    fontWeight: "600",
     color: "#0f172a",
   },
 
   // Quantity + Action
-  quantityActionRow: { 
-    flexDirection: "row", 
-    gap: 12, 
+  quantityActionRow: {
+    flexDirection: "row",
+    gap: 12,
     marginBottom: 12,
     alignItems: "flex-end",
   },
   quantitySelectorWrapper: {
     flex: 1,
   },
-  quantityPickerLabel: { 
-    fontSize: 12, 
-    fontWeight: "700", 
+  quantityPickerLabel: {
+    fontSize: 12,
+    fontWeight: "700",
     marginBottom: 6,
     color: "#4b5563",
   },
@@ -829,63 +907,63 @@ const styles = StyleSheet.create({
     borderLeftColor: "#000000",
     marginBottom: 20,
   },
-  shippingText: { 
-    fontSize: 14, 
+  shippingText: {
+    fontSize: 14,
     color: "#2d3748",
     flex: 1,
     fontWeight: "600",
   },
 
   // Related Products
-  relatedSection: { 
+  relatedSection: {
     marginTop: 32,
     marginBottom: 20,
   },
-  relatedTitle: { 
-    fontSize: 18, 
-    fontWeight: "700", 
+  relatedTitle: {
+    fontSize: 18,
+    fontWeight: "700",
     marginBottom: 16,
     color: "#000000",
   },
-  relatedList: { 
+  relatedList: {
     paddingRight: 16,
   },
-  relatedProductCard: { 
+  relatedProductCard: {
     marginRight: 12,
   },
-  relatedCard: { 
-    width: 200, 
-    borderRadius: 12, 
+  relatedCard: {
+    width: 200,
+    borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#FFFFFF",
   },
-  relatedImage: { 
-    width: "100%", 
+  relatedImage: {
+    width: "100%",
     height: 200,
     backgroundColor: "#f5f5f5",
   },
-  relatedInfo: { 
+  relatedInfo: {
     padding: 12,
   },
-  relatedName: { 
-    fontSize: 13, 
+  relatedName: {
+    fontSize: 13,
     fontWeight: "600",
     marginBottom: 4,
     color: "#1a1a1a",
   },
-  relatedPrice: { 
-    fontSize: 15, 
-    fontWeight: "700", 
+  relatedPrice: {
+    fontSize: 15,
+    fontWeight: "700",
     color: "#000000",
     marginBottom: 4,
   },
-  relatedRating: { 
-    flexDirection: "row", 
-    alignItems: "center", 
+  relatedRating: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
-  relatedRatingText: { 
-    fontSize: 12, 
+  relatedRatingText: {
+    fontSize: 12,
     color: "#999",
   },
 
