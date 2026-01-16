@@ -1,6 +1,12 @@
 import type { ImageSourcePropType } from "react-native";
 import type { CategoryId } from "../data/catalog";
 
+/**
+ * Product shape used by the UI.
+ *
+ * In a production app, this would typically mirror the API/SDK contract (often
+ * generated), while UI-only fields live in view models.
+ */
 export type Product = {
   id: string;
   name: string;
@@ -11,7 +17,20 @@ export type Product = {
   categoryId: CategoryId;
   /** Image for RN <Image source={...} />; supports both local require() and remote URLs. */
   image?: ImageSourcePropType;
+  /** Multiple images for gallery */
+  images?: ImageSourcePropType[];
   description?: string;
+  /** Rating (0-5) */
+  rating?: number;
+  /** Number of reviews */
+  reviewCount?: number;
+  /** Product features/tags */
+  features?: string[];
+  /** Shipping info */
+  shipping?: {
+    shippingType?: string;
+    estimatedDays?: string;
+  };
 };
 
 // Extend with attributes, variants and pricing models as needed.
