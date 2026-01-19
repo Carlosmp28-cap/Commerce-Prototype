@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Title, Paragraph, Button, Avatar, useTheme as usePaperTheme } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
@@ -69,6 +70,9 @@ export default function CheckoutScreen({ navigation, route }: Props) {
   const [cvvError, setCvvError] = useState("");
 
   // envio de email removido — estado relacionado eliminado
+  const [placing, setPlacing] = useState(false);
+
+  const STORAGE_KEY = "checkout:draft:v1";
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -100,6 +104,43 @@ export default function CheckoutScreen({ navigation, route }: Props) {
     }
   }, []);
 
+  // restore draft on mount / pageshow
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (!raw || !mounted) return;
+        const data = JSON.parse(raw);
+        if (data) {
+          setFullName(data.fullName || "");
+          setEmail(data.email || "");
+          setAddress(data.address || "");
+          setCity(data.city || "");
+          setPostalCode(data.postalCode || "");
+          setCountry(data.country || "");
+          setStep(typeof data.step === "number" ? data.step : 0);
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // save draft on unmount / pagehide
+  useEffect(() => {
+    const save = async () => {
+      try {
+        const payload = JSON.stringify({ fullName, email, address, city, postalCode, country, step });
+        await AsyncStorage.setItem(STORAGE_KEY, payload);
+      } catch { /* ignore */ }
+    };
+    // save on every change but debounced
+    const t = setTimeout(save, 600);
+    return () => clearTimeout(t);
+  }, [fullName, email, address, city, postalCode, country, step]);
+
   const validateShipping = () => {
     const basicEmailValid = (e: string) => /\S+@\S+\.\S+/.test(e);
     return Boolean(
@@ -129,7 +170,7 @@ export default function CheckoutScreen({ navigation, route }: Props) {
     return false;
   })();
 
-  const next = () => {
+  const next = useCallback(() => {
     if (step === 0) {
       if (!validateShipping()) return;
       setStep(1);
@@ -140,20 +181,28 @@ export default function CheckoutScreen({ navigation, route }: Props) {
       setStep(2);
       return;
     }
-  };
+  }, [step, validateShipping, validatePayment]);
 
-  const back = () => {
+  const back = useCallback(() => {
     if (step === 0) {
       navigation.goBack();
       return;
     }
     setStep((s) => Math.max(0, s - 1));
-  };
+  }, [step, navigation]);
 
   // place order: finalize locally and navigate back
-  const placeOrder = () => {
-    Keyboard.dismiss();
-    setTimeout(() => navigation.goBack(), 300);
+  const placeOrder = async () => {
+    if (placing) return;
+    setPlacing(true);
+    try {
+      Keyboard.dismiss();
+      // simulate processing
+      await new Promise((r) => setTimeout(r, 300));
+      navigation.goBack();
+    } finally {
+      setPlacing(false);
+    }
   };
 
   useEffect(() => {
