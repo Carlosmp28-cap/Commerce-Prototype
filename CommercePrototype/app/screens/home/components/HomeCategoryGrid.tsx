@@ -1,6 +1,8 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { Card, Text, useTheme as usePaperTheme } from "react-native-paper";
+
+import { HomeImage } from "./HomeImage";
 
 export function HomeCategoryGrid({
   title,
@@ -28,7 +30,15 @@ export function HomeCategoryGrid({
             accessibilityLabel={`Shop category ${c.label}`}
           >
             {c.image ? (
-              <Card.Cover source={c.image} style={styles.categoryTileImage} />
+              Platform.OS === "web" ? (
+                <HomeImage
+                  source={c.image}
+                  alt={`${c.label} category`}
+                  style={styles.categoryTileImage}
+                />
+              ) : (
+                <Card.Cover source={c.image} style={styles.categoryTileImage} />
+              )
             ) : null}
             <Card.Content style={styles.categoryTileContent}>
               <Text variant="titleMedium" style={{ fontWeight: "900" }}>
@@ -48,6 +58,10 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: "900", marginBottom: 10 },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   categoryTile: { width: "48%", borderRadius: 14 },
-  categoryTileImage: { height: 110 },
+  categoryTileImage: {
+    height: 110,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+  },
   categoryTileContent: { paddingTop: 10, gap: 2 },
 });

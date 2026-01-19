@@ -1,11 +1,13 @@
 import React from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, Platform, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
   Text,
   useTheme as usePaperTheme,
 } from "react-native-paper";
+
+import { HomeImage } from "./HomeImage";
 
 import { getAvailabilityLabel } from "../../../utils/stock";
 
@@ -59,7 +61,15 @@ export function HomeFeaturedCarousel({
             ]}
             accessibilityLabel={`Open product ${item.name}`}
           >
-            <Card.Cover source={item.image} style={styles.productImage} />
+            {Platform.OS === "web" ? (
+              <HomeImage
+                source={item.image}
+                alt={item.name}
+                style={styles.productImage}
+              />
+            ) : (
+              <Card.Cover source={item.image} style={styles.productImage} />
+            )}
             <Card.Content style={{ paddingTop: 10 }}>
               <Text
                 variant="titleMedium"

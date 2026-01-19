@@ -1,11 +1,13 @@
 import React from "react";
-import { ImageBackground, StyleSheet, View } from "react-native";
+import { ImageBackground, Platform, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
   Text,
   useTheme as usePaperTheme,
 } from "react-native-paper";
+
+import { HomeImage } from "./HomeImage";
 
 export function HomeHero({
   heroImage,
@@ -18,6 +20,43 @@ export function HomeHero({
 }) {
   const paperTheme = usePaperTheme();
 
+  const imageSource =
+    heroImage ?? require("../../../../assets/images/react-logo.png");
+
+  const heroContent = (
+    <>
+      <View style={styles.heroOverlay} />
+      <Card.Content style={styles.heroContent}>
+        <Text style={styles.heroKicker}>Welcome</Text>
+        <Text variant="headlineSmall" style={styles.heroHeadline}>
+          New season essentials
+        </Text>
+        <Text style={styles.heroBody}>
+          Shop curated picks across New, Men, Women and Sale.
+        </Text>
+
+        <View style={styles.heroCtas}>
+          <Button
+            mode="contained"
+            onPress={onShopAll}
+            accessibilityLabel="Shop all products"
+            style={styles.heroCtaButton}
+          >
+            Shop all
+          </Button>
+          <Button
+            mode="outlined"
+            onPress={onShopSale}
+            accessibilityLabel="Shop sale"
+            style={styles.heroCtaButton}
+          >
+            Shop sale
+          </Button>
+        </View>
+      </Card.Content>
+    </>
+  );
+
   return (
     <Card
       style={[styles.heroCard, { backgroundColor: paperTheme.colors.surface }]}
@@ -25,41 +64,25 @@ export function HomeHero({
       accessibilityLabel="Open product listing"
     >
       <View style={styles.heroClip}>
-        <ImageBackground
-          source={heroImage}
-          style={styles.heroImageBg}
-          imageStyle={styles.heroImageBgImage}
-        >
-          <View style={styles.heroOverlay} />
-          <Card.Content style={styles.heroContent}>
-            <Text style={styles.heroKicker}>Welcome</Text>
-            <Text variant="headlineSmall" style={styles.heroHeadline}>
-              New season essentials
-            </Text>
-            <Text style={styles.heroBody}>
-              Shop curated picks across New, Men, Women and Sale.
-            </Text>
-
-            <View style={styles.heroCtas}>
-              <Button
-                mode="contained"
-                onPress={onShopAll}
-                accessibilityLabel="Shop all products"
-                style={styles.heroCtaButton}
-              >
-                Shop all
-              </Button>
-              <Button
-                mode="outlined"
-                onPress={onShopSale}
-                accessibilityLabel="Shop sale"
-                style={styles.heroCtaButton}
-              >
-                Shop sale
-              </Button>
-            </View>
-          </Card.Content>
-        </ImageBackground>
+        {Platform.OS === "web" ? (
+          <View style={styles.heroImageBg}>
+            <HomeImage
+              source={imageSource}
+              alt="New season essentials"
+              priority="high"
+              style={styles.heroImage}
+            />
+            {heroContent}
+          </View>
+        ) : (
+          <ImageBackground
+            source={imageSource}
+            style={styles.heroImageBg}
+            imageStyle={styles.heroImageBgImage}
+          >
+            {heroContent}
+          </ImageBackground>
+        )}
       </View>
     </Card>
   );
@@ -76,6 +99,10 @@ const styles = StyleSheet.create({
   heroImageBg: {
     minHeight: 190,
     justifyContent: "flex-end",
+  },
+  heroImage: {
+    ...StyleSheet.absoluteFillObject,
+    transform: [{ scale: 1.05 }],
   },
   heroImageBgImage: {
     transform: [{ scale: 1.05 }],
