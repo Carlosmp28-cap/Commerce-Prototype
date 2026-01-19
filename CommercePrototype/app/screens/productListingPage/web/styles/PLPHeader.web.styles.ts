@@ -1,16 +1,11 @@
 import { StyleSheet } from "react-native";
+import { sharedStyles } from "../../styles/PLPHeader.shared.styles";
 
-/**
- * Styles for PLPHeader web version
- */
 export const styles = StyleSheet.create({
+  ...sharedStyles,
   topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    ...sharedStyles.topRow,
     paddingVertical: 8,
-    paddingHorizontal: 8,
-    position: "relative",
   },
   backButtonContainer: {
     position: "absolute",
@@ -18,7 +13,7 @@ export const styles = StyleSheet.create({
     zIndex: 10,
   },
   titleContainer: {
-    alignItems: "center",
+    ...sharedStyles.titleContainer,
     zIndex: 1,
   },
   controlsContainer: {
@@ -31,8 +26,7 @@ export const styles = StyleSheet.create({
     zIndex: 2,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
+    ...sharedStyles.buttonLabel,
     marginLeft: 8,
   },
   button: {
@@ -40,7 +34,7 @@ export const styles = StyleSheet.create({
     minWidth: 130,
   },
   buttonContent: {
-    flexDirection: "row-reverse",
+    ...sharedStyles.buttonContent,
   },
   menuContent: {
     marginTop: 50,

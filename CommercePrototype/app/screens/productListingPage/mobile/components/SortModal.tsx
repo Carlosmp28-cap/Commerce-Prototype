@@ -26,7 +26,7 @@ interface SortModalProps {
  * @param {SortModalProps} props - Component properties
  * @returns {JSX.Element} Modal with sort options
  */
-export function SortModal({ visible, selectedSort, onClose, onSelect }: SortModalProps) {
+export default function SortModal({ visible, selectedSort, onClose, onSelect }: SortModalProps) {
     const theme = useTheme();
 
     return (
@@ -55,7 +55,7 @@ export function SortModal({ visible, selectedSort, onClose, onSelect }: SortModa
                             accessible={true}
                             accessibilityRole="header"
                         >
-                            Sort by
+                            Sort By:
                         </Text>
                         <TouchableOpacity 
                             onPress={onClose} 
