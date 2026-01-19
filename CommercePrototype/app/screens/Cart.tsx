@@ -12,18 +12,6 @@ type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 export default function CartScreen({ navigation }: Props) {
   const { items, removeItem, updateQuantity } = useCart();
 
-  // Functional updates to avoid stale state when tapping fast
-  const handleRemoveItem = React.useCallback((id: string) => {
-    removeItem(id);
-  }, [removeItem]);
-
-  const handleUpdateQuantity = React.useCallback(
-    (id: string, newQuantity: number) => {
-      updateQuantity(id, newQuantity);
-    },
-    [updateQuantity]
-  );
-
   const subtotal = React.useMemo(
     () => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
     [items]
@@ -48,22 +36,22 @@ export default function CartScreen({ navigation }: Props) {
             <View style={styles.quantityControl}>
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
-              >
-                <Text style={styles.quantityBtnText}>−</Text>
-              </TouchableOpacity>
-              <Text style={styles.quantityValue}>{item.quantity}</Text>
-              <TouchableOpacity
-                style={styles.quantityBtn}
-                onPress={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
-              >
-                <Text style={styles.quantityBtnText}>+</Text>
-              </TouchableOpacity>
+              onPress={() => updateQuantity(item.product.id, item.quantity - 1)}
+            >
+              <Text style={styles.quantityBtnText}>−</Text>
+            </TouchableOpacity>
+            <Text style={styles.quantityValue}>{item.quantity}</Text>
+            <TouchableOpacity
+              style={styles.quantityBtn}
+              onPress={() => updateQuantity(item.product.id, item.quantity + 1)}
+            >
+              <Text style={styles.quantityBtnText}>+</Text>
+            </TouchableOpacity>
             </View>
 
             <TouchableOpacity
               style={styles.deleteBtn}
-              onPress={() => handleRemoveItem(item.product.id)}
+              onPress={() => removeItem(item.product.id)}
             >
               <Text style={styles.deleteBtnIcon}>✕</Text>
             </TouchableOpacity>
@@ -71,31 +59,23 @@ export default function CartScreen({ navigation }: Props) {
         </View>
       </View>
     ),
-    [handleRemoveItem, handleUpdateQuantity]
+    [removeItem, updateQuantity]
   );
 
   const isEmpty = items.length === 0;
 
   return (
     <View style={styles.container}>
-      {/* LEFT: scrollable items (FlatList) */}
       <View style={styles.scrollContainer}>
         <FlatList
           data={items}
           renderItem={renderCartItem}
           keyExtractor={(item) => item.product.id}
           showsVerticalScrollIndicator={false}
-          // keep your padding/gap from itemsSection
+
           contentContainerStyle={
             isEmpty
-              ? [
-                  styles.itemsSection,
-                  {
-                    flexGrow: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  },
-                ]
+              ? [styles.itemsSection, styles.emptyStateLayout]
               : styles.itemsSection
           }
           ListEmptyComponent={
@@ -107,14 +87,12 @@ export default function CartScreen({ navigation }: Props) {
               </Text>
             </View>
           }
-          // Optional virtualization tuning
           initialNumToRender={10}
           windowSize={5}
           maxToRenderPerBatch={10}
         />
       </View>
 
-      {/* RIGHT: summary + buttons */}
       {!isEmpty && (
         <View style={styles.rightColumn}>
           <View style={styles.summarySection}>
