@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,7 +7,6 @@ import {
   Platform,
   useWindowDimensions,
   Keyboard,
-  ActivityIndicator,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Title, Paragraph, Button, Avatar, useTheme as usePaperTheme } from "react-native-paper";
@@ -17,10 +16,10 @@ import { useTheme } from "../../themes";
 import styles from "./styles";
 import { sendOrderEmail } from "../../services/sendOrderEmail";
 
-const ShippingForm = React.lazy(() => import("./components/ShippingForm"));
-const PaymentForm = React.lazy(() => import("./components/PaymentForm"));
-const ReviewCard = React.lazy(() => import("./components/ReviewCard"));
-const OrderSummary = React.lazy(() => import("./components/OrderSummary"));
+import ShippingForm from "./components/ShippingForm";
+import PaymentForm from "./components/PaymentForm";
+import ReviewCard from "./components/ReviewCard";
+import OrderSummary from "./components/OrderSummary";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
@@ -210,49 +209,47 @@ export default function CheckoutScreen({ navigation, route }: Props) {
 
         <View style={[styles.grid, isNarrow && styles.gridColumn]}>
           <View style={styles.colMain}>
-            <Suspense fallback={<View style={{ height: 200, justifyContent: "center" }}><ActivityIndicator /></View>}>
-              {step === 0 && (
-                <ShippingForm
-                  fullName={fullName} setFullName={setFullName}
-                  email={email} setEmail={setEmail}
-                  address={address} setAddress={setAddress}
-                  city={city} setCity={setCity}
-                  postalCode={postalCode} setPostalCode={setPostalCode}
-                  country={country} countryQuery={countryQuery} setCountry={setCountry} setCountryQuery={setCountryQuery}
-                />
-              )}
+            {step === 0 && (
+              <ShippingForm
+                fullName={fullName} setFullName={setFullName}
+                email={email} setEmail={setEmail}
+                address={address} setAddress={setAddress}
+                city={city} setCity={setCity}
+                postalCode={postalCode} setPostalCode={setPostalCode}
+                country={country} countryQuery={countryQuery} setCountry={setCountry} setCountryQuery={setCountryQuery}
+              />
+            )}
 
-              {step === 1 && (
-                <PaymentForm
-                  paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-                  cardName={cardName} setCardName={setCardName}
-                  cardNumber={cardNumber} setCardNumber={setCardNumber}
-                  expiry={expiry} setExpiry={setExpiry}
-                  cvv={cvv} setCvv={setCvv}
-                  cardNumberError={cardNumberError} setCardNumberError={setCardNumberError}
-                  expiryError={expiryError} setExpiryError={setExpiryError}
-                  cvvError={cvvError} setCvvError={setCvvError}
-                />
-              )}
+            {step === 1 && (
+              <PaymentForm
+                paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
+                cardName={cardName} setCardName={setCardName}
+                cardNumber={cardNumber} setCardNumber={setCardNumber}
+                expiry={expiry} setExpiry={setExpiry}
+                cvv={cvv} setCvv={setCvv}
+                cardNumberError={cardNumberError} setCardNumberError={setCardNumberError}
+                expiryError={expiryError} setExpiryError={setExpiryError}
+                cvvError={cvvError} setCvvError={setCvvError}
+              />
+            )}
 
-              {step === 2 && (
-                <ReviewCard
-                  fullName={fullName}
-                  email={email}
-                  address={address}
-                  city={city}
-                  postalCode={postalCode}
-                  country={country}
-                  paymentMethod={paymentMethod}
-                  cardName={cardName}
-                  cardNumber={cardNumber}
-                  mockItems={mockItems}
-                  subtotal={subtotal}
-                  shippingCost={shippingCost}
-                  total={total}
-                />
-              )}
-            </Suspense>
+            {step === 2 && (
+              <ReviewCard
+                fullName={fullName}
+                email={email}
+                address={address}
+                city={city}
+                postalCode={postalCode}
+                country={country}
+                paymentMethod={paymentMethod}
+                cardName={cardName}
+                cardNumber={cardNumber}
+                mockItems={mockItems}
+                subtotal={subtotal}
+                shippingCost={shippingCost}
+                total={total}
+              />
+            )}
 
             <View style={styles.actions}>
               <View style={{ flex: 1, marginRight: 8 }}>
@@ -300,8 +297,6 @@ export default function CheckoutScreen({ navigation, route }: Props) {
           )}
         </View>
       </ScrollView>
-
-      {/* email/snackbar removed */}
     </KeyboardAvoidingView>
   );
 }

@@ -22,7 +22,9 @@ export default function ShippingForm(props: {
     <Card style={styles.card}>
       <Card.Content>
         <Text style={styles.sectionTitle}>Shipping information</Text>
-        <Paragraph style={styles.hint}>Enter the address where you want to receive the order.</Paragraph>
+        <Paragraph style={styles.hint}>
+          Enter the address where you want to receive the order.
+        </Paragraph>
 
         <TextInput
           label="Full name"

@@ -2,7 +2,7 @@
 import "@testing-library/jest-native/extend-expect";
 
 // Habilita matchers do jest-dom para testes web
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Optional: mock native modules here if needed
 
@@ -39,7 +39,33 @@ jest.mock(
   { virtual: true }
 );
 
+jest.mock("@expo/vector-icons/MaterialIcons", () => {
+  const React = require("react");
+  return {
+    default: function IconMock(props) {
+      return React.createElement("Icon", props);
+    },
+  };
+});
+jest.mock(
+  "react-native-vector-icons/MaterialIcons",
+  () => {
+    const React = require("react");
+    return {
+      default: function IconMock(props) {
+        return React.createElement("Icon", props);
+      },
+    };
+  },
+  { virtual: true }
+);
+
 // expo-linking is ESM in recent SDKs; mock to avoid Jest ESM parsing issues.
 jest.mock("expo-linking", () => ({
   createURL: () => "test://",
 }));
+
+// AsyncStorage is a native module; mock it for Jest.
+jest.mock("@react-native-async-storage/async-storage", () =>
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+);

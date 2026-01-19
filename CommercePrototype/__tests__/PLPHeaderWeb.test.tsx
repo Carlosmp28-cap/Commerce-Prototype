@@ -1,4 +1,6 @@
-import '@testing-library/jest-dom';
+/** @jest-environment jsdom */
+
+import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { PLPHeaderWebTitle } from "../app/screens/productListingPage/web/components/PLPHeaderWeb";
 
