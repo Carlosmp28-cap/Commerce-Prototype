@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -16,6 +16,7 @@ import {
   Title,
   useTheme as usePaperTheme,
 } from "react-native-paper";
+import { useCart } from "../../store/CartContext";
 
 import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
@@ -30,12 +31,22 @@ import {
 
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
-export default function CheckoutScreen({ route, navigation }: Props) {
-  const { items, subtotalCart, tax, totalCart } = route.params;
+export default function CheckoutScreen({ navigation }: Props) {
+  const { items, totalPrice, totalQuantity } = useCart();
 
+  // 1) Guard incoming params
   const safeItems = Array.isArray(items) ? items : [];
 
-  console.log("cartItems:", safeItems);
+  console.log("Cart items (full):", JSON.stringify(safeItems, null, 2));
+
+  // Debug – see what we actually received
+  console.log("✅ Checkout params:", {
+    itemsType: Array.isArray(items) ? "array" : typeof items,
+    itemsLen: Array.isArray(items) ? items.length : undefined,
+    totalPrice,
+    totalQuantity,
+  });
+
   const theme = useTheme();
   const paper = usePaperTheme();
   const { width } = useWindowDimensions();
@@ -64,23 +75,21 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   const [expiryError, setExpiryError] = useState("");
   const [cvvError, setCvvError] = useState("");
 
-  const orderSummaryItems = React.useMemo(
-    () =>
-      items.map((i) => ({
-        id: i.id,
-        title: i.name,
-        qty: i.quantity,
-        price: i.price,
-      })),
-    [items]
-  );
-
-  const subtotal = React.useMemo(
-    () => orderSummaryItems.reduce((s, it) => s + it.qty * it.price, 0),
-    []
-  );
+  // 4) Shipping and total (choose your source of truth)
   const shippingCost = 5.0;
+  const subtotal = Number(totalPrice) || 0;
   const total = subtotal + shippingCost;
+
+  // Option B: trust numbers from Cart (coerce anyway)
+  // const subtotal = safeSubtotalCart;
+  // const total = safeTotalCart;
+
+  // Debug – confirm computed numbers are valid
+  console.log("🧮 Computed:", {
+    totalPrice,
+    shippingCost,
+    total,
+  });
 
   // suggestions (local mock logic moved to ShippingForm but parent keeps selected data)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
@@ -101,7 +110,6 @@ export default function CheckoutScreen({ route, navigation }: Props) {
 
   const validatePayment = () => {
     if (paymentMethod === "paypal") return true;
-    // basic checks (detailed validators can be moved to helpers)
     return Boolean(
       cardName.trim() &&
         cardNumber.length >= 12 &&
@@ -132,7 +140,6 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   };
 
   const placeOrder = async () => {
-    // simulate
     Keyboard.dismiss();
     setTimeout(() => navigation.goBack(), 900);
   };
@@ -217,8 +224,8 @@ export default function CheckoutScreen({ route, navigation }: Props) {
                 paymentMethod={paymentMethod}
                 cardName={cardName}
                 cardNumber={cardNumber}
-                mockItems={orderSummaryItems}
-                subtotal={subtotal}
+                items={items}
+                subtotal={totalPrice}
                 shippingCost={shippingCost}
                 total={total}
               />
@@ -247,8 +254,8 @@ export default function CheckoutScreen({ route, navigation }: Props) {
               style={[styles.colSummary, isNarrow && styles.colSummaryNarrow]}
             >
               <OrderSummary
-                mockItems={orderSummaryItems}
-                subtotal={subtotal}
+                items={items}
+                subtotal={totalPrice}
                 shippingCost={shippingCost}
                 total={total}
               />

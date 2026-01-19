@@ -1,168 +1,71 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
-import { create } from "zustand";
 import ButtonCheckout from "../components/ButtonCheckout";
 import ButtonContinueShop from "../components/ButtonContinueShop";
+import { useCart } from "../hooks/useCart";
 import type { RootStackParamList } from "../navigation";
 import { styles } from "./Cart.styles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 
-// Test data for cart items
-const INITIAL_CART_ITEMS = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    price: 79.99,
-    quantity: 1,
-    image: "🎧",
-  },
-  { id: "2", name: "USB-C Cable", price: 15.99, quantity: 2, image: "🔌" },
-  { id: "3", name: "Phone Case", price: 24.99, quantity: 1, image: "📱" },
-  { id: "4", name: "Screen Protector", price: 9.99, quantity: 3, image: "🛡️" },
-  {
-    id: "5",
-    name: "Bluetooth Speaker",
-    price: 49.99,
-    quantity: 1,
-    image: "🔊",
-  },
-  { id: "6", name: "Portable Charger", price: 29.99, quantity: 1, image: "🔋" },
-  { id: "7", name: "Wireless Mouse", price: 19.99, quantity: 2, image: "🖱️" },
-  {
-    id: "8",
-    name: "Mechanical Keyboard",
-    price: 89.99,
-    quantity: 1,
-    image: "⌨️",
-  },
-  { id: "9", name: "Laptop Stand", price: 34.99, quantity: 1, image: "💻" },
-  {
-    id: "10",
-    name: "Monitor Cleaning Kit",
-    price: 12.99,
-    quantity: 1,
-    image: "🧴",
-  },
-  { id: "11", name: "Smartwatch Band", price: 14.99, quantity: 1, image: "⌚" },
-  { id: "12", name: "LED Light Strip", price: 22.99, quantity: 1, image: "🌈" },
-  {
-    id: "13",
-    name: "Gaming Controller",
-    price: 59.99,
-    quantity: 1,
-    image: "🎮",
-  },
-  { id: "14", name: "USB Hub", price: 18.99, quantity: 1, image: "🔌" },
-  {
-    id: "15",
-    name: "Noise Cancelling Earbuds",
-    price: 69.99,
-    quantity: 1,
-    image: "🎧",
-  },
-  {
-    id: "16",
-    name: "Action Camera Mount",
-    price: 11.99,
-    quantity: 1,
-    image: "📷",
-  },
-  { id: "17", name: "Desk Mat", price: 15.99, quantity: 1, image: "🖤" },
-  {
-    id: "18",
-    name: "VR Headset Cover",
-    price: 25.99,
-    quantity: 1,
-    image: "🕶️",
-  },
-  {
-    id: "19",
-    name: "Micro SD Card 128GB",
-    price: 19.99,
-    quantity: 2,
-    image: "💾",
-  },
-  { id: "20", name: "Ethernet Cable", price: 7.99, quantity: 3, image: "🔌" },
-];
-
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-}
-
-interface CartState {
-  cartItems: CartItem[];
-  setCartItems: (fn: (items: CartItem[]) => CartItem[]) => void;
-  clearCart: () => void;
-}
-
-export const useCartStore = create<CartState>()((set) => ({
-  cartItems: [],
-  setCartItems: (fn) =>
-    set((state) => ({
-      cartItems: fn(state.cartItems),
-    })),
-  clearCart: () => set({ cartItems: [] }),
-}));
-
 export default function CartScreen({ navigation }: Props) {
-  const [cartItems, setCartItems] =
-    React.useState<CartItem[]>(INITIAL_CART_ITEMS);
+  const { items, removeItem, updateQuantity } = useCart();
 
   // Functional updates to avoid stale state when tapping fast
-  const handleRemoveItem = React.useCallback((id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  const handleRemoveItem = React.useCallback(
+    (id: string) => {
+      removeItem(id);
+    },
+    [removeItem]
+  );
 
   const handleUpdateQuantity = React.useCallback(
     (id: string, newQuantity: number) => {
-      setCartItems((prev) => {
-        if (newQuantity <= 0) return prev.filter((item) => item.id !== id);
-        return prev.map((item) =>
-          item.id === id ? { ...item, quantity: newQuantity } : item
-        );
-      });
+      updateQuantity(id, newQuantity);
     },
-    []
+    [updateQuantity]
   );
 
   const subtotal = React.useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cartItems]
+    () =>
+      items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [items]
   );
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
   const renderCartItem = React.useCallback(
-    ({ item }: { item: CartItem }) => (
+    ({ item }: { item: (typeof items)[0] }) => (
       <View style={styles.cartItemWrapper}>
         <View style={styles.cartItem}>
           <View style={styles.itemImageContainer}>
-            <Text style={styles.itemImage}>{item.image}</Text>
+            <Text style={styles.itemImage}>📦</Text>
           </View>
 
           <View style={styles.itemContent}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+            <Text style={styles.itemName}>{item.product.name}</Text>
+            <Text style={styles.itemPrice}>
+              ${item.product.price.toFixed(2)}
+            </Text>
           </View>
 
           <View style={styles.itemActions}>
             <View style={styles.quantityControl}>
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                onPress={() =>
+                  handleUpdateQuantity(item.product.id, item.quantity - 1)
+                }
               >
                 <Text style={styles.quantityBtnText}>−</Text>
               </TouchableOpacity>
               <Text style={styles.quantityValue}>{item.quantity}</Text>
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                onPress={() =>
+                  handleUpdateQuantity(item.product.id, item.quantity + 1)
+                }
               >
                 <Text style={styles.quantityBtnText}>+</Text>
               </TouchableOpacity>
@@ -170,7 +73,7 @@ export default function CartScreen({ navigation }: Props) {
 
             <TouchableOpacity
               style={styles.deleteBtn}
-              onPress={() => handleRemoveItem(item.id)}
+              onPress={() => handleRemoveItem(item.product.id)}
             >
               <Text style={styles.deleteBtnIcon}>✕</Text>
             </TouchableOpacity>
@@ -181,16 +84,16 @@ export default function CartScreen({ navigation }: Props) {
     [handleRemoveItem, handleUpdateQuantity]
   );
 
-  const isEmpty = cartItems.length === 0;
+  const isEmpty = items.length === 0;
 
   return (
     <View style={styles.container}>
       {/* LEFT: scrollable items (FlatList) */}
       <View style={styles.scrollContainer}>
         <FlatList
-          data={cartItems}
+          data={items}
           renderItem={renderCartItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.product.id}
           showsVerticalScrollIndicator={false}
           // keep your padding/gap from itemsSection
           contentContainerStyle={
@@ -243,7 +146,7 @@ export default function CartScreen({ navigation }: Props) {
             </View>
 
             <Text style={styles.itemCount}>
-              {cartItems.length} item{cartItems.length !== 1 ? "s" : ""}
+              {items.length} item{items.length !== 1 ? "s" : ""}
             </Text>
           </View>
 
@@ -251,12 +154,7 @@ export default function CartScreen({ navigation }: Props) {
             <ButtonCheckout
               title="Proceed to Checkout"
               onPress={() => {
-                navigation.navigate("Checkout", {
-                  items: cartItems,
-                  subtotalCart: subtotal,
-                  tax,
-                  totalCart: total,
-                });
+                navigation.navigate("Checkout");
               }}
             />
 
