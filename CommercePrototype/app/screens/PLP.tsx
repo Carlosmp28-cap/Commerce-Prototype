@@ -8,11 +8,16 @@ import type { CatalogProduct } from "../data/catalog";
 import { createStyles } from "./PLP.styles";
 import ProductCard from "./productListingPage/components/ProductCard";
 import EmptyState from "./productListingPage/components/EmptyState";
-import { sortProducts, type SortOption } from "../scripts/helpers/productHelpers";
+import {
+  sortProducts,
+  type SortOption,
+} from "../scripts/helpers/productHelpers";
+import Footer from "../components/Footer";
 
-const PLPHeader = Platform.OS === "web"
-  ? require("./productListingPage/PLPHeader.web").default
-  : require("./productListingPage/PLPHeader.native").default;
+const PLPHeader =
+  Platform.OS === "web"
+    ? require("./productListingPage/PLPHeader.web").default
+    : require("./productListingPage/PLPHeader.native").default;
 
 type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
 
@@ -82,7 +87,9 @@ export default function PLPScreen({ navigation, route }: Props) {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <PLPHeader
         query={q}
         productCount={products.length}
@@ -100,10 +107,17 @@ export default function PLPScreen({ navigation, route }: Props) {
         data={products}
         keyExtractor={(p) => p.id}
         numColumns={numColumns}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { flexGrow: 1 }]}
         columnWrapperStyle={styles.row}
         renderItem={renderProduct}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={
+          <View style={{ flexGrow: 1, justifyContent: "flex-end" }}>
+            <View style={{ marginHorizontal: -8 }}>
+              <Footer />
+            </View>
+          </View>
+        }
       />
     </View>
   );

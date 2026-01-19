@@ -13,8 +13,8 @@ export default StyleSheet.create({
 
   /* Checkout / common cards */
   card: { marginVertical: 6 },
-  sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 6 },
-  hint: { marginBottom: 8, color: "#666" },
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 6, color: "#111111" },
+  hint: { marginBottom: 8, color: "#333333" },
   subLabel: { fontWeight: "600", marginTop: 6, marginBottom: 4 },
 
   /* inputs / layout */

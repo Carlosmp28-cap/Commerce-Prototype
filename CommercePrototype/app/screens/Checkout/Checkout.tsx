@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -12,12 +12,11 @@ import {
   Avatar,
   Button,
   Paragraph,
-  Snackbar,
   Title,
   useTheme as usePaperTheme,
 } from "react-native-paper";
-import { useCart } from "../../store/CartContext";
 
+import { useCart } from "../../hooks/useCart";
 import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
 import styles from "./styles";
@@ -58,6 +57,7 @@ export default function CheckoutScreen({ route, navigation }: Props) {
 
   // shipping
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -96,17 +96,50 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const [placing, setPlacing] = useState(false);
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    if (typeof document !== "undefined") {
+      document.title = "Checkout — CommercePrototype";
+
+      let meta = document.querySelector("meta[name='description']");
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.setAttribute("name", "description");
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute(
+        "content",
+        "Finalizar encomenda — pagamento seguro e envio rápido."
+      );
+
+      const ensure = (name: string, content: string) => {
+        let tag = document.querySelector(`meta[property='${name}']`);
+        if (!tag) {
+          tag = document.createElement("meta");
+          tag.setAttribute("property", name);
+          document.head.appendChild(tag);
+        }
+        tag.setAttribute("content", content);
+      };
+
+      ensure("og:title", "Checkout — CommercePrototype");
+      ensure(
+        "og:description",
+        "Finalizar encomenda — pagamento seguro e envio rápido."
+      );
+    }
   }, []);
 
-  const validateShipping = () =>
-    Boolean(
-      fullName.trim() && address.trim() && city.trim() && postalCode.trim()
+  const validateShipping = () => {
+    const basicEmailValid = (e: string) => /\S+@\S+\.\S+/.test(e);
+    return Boolean(
+      fullName.trim() &&
+        address.trim() &&
+        city.trim() &&
+        postalCode.trim() &&
+        basicEmailValid(email)
     );
+  };
 
   const validatePayment = () => {
     if (paymentMethod === "paypal") return true;
@@ -118,7 +151,14 @@ export default function CheckoutScreen({ route, navigation }: Props) {
     );
   };
 
-  const next = () => {
+  // desativa Next até o step atual estar válido
+  const isNextDisabled = (() => {
+    if (step === 0) return !validateShipping();
+    if (step === 1) return !validatePayment();
+    return false;
+  })();
+
+  const next = useCallback(() => {
     if (step === 0) {
       if (!validateShipping()) return;
       setStep(1);
@@ -129,20 +169,49 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       setStep(2);
       return;
     }
-  };
+  }, [step, validateShipping, validatePayment]);
 
-  const back = () => {
+  const back = useCallback(() => {
     if (step === 0) {
       navigation.goBack();
       return;
     }
     setStep((s) => Math.max(0, s - 1));
+  }, [step, navigation]);
+
+  // place order: finalize locally and navigate back
+  const placeOrder = async () => {
+    if (placing) return;
+    setPlacing(true);
+    try {
+      Keyboard.dismiss();
+      // simulate processing
+      await new Promise((r) => setTimeout(r, 300));
+      navigation.goBack();
+    } finally {
+      setPlacing(false);
+    }
   };
 
-  const placeOrder = async () => {
-    Keyboard.dismiss();
-    setTimeout(() => navigation.goBack(), 900);
-  };
+  useEffect(() => {
+    // Add page visibility handlers only on web where window.events are meaningful.
+    if (typeof window === "undefined" || !window.addEventListener) return;
+    const onPageShow = (e: any) => {
+      // restore state if persisted in bfcache
+      if (e?.persisted) {
+        // TODO: restore any transient UI state if needed
+      }
+    };
+    const onPageHide = () => {
+      // TODO: save transient state if needed
+    };
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -155,8 +224,17 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       >
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Title style={{ color: paper.colors.onSurface }}>Checkout</Title>
-            <Paragraph style={{ color: paper.colors.onSurfaceVariant }}>
+            <Title
+              style={{ color: paper.colors.onSurface }}
+              accessibilityRole="header"
+              accessibilityLabel="Checkout page title"
+            >
+              Checkout
+            </Title>
+            <Paragraph
+              style={{ color: paper.colors.onSurfaceVariant }}
+              accessibilityLabel="Checkout subtitle"
+            >
               Complete your purchase — secure payment and fast delivery
             </Paragraph>
           </View>
@@ -164,6 +242,8 @@ export default function CheckoutScreen({ route, navigation }: Props) {
             size={48}
             label="CP"
             style={{ backgroundColor: paper.colors.primary }}
+            accessibilityLabel="Commerce Prototype logo"
+            accessibilityRole="image"
           />
         </View>
 
@@ -173,6 +253,8 @@ export default function CheckoutScreen({ route, navigation }: Props) {
               <ShippingForm
                 fullName={fullName}
                 setFullName={setFullName}
+                email={email}
+                setEmail={setEmail}
                 address={address}
                 setAddress={setAddress}
                 city={city}
@@ -183,13 +265,6 @@ export default function CheckoutScreen({ route, navigation }: Props) {
                 countryQuery={countryQuery}
                 setCountry={setCountry}
                 setCountryQuery={setCountryQuery}
-                addressSuggestions={addressSuggestions}
-                setAddressSuggestions={setAddressSuggestions}
-                showAddressSuggestions={showAddressSuggestions}
-                setShowAddressSuggestions={setShowAddressSuggestions}
-                suggestionsLoading={suggestionsLoading}
-                setSuggestionsLoading={setSuggestionsLoading}
-                debounceRef={debounceRef}
               />
             )}
 
@@ -217,6 +292,7 @@ export default function CheckoutScreen({ route, navigation }: Props) {
             {step === 2 && (
               <ReviewCard
                 fullName={fullName}
+                email={email}
                 address={address}
                 city={city}
                 postalCode={postalCode}
@@ -233,17 +309,38 @@ export default function CheckoutScreen({ route, navigation }: Props) {
 
             <View style={styles.actions}>
               <View style={{ flex: 1, marginRight: 8 }}>
-                <ButtonCompact label="Back" onPress={back} />
+                <Button
+                  mode="outlined"
+                  onPress={back}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back"
+                  disabled={false}
+                  accessibilityState={{ disabled: false }}
+                >
+                  Back
+                </Button>
               </View>
+
               <View style={{ flex: 1 }}>
                 {step < 2 ? (
-                  <ButtonCompact label="Next" onPress={next} primary />
+                  <Button
+                    mode="contained"
+                    onPress={next}
+                    disabled={!!isNextDisabled}
+                    accessibilityRole="button"
+                    accessibilityLabel="Next"
+                  >
+                    Next
+                  </Button>
                 ) : (
-                  <ButtonCompact
-                    label="Place order"
+                  <Button
+                    mode="contained"
                     onPress={placeOrder}
-                    primary
-                  />
+                    accessibilityRole="button"
+                    accessibilityLabel="Place order"
+                  >
+                    Place order
+                  </Button>
                 )}
               </View>
             </View>
@@ -264,26 +361,6 @@ export default function CheckoutScreen({ route, navigation }: Props) {
           )}
         </View>
       </ScrollView>
-
-      <Snackbar visible={false} onDismiss={() => {}} duration={3000}>
-        {" "}
-      </Snackbar>
     </KeyboardAvoidingView>
-  );
-}
-
-function ButtonCompact({
-  label,
-  onPress,
-  primary,
-}: {
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-}) {
-  return (
-    <Button mode={primary ? "contained" : "outlined"} onPress={onPress}>
-      {label}
-    </Button>
   );
 }

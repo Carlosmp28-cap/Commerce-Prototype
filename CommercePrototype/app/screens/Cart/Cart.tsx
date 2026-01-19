@@ -12,6 +12,18 @@ type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 export default function CartScreen({ navigation }: Props) {
   const { items, removeItem, updateQuantity } = useCart();
 
+  // prepare transferable payload for checkout (stable reference)
+  const checkoutPayload = React.useMemo(
+    () =>
+      items.map((i) => ({
+        id: i.product.id,
+        title: i.product.name,
+        qty: i.quantity,
+        price: i.product.price,
+      })),
+    [items]
+  );
+
   // Functional updates to avoid stale state when tapping fast
   const handleRemoveItem = React.useCallback(
     (id: string) => {
