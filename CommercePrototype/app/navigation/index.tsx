@@ -27,7 +27,8 @@ export type RootStackParamList = {
   PLP: { q?: string } | undefined;
   PDP: { id: string };
   Cart: undefined;
-  Checkout: undefined;
+  // pass items from Cart to Checkout
+  Checkout: { items?: { id: string; title: string; qty: number; price: number }[] } | undefined;
   Login: undefined;
 };
 

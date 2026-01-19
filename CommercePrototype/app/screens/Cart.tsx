@@ -98,6 +98,18 @@ export default function CartScreen({ navigation }: Props) {
   const [cartItems, setCartItems] =
     React.useState<CartItem[]>(INITIAL_CART_ITEMS);
 
+  // prepare transferable payload for checkout (stable reference)
+  const checkoutPayload = React.useMemo(
+    () =>
+      items.map((i) => ({
+        id: i.product.id,
+        title: i.product.name,
+        qty: i.quantity,
+        price: i.product.price,
+      })),
+    [items]
+  );
+
   // Functional updates to avoid stale state when tapping fast
   const handleRemoveItem = React.useCallback((id: string) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
@@ -232,7 +244,10 @@ export default function CartScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.actionsContainer}>
-            <ButtonCheckout title="Proceed to Checkout" onPress={() => {}} />
+            <ButtonCheckout
+              title="Proceed to Checkout"
+              onPress={() => navigation.navigate("Checkout", { items: checkoutPayload })}
+            />
             <ButtonContinueShop
               title="Continue Shopping"
               onPress={() => navigation.navigate("PLP")}
