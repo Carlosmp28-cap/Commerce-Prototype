@@ -8,7 +8,7 @@ import {
 
 describe("catalog", () => {
   test("has 5 categories", () => {
-    expect(categories).toHaveLength(4);
+    expect(categories).toHaveLength(5);
     expect(categories.map((c) => c.id)).toEqual([
       "new",
       "men",
