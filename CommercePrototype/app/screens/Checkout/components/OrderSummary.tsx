@@ -23,14 +23,16 @@ export type CartLine = {
 
 export default function OrderSummary({
   items,
-  subtotal,
+  subtotal, // Keep total price without tax just in case
   shippingCost,
   total,
+  totalTax,
 }: {
   items: CartLine[];
   subtotal: number;
   shippingCost: number;
   total: number;
+  totalTax: number;
 }) {
   // Optional debug (comment out if noisy)
   try {
@@ -65,7 +67,7 @@ export default function OrderSummary({
 
         <View style={styles.orderRow}>
           <Text>Subtotal</Text>
-          <Text>${Number(subtotal || 0).toFixed(2)}</Text>
+          <Text>${Number(totalTax || 0).toFixed(2)}</Text>
         </View>
 
         <View style={styles.orderRow}>

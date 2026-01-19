@@ -31,8 +31,9 @@ import {
 
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
-export default function CheckoutScreen({ navigation }: Props) {
+export default function CheckoutScreen({ route, navigation }: Props) {
   const { items, totalPrice, totalQuantity } = useCart();
+  const { totalTax } = route.params;
 
   // 1) Guard incoming params
   const safeItems = Array.isArray(items) ? items : [];
@@ -77,8 +78,7 @@ export default function CheckoutScreen({ navigation }: Props) {
 
   // 4) Shipping and total (choose your source of truth)
   const shippingCost = 5.0;
-  const subtotal = Number(totalPrice) || 0;
-  const total = subtotal + shippingCost;
+  const total = totalTax + shippingCost;
 
   // Option B: trust numbers from Cart (coerce anyway)
   // const subtotal = safeSubtotalCart;
@@ -258,6 +258,7 @@ export default function CheckoutScreen({ navigation }: Props) {
                 subtotal={totalPrice}
                 shippingCost={shippingCost}
                 total={total}
+                totalTax={totalTax}
               />
             </View>
           )}
