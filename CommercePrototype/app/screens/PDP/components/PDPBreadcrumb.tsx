@@ -1,10 +1,11 @@
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { Text } from "react-native-paper";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../../navigation";
 import type { Product } from "../../../models/Product";
 import { categories } from "../../../data/catalog";
+import Text from "../../../components/Text";
+import { useTheme } from "../../../themes";
 
 interface PDPBreadcrumbProps {
   product: Product;
@@ -12,19 +13,31 @@ interface PDPBreadcrumbProps {
 }
 
 export default function PDPBreadcrumb({ product, navigation }: PDPBreadcrumbProps) {
+  const theme = useTheme();
   const category = categories.find((c) => c.id === product.categoryId);
+  const categoryLabel = category?.label || "Products";
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-        <Text style={styles.link}>Home</Text>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Go home"
+        onPress={() => navigation.navigate("Home")}
+      >
+        <Text style={[styles.link, { color: theme.colors.mutedText }]}>Home</Text>
       </TouchableOpacity>
-      <Text style={styles.sep}> › </Text>
-      <TouchableOpacity onPress={() => navigation.navigate("PLP", { q: category?.query })}>
-        <Text style={styles.link}>{category?.label || "Products"}</Text>
+      <Text style={[styles.sep, { color: theme.colors.subtleText }]}> › </Text>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`Open category ${categoryLabel}`}
+        onPress={() => navigation.navigate("PLP", { q: category?.query })}
+      >
+        <Text style={[styles.link, { color: theme.colors.mutedText }]}>
+          {categoryLabel}
+        </Text>
       </TouchableOpacity>
-      <Text style={styles.sep}> › </Text>
-      <Text style={styles.link}>{product.name}</Text>
+      <Text style={[styles.sep, { color: theme.colors.subtleText }]}> › </Text>
+      <Text style={[styles.link, { color: theme.colors.mutedText }]}>{product.name}</Text>
     </View>
   );
 }
@@ -39,12 +52,10 @@ const styles = StyleSheet.create({
   },
   link: {
     fontSize: 14,
-    color: "#4e4e4e",
     fontWeight: "500",
   },
   sep: {
     fontSize: 14,
-    color: "#CCC",
     marginHorizontal: 4,
   },
 });

@@ -6,17 +6,18 @@ export const styles = StyleSheet.create({
     padding: 16,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 16,
   },
 
   // Desktop Layout
   contentRow: {
     flexDirection: "row",
-    gap: 50,
+    gap: 40,
     marginBottom: 64,
+    justifyContent: "center",
   },
   rightColumn: {
-    flex: 1,
+    maxWidth: 450,
     gap: 0,
   },
 });

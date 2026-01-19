@@ -10,6 +10,7 @@ import {
   ImageSourcePropType,
 } from "react-native";
 import { Card, IconButton } from "react-native-paper";
+import { useTheme } from "../../../themes";
 
 interface PDPImageGalleryProps {
   images: ImageSourcePropType[];
@@ -17,6 +18,7 @@ interface PDPImageGalleryProps {
 }
 
 export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryProps) {
+  const theme = useTheme();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -38,6 +40,7 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
                 size={32}
                 iconColor="#fff"
                 onPress={() => setIsZoomed(false)}
+                accessibilityLabel="Close image zoom"
                 style={styles.closeZoomBtn}
               />
               {currentImage && (
@@ -55,13 +58,16 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
           {images.map((item, index) => (
             <TouchableOpacity
               key={`thumb-${index}`}
+              accessibilityRole="button"
+              accessibilityLabel={`Select image ${index + 1}`}
               onPress={() => setSelectedImageIndex(index)}
               activeOpacity={0.7}
             >
               <Card
                 style={[
                   styles.thumbnailCard,
-                  selectedImageIndex === index && styles.thumbnailCardActive,
+                  { borderColor: theme.colors.border },
+                  selectedImageIndex === index && { borderColor: theme.colors.primary },
                 ]}
               >
                 <Image
@@ -78,19 +84,21 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
           <TouchableOpacity
             onPress={() => setIsZoomed(true)}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Open image zoom"
           >
             <Card style={styles.imageCard}>
               {currentImage ? (
                 <Image
                   source={currentImage}
-                  style={styles.mainImageDesktop}
+                  style={[styles.mainImageDesktop, { backgroundColor: theme.colors.background }]}
                   resizeMode="cover"
                 />
               ) : (
                 <View
                   style={[
                     styles.mainImageDesktop,
-                    { backgroundColor: "#E5E5EA" },
+                    { backgroundColor: theme.colors.placeholder },
                   ]}
                 />
               )}
@@ -117,6 +125,7 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
               size={32}
               iconColor="#fff"
               onPress={() => setIsZoomed(false)}
+              accessibilityLabel="Close image zoom"
               style={styles.closeZoomBtn}
             />
             {currentImage && (
@@ -133,19 +142,21 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
       <TouchableOpacity
         onPress={() => setIsZoomed(true)}
         activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel="Open image zoom"
       >
         <Card style={styles.imageCard}>
           {currentImage ? (
             <Image
               source={currentImage}
-              style={styles.mainImageMobile}
+              style={[styles.mainImageMobile, { backgroundColor: theme.colors.background }]}
               resizeMode="cover"
             />
           ) : (
             <View
               style={[
                 styles.mainImageMobile,
-                { backgroundColor: "#E5E5EA" },
+                { backgroundColor: theme.colors.placeholder },
               ]}
             />
           )}
@@ -162,14 +173,17 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
             {images.map((item, index) => (
               <TouchableOpacity
                 key={`thumb-${index}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Select image ${index + 1}`}
                 onPress={() => setSelectedImageIndex(index)}
                 activeOpacity={0.7}
               >
                 <Card
                   style={[
                     styles.thumbnailCardMobile,
+                    { borderColor: theme.colors.border },
                     selectedImageIndex === index &&
-                      styles.thumbnailCardActive,
+                      { borderColor: theme.colors.primary },
                   ]}
                 >
                   <Image
@@ -218,7 +232,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#E8E8E8",
+    borderColor: "#00000000",
     marginRight: 8,
   },
   thumbnailCardMobile: {
@@ -227,11 +241,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#E8E8E8",
+    borderColor: "#00000000",
   },
-  thumbnailCardActive: {
-    borderColor: "#007AFF",
-  },
+  thumbnailCardActive: {},
   thumbnail: {
     width: 70,
     height: 70,
@@ -254,13 +266,13 @@ const styles = StyleSheet.create({
   },
   mainImageMobile: {
     width: "100%",
-    height: 300,
-    backgroundColor: "#f5f5f5",
+    aspectRatio: 1,
+    backgroundColor: "#00000000",
   },
   mainImageDesktop: {
     width: "100%",
-    height: 600,
-    backgroundColor: "#f5f5f5",
+    aspectRatio: 1,
+    backgroundColor: "#00000000",
   },
 
   // Zoom Modal

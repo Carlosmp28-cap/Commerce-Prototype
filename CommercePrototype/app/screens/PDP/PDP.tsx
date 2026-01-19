@@ -1,11 +1,13 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View, ScrollView, useWindowDimensions } from "react-native";
+import { View, ScrollView, useWindowDimensions } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useTheme } from "react-native-paper";
+import { useTheme } from "../../themes";
 import type { RootStackParamList } from "../../navigation";
 import type { Product } from "../../models/Product";
 import { getProductById, products } from "../../data/catalog";
 import { useCart } from "../../hooks/useCart";
+import { useMetaTags } from "../../hooks/useMetaTags";
+import { styles } from "./PDP.styles";
 import {
   PDPBreadcrumb,
   PDPImageGallery,
@@ -55,6 +57,15 @@ export default function PDPScreen({ navigation, route }: Props) {
     addItem(product, quantity);
   };
 
+  // SEO: Meta tags dinâmicas para cada produto
+  useMetaTags({
+    title: `${product.name} - Commerce Prototype`,
+    description: `Buy ${product.name} for €${product.price.toFixed(2)}. ${product.description || 'High-quality product available now.'} Shop online with fast delivery.`,
+    keywords: `${product.name}, ${product.categoryId}, ecommerce, online shopping`,
+    ogTitle: product.name,
+    ogDescription: `${product.name} - €${product.price.toFixed(2)}`,
+  });
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -90,25 +101,3 @@ export default function PDPScreen({ navigation, route }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  scrollContent: {
-    paddingBottom: 16,
-  },
-
-  // Desktop Layout
-  contentRow: {
-    flexDirection: "row",
-    gap: 40,
-    marginBottom: 64,
-    justifyContent: "center",
-  },
-  rightColumn: {
-    maxWidth: 450,
-    gap: 0,
-  },
-});

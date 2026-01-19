@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Text, Button, Menu } from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { Product } from "../../../models/Product";
+import { useTheme } from "../../../themes";
 
 interface PDPQuantitySelectorProps {
   product: Product;
@@ -13,6 +14,7 @@ export default function PDPQuantitySelector({
   product,
   onAddToCart,
 }: PDPQuantitySelectorProps) {
+  const theme = useTheme();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -25,7 +27,7 @@ export default function PDPQuantitySelector({
     setTimeout(() => {
       onAddToCart(quantity);
       setIsAdding(false);
-      alert(`${quantity}x ${product.name} adicionado ao carrinho!`);
+      alert(`${quantity}x ${product.name} added to cart!`);
       setQuantity(1);
     }, 300);
   };
@@ -34,18 +36,23 @@ export default function PDPQuantitySelector({
     <>
       <View style={styles.row}>
         <View style={styles.wrapper}>
-          <Text style={styles.label}>Quantity</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>Quantity</Text>
           <Menu
             visible={menuVisible}
             onDismiss={() => setMenuVisible(false)}
             anchor={
               <TouchableOpacity
                 ref={anchorRef}
-                style={styles.selector}
+                accessibilityRole="button"
+                accessibilityLabel="Select quantity"
+                style={[
+                  styles.selector,
+                  { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+                ]}
                 onPress={() => setMenuVisible(true)}
               >
-                <Text style={styles.text}>{quantity}</Text>
-                <MaterialIcons name="expand-more" size={20} color="#007AFF" />
+                <Text style={[styles.text, { color: theme.colors.text }]}>{quantity}</Text>
+                <MaterialIcons name="expand-more" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
             }
           >
@@ -69,17 +76,25 @@ export default function PDPQuantitySelector({
           mode="contained"
           onPress={handleAddToCart}
           disabled={isAdding}
-          style={styles.button}
-          labelStyle={styles.buttonLabel}
+          style={[styles.button, { backgroundColor: theme.colors.primary }]}
+          labelStyle={[styles.buttonLabel, { color: theme.colors.surface }]}
         >
           {isAdding ? "Adding..." : "Add to Cart"}
         </Button>
       </View>
 
       {product.shipping && (
-        <View style={styles.shipping}>
-          <MaterialIcons name="local-shipping" size={16} color="#666" />
-          <Text style={styles.shippingText}>
+        <View
+          style={[
+            styles.shipping,
+            {
+              backgroundColor: theme.colors.background,
+              borderLeftColor: theme.colors.primary,
+            },
+          ]}
+        >
+          <MaterialIcons name="local-shipping" size={16} color={theme.colors.mutedText} />
+          <Text style={[styles.shippingText, { color: theme.colors.mutedText }]}>
             {product.shipping.shippingType || "Standard shipping"} •{" "}
             {product.shipping.estimatedDays || "3-5 days"}
           </Text>
@@ -103,34 +118,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 6,
-    color: "#4b5563",
   },
   selector: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1.5,
-    borderColor: "#E0E0E0",
     borderRadius: 10,
-    backgroundColor: "#FFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   text: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#000",
   },
   button: {
     flex: 2,
     borderRadius: 10,
-    backgroundColor: "#000",
     paddingVertical: 6,
   },
   buttonLabel: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFF",
   },
   shipping: {
     flexDirection: "row",
@@ -138,15 +147,12 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#F5F7FA",
     borderRadius: 10,
     borderLeftWidth: 4,
-    borderLeftColor: "#000",
     marginBottom: 20,
   },
   shippingText: {
     fontSize: 14,
-    color: "#2d3748",
     flex: 1,
     fontWeight: "600",
   },

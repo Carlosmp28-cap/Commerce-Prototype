@@ -1,6 +1,6 @@
 /**
- * Exemplo: Implementação completa de Add to Cart na PDP
- * Este arquivo demonstra como usar a função addItem no componente PDP
+ * Example: Full Add to Cart implementation for the PDP
+ * This file demonstrates how to use the addItem function in a PDP component
  */
 
 import React, { useState } from "react";
@@ -27,7 +27,7 @@ interface AddToCartExampleProps {
 }
 
 /**
- * Component que demonstra a integração do Add to Cart
+ * Component that demonstrates Add to Cart integration
  */
 export default function AddToCartExample({
   product,
@@ -36,58 +36,58 @@ export default function AddToCartExample({
   const theme = useTheme();
   const { addItem, totalQuantity, totalPrice, items } = useCart();
 
-  // Estados locais
+  // Local state
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Validações
+  // Validations
   const isOutOfStock = product.quantityAvailable <= 0;
   const canAdd = quantity < product.quantityAvailable;
   const canRemove = quantity > 1;
 
   /**
-   * Handler principal para adicionar ao carrinho
+   * Main handler to add to cart
    */
   const handleAddToCart = async () => {
-    // Validação básica
+    // Basic validation
     if (isOutOfStock) {
-      setSuccessMessage("❌ Produto fora de estoque");
+      setSuccessMessage("❌ Out of stock");
       setShowSuccessDialog(true);
       return;
     }
 
     if (quantity <= 0 || quantity > product.quantityAvailable) {
-      setSuccessMessage("⚠️ Quantidade inválida");
+      setSuccessMessage("⚠️ Invalid quantity");
       setShowSuccessDialog(true);
       return;
     }
 
-    // Simulando delay de feedback visual
+    // Simulate delay for visual feedback
     setIsAdding(true);
 
     try {
       // Chama a função do hook
       addItem(product, quantity);
 
-      // Feedback de sucesso
+      // Success feedback
       setSuccessMessage(
-        `✅ ${quantity}x ${product.name} adicionado ao carrinho!\n\n` +
-        `Carrinho: ${totalQuantity + quantity} itens | Total: R$ ${(totalPrice + product.price * quantity).toFixed(2)}`
+        `✅ ${quantity}x ${product.name} added to cart!\n\n` +
+        `Cart: ${totalQuantity + quantity} items | Total: R$ ${(totalPrice + product.price * quantity).toFixed(2)}`
       );
       setShowSuccessDialog(true);
 
-      // Reset da quantidade
+      // Reset quantity
       setQuantity(1);
 
-      // Callback opcional
+      // Optional callback
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      console.error("Erro ao adicionar ao carrinho:", error);
-      setSuccessMessage("❌ Erro ao adicionar ao carrinho");
+      console.error("Failed to add to cart:", error);
+      setSuccessMessage("❌ Failed to add to cart");
       setShowSuccessDialog(true);
     } finally {
       setIsAdding(false);
@@ -95,7 +95,7 @@ export default function AddToCartExample({
   };
 
   /**
-   * Incrementa quantidade
+   * Increase quantity
    */
   const handleIncreaseQuantity = () => {
     if (canAdd) {
@@ -104,7 +104,7 @@ export default function AddToCartExample({
   };
 
   /**
-   * Decrementa quantidade
+   * Decrease quantity
    */
   const handleDecreaseQuantity = () => {
     if (canRemove) {
@@ -114,7 +114,7 @@ export default function AddToCartExample({
 
   return (
     <View style={styles.container}>
-      {/* Informações do Produto */}
+      {/* Product information */}
       <View style={styles.productInfo}>
         <Text style={styles.productName} variant="headlineMedium">
           {product.name}
@@ -124,7 +124,7 @@ export default function AddToCartExample({
           R$ {product.price.toFixed(2)}
         </Text>
 
-        {/* Status de Estoque */}
+        {/* Stock status */}
         <View style={styles.stockStatus}>
           {isOutOfStock ? (
             <Chip
@@ -132,7 +132,7 @@ export default function AddToCartExample({
               style={{ backgroundColor: theme.colors.error }}
               textStyle={{ color: "#fff" }}
             >
-              Fora de Estoque
+              Out of stock
             </Chip>
           ) : (
             <Chip
@@ -140,17 +140,17 @@ export default function AddToCartExample({
               style={{ backgroundColor: theme.colors.primary }}
               textStyle={{ color: "#fff" }}
             >
-              {product.quantityAvailable} unidades disponíveis
+              {product.quantityAvailable} units available
             </Chip>
           )}
         </View>
       </View>
 
-      {/* Seletor de Quantidade */}
+      {/* Quantity selector */}
       {!isOutOfStock && (
         <View style={styles.quantitySection}>
           <Text variant="titleMedium" style={styles.quantityLabel}>
-            Quantidade
+            Quantity
           </Text>
 
           <View style={styles.quantitySelector}>
@@ -191,13 +191,13 @@ export default function AddToCartExample({
 
           {!canAdd && (
             <Text style={styles.limitText} variant="bodySmall">
-              Você atingiu o máximo disponível em estoque
+              You've reached the maximum available stock
             </Text>
           )}
         </View>
       )}
 
-      {/* Botão Adicionar ao Carrinho */}
+      {/* Add to cart button */}
       <Button
         mode="contained"
         onPress={handleAddToCart}
@@ -206,25 +206,25 @@ export default function AddToCartExample({
         style={styles.addButton}
         contentStyle={styles.addButtonContent}
       >
-        {isAdding ? "Adicionando..." : "Adicionar ao Carrinho"}
+        {isAdding ? "Adding..." : "Add to Cart"}
       </Button>
 
-      {/* Informações do Carrinho Atual */}
+      {/* Current cart information */}
       {items.length > 0 && (
         <View style={styles.cartInfo}>
           <Text variant="bodySmall" style={styles.cartInfoText}>
-            Carrinho: {totalQuantity} itens | R$ {totalPrice.toFixed(2)}
+            Cart: {totalQuantity} items | R$ {totalPrice.toFixed(2)}
           </Text>
         </View>
       )}
 
-      {/* Dialog de Sucesso */}
+      {/* Success dialog */}
       <Portal>
         <Dialog
           visible={showSuccessDialog}
           onDismiss={() => setShowSuccessDialog(false)}
         >
-          <Dialog.Title>Carrinho</Dialog.Title>
+          <Dialog.Title>Cart</Dialog.Title>
           <Dialog.Content>
             <Text>{successMessage}</Text>
           </Dialog.Content>
