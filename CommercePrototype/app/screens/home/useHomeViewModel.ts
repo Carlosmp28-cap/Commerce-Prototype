@@ -17,6 +17,7 @@ import { createPicsumResizer } from "./picsum";
 import { normalizeHomeSearchQuery } from "./searchUtils";
 import type { HomeFeaturedProduct } from "./components/HomeFeaturedCarousel";
 
+/** Data + actions needed by the Home screen. */
 export type HomeViewModel = {
   // Layout flags
   homeMaxWidth: number;
@@ -50,13 +51,21 @@ export type HomeViewModel = {
 
 type Navigation = NativeStackNavigationProp<RootStackParamList, "Home">;
 
+/**
+ * Home view-model hook.
+ * @param navigation - Typed navigation object for the Home route
+ * @param width - Current window width used for responsive layout decisions
+ * @returns Derived Home data and stable UI actions
+ */
 export function useHomeViewModel(
   navigation: Navigation,
   width: number
 ): HomeViewModel {
+  // Keep a single resizer instance per mount so its in-memory cache stays effective.
   const resizePicsumSource = useMemo(() => createPicsumResizer(), []);
 
   useEffect(() => {
+    // Web-only: set document title/metadata for SEO/Lighthouse.
     const href =
       typeof window !== "undefined" && window.location
         ? window.location.href
@@ -79,6 +88,7 @@ export function useHomeViewModel(
   const isWideWeb = Platform.OS === "web" && width >= 1024;
 
   const heroSize = useMemo(() => {
+    // Hero is a likely LCP element on web; prefer smaller sources.
     if (width >= 1024) return { w: 960, h: 480 };
     if (width >= 420) return { w: 800, h: 400 };
     return { w: 640, h: 320 };

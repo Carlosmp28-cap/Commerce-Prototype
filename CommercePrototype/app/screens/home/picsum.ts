@@ -2,6 +2,10 @@ import type { ImageSourcePropType } from "react-native";
 
 export type PicsumSize = { w: number; h: number };
 
+/**
+ * Rewrites Picsum URLs of the form `.../seed/<id>/<w>/<h>` to a requested size.
+ * This reduces bytes on Home web without changing product data.
+ */
 function resizePicsumUri(uri: string, width: number, height: number) {
   if (!uri.includes("picsum.photos/seed/")) return uri;
 
@@ -10,6 +14,10 @@ function resizePicsumUri(uri: string, width: number, height: number) {
   return uri.replace(/\/(\d+)\/(\d+)(\?.*)?$/, `/${width}/${height}$3`);
 }
 
+/**
+ * Creates a memoizable Picsum resizer with an in-memory cache.
+ * @returns A function that resizes Picsum sources while preserving input typing
+ */
 export function createPicsumResizer() {
   const cache = new Map<string, ImageSourcePropType>();
 

@@ -12,6 +12,11 @@ import { HomeImage } from "./HomeImage";
 import { HOME_STRINGS } from "../homeStrings";
 import { styles } from "./HomeHero.styles";
 
+/**
+ * Home hero banner.
+ *
+ * Uses `HomeImage` on web for better control over `<img>` attributes (alt, fetchPriority).
+ */
 function HomeHeroComponent({
   heroImage,
   onShopAll,

@@ -4,6 +4,8 @@ type WebHeadOptions = {
   canonicalHref?: string;
 };
 
+/** Web-only helpers for updating document head tags. */
+
 function ensureMetaName(name: string) {
   let meta = document.querySelector(`meta[name='${name}']`);
   if (!meta) {
@@ -34,13 +36,18 @@ function ensureCanonical() {
   return canonical;
 }
 
+/**
+ * Applies Home page head tags on web.
+ * @param title - Document title
+ * @param description - Meta description
+ * @param canonicalHref - Canonical URL (optional)
+ */
 export function applyWebHead({
   title,
   description,
   canonicalHref,
 }: WebHeadOptions) {
   if (typeof document === "undefined") return;
-
   document.title = title;
 
   ensureMetaName("description").setAttribute("content", description);

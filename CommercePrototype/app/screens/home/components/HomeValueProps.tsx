@@ -4,6 +4,11 @@ import { Icon, Text, useTheme as usePaperTheme } from "react-native-paper";
 
 import { styles } from "./HomeValueProps.styles";
 
+/**
+ * Simple value proposition section (trust signals).
+ *
+ * Kept intentionally static and lightweight.
+ */
 function HomeValuePropsComponent({ title }: { title: string }) {
   const paperTheme = usePaperTheme();
 

@@ -13,6 +13,12 @@ import { HomeImage } from "./HomeImage";
 import { getAvailabilityLabel } from "../../../utils/stock";
 import { styles } from "./HomeFeaturedCarousel.styles";
 
+/**
+ * Product carousel used on Home.
+ *
+ * Uses `FlatList` for efficient horizontal virtualization and `HomeImage` on web
+ * to render real `<img>` tags with alt text.
+ */
 export type HomeFeaturedProduct = {
   id: string;
   name: string;

@@ -6,6 +6,7 @@ import { Chip, Searchbar, useTheme as usePaperTheme } from "react-native-paper";
 import { HOME_STRINGS } from "../homeStrings";
 import { styles } from "./HomeSearch.styles";
 
+/** Search input + quick category shortcuts. */
 function HomeSearchComponent({
   query,
   onChangeQuery,
@@ -45,6 +46,7 @@ function HomeSearchComponent({
         contentContainerStyle={styles.categoryRow}
         accessibilityLabel="Categories"
       >
+        {/* Avoid `accessibilityRole="list"` here: RN doesn't expose `listitem`, which Lighthouse expects on web. */}
         {categories.map((c) => (
           <Chip
             key={c.id}

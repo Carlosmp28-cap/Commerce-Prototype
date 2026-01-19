@@ -2,13 +2,20 @@ import React from "react";
 import { Image, Platform, StyleProp, type ImageStyle } from "react-native";
 
 type Props = {
+  /** Image source (kept broad to support `expo-image` on web). */
   source: any;
+  /** Alt text for web (also used as an accessibility label). */
   alt: string;
   style?: StyleProp<ImageStyle>;
   // Only set for the most important image on the page.
   priority?: "high" | "normal" | "low";
 };
 
+/**
+ * Image wrapper for Home.
+ * - Web: uses `expo-image` for `<img>` attributes (alt, fetchPriority)
+ * - Native/tests: falls back to `react-native`'s `Image`
+ */
 export function HomeImage({ source, alt, style, priority }: Props) {
   // Avoid importing expo-image in Jest (ESM) by requiring it only on web.
   const WebImage: any =

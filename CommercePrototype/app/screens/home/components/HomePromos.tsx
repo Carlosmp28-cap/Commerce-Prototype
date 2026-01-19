@@ -9,6 +9,11 @@ import {
 
 import { styles } from "./HomePromos.styles";
 
+/**
+ * Promotional tiles used on Home.
+ *
+ * `layout` allows the same component to render as a row (mobile) or column (desktop web).
+ */
 function HomePromosComponent({
   onShopNew,
   onShopSale,

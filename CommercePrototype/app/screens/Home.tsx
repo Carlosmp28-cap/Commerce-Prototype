@@ -17,8 +17,7 @@ import { HomeValueProps } from "./home/components/HomeValueProps";
 import { HOME_STRINGS } from "./home/homeStrings";
 import { useHomeViewModel } from "./home/useHomeViewModel";
 
-// Home (landing) screen.
-// Uses `ScreenScroll` so content gets footer-aware bottom padding automatically.
+/** Home (landing) screen. */
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 

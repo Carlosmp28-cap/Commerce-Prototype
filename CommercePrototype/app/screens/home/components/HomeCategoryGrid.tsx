@@ -6,6 +6,11 @@ import { Card, Text, useTheme as usePaperTheme } from "react-native-paper";
 import { HomeImage } from "./HomeImage";
 import { styles } from "./HomeCategoryGrid.styles";
 
+/**
+ * Grid of category tiles (Shop by Category).
+ *
+ * On web, uses `HomeImage` for proper alt attributes; on native, uses `Card.Cover`.
+ */
 function HomeCategoryGridComponent({
   title,
   categories,

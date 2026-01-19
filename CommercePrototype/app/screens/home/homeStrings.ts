@@ -1,3 +1,9 @@
+/**
+ * Centralized copy for the Home screen.
+ *
+ * Keeps UI text and accessibility labels consistent across components and
+ * makes future localization/refactors easier.
+ */
 export const HOME_STRINGS = {
   documentTitle: "Home — CommercePrototype",
   metaDescription:
