@@ -10,12 +10,10 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Title, Paragraph, Button, Avatar, useTheme as usePaperTheme } from "react-native-paper";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
 import styles from "./styles";
-import { sendOrderEmail } from "../../services/sendOrderEmail";
 
 import ShippingForm from "./components/ShippingForm";
 import PaymentForm from "./components/PaymentForm";
@@ -31,7 +29,11 @@ export default function CheckoutScreen({ navigation, route }: Props) {
     { id: "1", title: "T-Shirt", qty: 2, price: 19.99 },
     { id: "2", title: "Sneakers", qty: 1, price: 69.5 },
   ];
-  const mockItems = React.useMemo(() => (routeItems && routeItems.length ? routeItems : defaultItems), [routeItems]);
+  // ensure mockItems is always an array (route params may provide a single object or non-array)
+  const mockItems = React.useMemo(
+    () => (Array.isArray(routeItems) && routeItems.length ? routeItems : defaultItems),
+    [routeItems]
+  );
 
   const subtotal = React.useMemo(
     () => mockItems.reduce((s, it) => s + it.qty * it.price, 0),
@@ -72,8 +74,6 @@ export default function CheckoutScreen({ navigation, route }: Props) {
   // envio de email removido — estado relacionado eliminado
   const [placing, setPlacing] = useState(false);
 
-  const STORAGE_KEY = "checkout:draft:v1";
-
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.title = "Checkout — CommercePrototype";
@@ -103,43 +103,6 @@ export default function CheckoutScreen({ navigation, route }: Props) {
       ensure("og:description", "Finalizar encomenda — pagamento seguro e envio rápido.");
     }
   }, []);
-
-  // restore draft on mount / pageshow
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (!raw || !mounted) return;
-        const data = JSON.parse(raw);
-        if (data) {
-          setFullName(data.fullName || "");
-          setEmail(data.email || "");
-          setAddress(data.address || "");
-          setCity(data.city || "");
-          setPostalCode(data.postalCode || "");
-          setCountry(data.country || "");
-          setStep(typeof data.step === "number" ? data.step : 0);
-        }
-      } catch (e) {
-        /* ignore */
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
-
-  // save draft on unmount / pagehide
-  useEffect(() => {
-    const save = async () => {
-      try {
-        const payload = JSON.stringify({ fullName, email, address, city, postalCode, country, step });
-        await AsyncStorage.setItem(STORAGE_KEY, payload);
-      } catch { /* ignore */ }
-    };
-    // save on every change but debounced
-    const t = setTimeout(save, 600);
-    return () => clearTimeout(t);
-  }, [fullName, email, address, city, postalCode, country, step]);
 
   const validateShipping = () => {
     const basicEmailValid = (e: string) => /\S+@\S+\.\S+/.test(e);
