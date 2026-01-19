@@ -1,16 +1,23 @@
-import React from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { memo } from "react";
+import type { ImageSourcePropType } from "react-native";
+import { Platform, View } from "react-native";
 import { Card, Text, useTheme as usePaperTheme } from "react-native-paper";
 
 import { HomeImage } from "./HomeImage";
+import { styles } from "./HomeCategoryGrid.styles";
 
-export function HomeCategoryGrid({
+function HomeCategoryGridComponent({
   title,
   categories,
   onSelectCategory,
 }: {
   title: string;
-  categories: Array<{ id: string; label: string; query: string; image?: any }>;
+  categories: Array<{
+    id: string;
+    label: string;
+    query: string;
+    image?: ImageSourcePropType;
+  }>;
   onSelectCategory: (categoryQuery: string) => void;
 }) {
   const paperTheme = usePaperTheme();
@@ -41,10 +48,10 @@ export function HomeCategoryGrid({
               )
             ) : null}
             <Card.Content style={styles.categoryTileContent}>
-              <Text variant="titleMedium" style={{ fontWeight: "900" }}>
+              <Text variant="titleMedium" style={styles.categoryTileLabel}>
                 {c.label}
               </Text>
-              <Text style={{ opacity: 0.7 }}>Explore</Text>
+              <Text style={styles.categoryTileSubtitle}>Explore</Text>
             </Card.Content>
           </Card>
         ))}
@@ -53,15 +60,4 @@ export function HomeCategoryGrid({
   );
 }
 
-const styles = StyleSheet.create({
-  section: { marginTop: 18 },
-  sectionTitle: { fontSize: 16, fontWeight: "900", marginBottom: 10 },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  categoryTile: { width: "48%", borderRadius: 14 },
-  categoryTileImage: {
-    height: 110,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
-  },
-  categoryTileContent: { paddingTop: 10, gap: 2 },
-});
+export const HomeCategoryGrid = memo(HomeCategoryGridComponent);

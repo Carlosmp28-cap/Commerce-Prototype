@@ -1,5 +1,6 @@
-import React from "react";
-import { FlatList, Platform, StyleSheet, View } from "react-native";
+import { memo } from "react";
+import type { ImageSourcePropType } from "react-native";
+import { FlatList, Platform, View } from "react-native";
 import {
   Button,
   Card,
@@ -10,16 +11,17 @@ import {
 import { HomeImage } from "./HomeImage";
 
 import { getAvailabilityLabel } from "../../../utils/stock";
+import { styles } from "./HomeFeaturedCarousel.styles";
 
 export type HomeFeaturedProduct = {
   id: string;
   name: string;
   price: number;
-  image: any;
+  image: ImageSourcePropType;
   quantityAvailable: number;
 };
 
-export function HomeFeaturedCarousel({
+function HomeFeaturedCarouselComponent({
   title,
   products,
   onSeeAll,
@@ -70,10 +72,10 @@ export function HomeFeaturedCarousel({
             ) : (
               <Card.Cover source={item.image} style={styles.productImage} />
             )}
-            <Card.Content style={{ paddingTop: 10 }}>
+            <Card.Content style={styles.productContent}>
               <Text
                 variant="titleMedium"
-                style={{ fontWeight: "900" }}
+                style={styles.productTitle}
                 numberOfLines={1}
               >
                 {item.name}
@@ -86,7 +88,7 @@ export function HomeFeaturedCarousel({
               >
                 € {item.price.toFixed(2)}
               </Text>
-              <Text style={{ marginTop: 2, opacity: 0.7 }}>
+              <Text style={styles.productMeta}>
                 {getAvailabilityLabel(item.quantityAvailable)}
               </Text>
             </Card.Content>
@@ -97,22 +99,4 @@ export function HomeFeaturedCarousel({
   );
 }
 
-const styles = StyleSheet.create({
-  section: { marginTop: 18 },
-  sectionTitle: { fontSize: 16, fontWeight: "900", marginBottom: 10 },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  carousel: { gap: 12, paddingVertical: 4 },
-  productCard: {
-    width: 180,
-    borderRadius: 14,
-  },
-  productImage: {
-    height: 110,
-    borderRadius: 10,
-  },
-  productPrice: { marginTop: 6, fontWeight: "900" },
-});
+export const HomeFeaturedCarousel = memo(HomeFeaturedCarouselComponent);
