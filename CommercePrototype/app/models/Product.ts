@@ -26,6 +26,11 @@ export type Product = {
   reviewCount?: number;
   /** Product features/tags */
   features?: string[];
+  /** PDP details copy block (title + paragraphs). */
+  details?: {
+    title: string;
+    paragraphs: string[];
+  };
   /** Shipping info */
   shipping?: {
     shippingType?: string;

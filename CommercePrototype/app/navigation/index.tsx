@@ -15,15 +15,13 @@ import { IconButton, Text, useTheme } from "react-native-paper";
 
 import { useAuth } from "../hooks/useAuth";
 import HomeScreen from "../screens/Home";
-
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
   Home: undefined;
   PLP: { q?: string } | undefined;
   PDP: { id: string };
   Cart: undefined;
-  // pass items from Cart to Checkout
-  Checkout: { items?: { id: string; title: string; qty: number; price: number }[] } | undefined;
+  Checkout: { totalTax?: number } | undefined;
   Login: undefined;
 };
 
@@ -214,7 +212,7 @@ export default function AppNavigation() {
         />
         <Stack.Screen
           name="Cart"
-          getComponent={() => require("../screens/Cart").default}
+          getComponent={() => require("../screens/Cart/Cart").default}
         />
         <Stack.Screen
           name="Checkout"

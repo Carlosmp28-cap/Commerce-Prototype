@@ -39,6 +39,12 @@ export const styles = {
     gap: isWeb ? 12 : isIOS ? 10 : 8,
   },
 
+  emptyStateLayout: {
+    flexGrow: 1,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+
   // Cart item
   cartItemWrapper: {
     marginBottom: 0,
