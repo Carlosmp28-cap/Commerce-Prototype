@@ -33,7 +33,13 @@ type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
 export default function CheckoutScreen({ route, navigation }: Props) {
   const { items, totalPrice, totalQuantity } = useCart();
-  const { totalTax } = route.params;
+  const totalTaxParam = route.params?.totalTax;
+  const safeTotalTax =
+    typeof totalTaxParam === "number" && Number.isFinite(totalTaxParam)
+      ? totalTaxParam
+      : typeof totalPrice === "number" && Number.isFinite(totalPrice)
+      ? totalPrice
+      : 0;
 
   // 1) Guard incoming params
   const safeItems = Array.isArray(items) ? items : [];
@@ -79,7 +85,7 @@ export default function CheckoutScreen({ route, navigation }: Props) {
 
   // 4) Shipping and total (choose your source of truth)
   const shippingCost = 5.0;
-  const total = totalTax + shippingCost;
+  const total = safeTotalTax + shippingCost;
   // envio de email removido — estado relacionado eliminado
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState<string | undefined>(undefined);
@@ -205,7 +211,10 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       }
 
       // simulate order id from backend and show inline success component
-      const fakeOrderId = `CP-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+      const fakeOrderId = `CP-${Date.now()
+        .toString(36)
+        .slice(-6)
+        .toUpperCase()}`;
       setOrderId(fakeOrderId);
       setOrderPlaced(true);
     } finally {
@@ -387,7 +396,7 @@ export default function CheckoutScreen({ route, navigation }: Props) {
                 subtotal={totalPrice}
                 shippingCost={shippingCost}
                 total={total}
-                totalTax={totalTax}
+                totalTax={safeTotalTax}
               />
             </View>
           )}
