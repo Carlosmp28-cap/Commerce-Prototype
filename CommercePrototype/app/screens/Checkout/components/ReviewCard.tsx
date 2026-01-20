@@ -1,38 +1,226 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Card, Text, Divider, Paragraph } from "react-native-paper";
-import styles from "../styles";
+import { StyleSheet, View } from "react-native";
+import {
+  Card,
+  Divider,
+  Paragraph,
+  Text,
+  Title,
+  useTheme,
+} from "react-native-paper";
+
+type LineWithProduct = {
+  product: { id: string | number; name: string; price: number };
+  quantity: number;
+};
+
+type FlatLine = {
+  id: string | number;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+type CartLine = LineWithProduct | FlatLine;
+
+function getLineId(line: CartLine, idx: number) {
+  return "product" in line
+    ? line.product.id ?? `line-${idx}`
+    : line.id ?? `line-${idx}`;
+}
+
+function getLineName(line: CartLine) {
+  return "product" in line ? line.product.name : line.name;
+}
+
+function getLineUnitPrice(line: CartLine) {
+  return "product" in line ? line.product.price : line.price;
+}
+
+function getLineQty(line: CartLine) {
+  return "product" in line ? line.quantity : line.quantity;
+}
 
 export default function ReviewCard(props: {
-  fullName:string; address:string; city:string; postalCode:string; country:string;
-  paymentMethod:string; cardName:string; cardNumber:string;
-  mockItems:any[]; subtotal:number; shippingCost:number; total:number;
+  fullName: string;
+  email?: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  paymentMethod: string;
+  cardName: string;
+  cardNumber: string;
+  items: CartLine[];
+  subtotal: number;
+  shippingCost: number;
+  total: number;
 }) {
-  const { fullName, address, city, postalCode, country, paymentMethod, cardName, cardNumber, mockItems, subtotal, shippingCost, total } = props;
-  const masked = (n:string) => n ? `•`.repeat(Math.max(0, n.length-4)) + n.slice(-4) : "";
+  const {
+    fullName,
+    email,
+    address,
+    city,
+    postalCode,
+    country,
+    paymentMethod,
+    cardName,
+    cardNumber,
+    items,
+    subtotal,
+    shippingCost,
+    total,
+  } = props;
+
+  const theme = useTheme();
+  const maskedCard = cardNumber ? `•••• ${cardNumber.slice(-4)}` : "";
+
   return (
     <Card style={styles.card}>
       <Card.Content>
-        <Text style={styles.sectionTitle}>Review and confirm</Text>
-        <Text style={styles.subLabel}>Shipping</Text>
-        <Paragraph>{fullName}</Paragraph>
-        <Paragraph numberOfLines={2}>{address}</Paragraph>
-        <Paragraph>{city} {postalCode} {country}</Paragraph>
+        <Title style={styles.title}>Review order</Title>
 
-        <Divider style={{marginVertical:12}}/>
+        {/* SHIPPING */}
+        <Paragraph style={styles.sectionLabel}>Shipping</Paragraph>
+        <View style={styles.block}>
+          <Text style={styles.blockLine}>{fullName}</Text>
+          {email ? <Text style={styles.muted}>{email}</Text> : null}
+          <Text style={styles.blockLine}>{address}</Text>
+          <Text style={styles.blockLine}>
+            {city} {postalCode}
+          </Text>
+          <Text style={styles.blockLine}>{country}</Text>
+        </View>
 
-        <Text style={styles.subLabel}>Payment</Text>
-        <Paragraph>{paymentMethod === "card" ? `${cardName} • ${masked(cardNumber)}` : "PayPal"}</Paragraph>
+        <Divider style={styles.divider} />
 
-        <Divider style={{marginVertical:12}}/>
+        {/* PAYMENT */}
+        <Paragraph style={styles.sectionLabel}>Payment</Paragraph>
+        <View style={styles.block}>
+          <Text style={styles.blockLine}>
+            {paymentMethod === "card"
+              ? `Card • ${cardName ?? ""} • ${maskedCard}`
+              : "PayPal"}
+          </Text>
+        </View>
 
-        <Text style={styles.subLabel}>Order summary</Text>
-        {mockItems.map(it => <View key={it.id} style={styles.orderRow}><Text>{it.title} x{it.qty}</Text><Text>${(it.price*it.qty).toFixed(2)}</Text></View>)}
-        <Divider style={{marginVertical:8}} />
-        <View style={styles.orderRow}><Text>Subtotal</Text><Text>${subtotal.toFixed(2)}</Text></View>
-        <View style={styles.orderRow}><Text>Shipping</Text><Text>${shippingCost.toFixed(2)}</Text></View>
-        <View style={[styles.orderRow,{marginTop:6}]}><Text style={{fontWeight:"700"}}>Total</Text><Text style={{fontWeight:"700"}}>${total.toFixed(2)}</Text></View>
+        <Divider style={styles.divider} />
+
+        {/* ITEMS */}
+        <Paragraph style={styles.sectionLabel}>Items</Paragraph>
+        <View style={styles.items}>
+          {items.map((line, idx) => {
+            const title = getLineName(line);
+            const qty = getLineQty(line);
+            const unitPrice = getLineUnitPrice(line);
+            const id = getLineId(line, idx);
+
+            return (
+              <View key={id} style={styles.itemRow}>
+                <Text style={styles.itemTitle}>
+                  {title} × {qty}
+                </Text>
+                <Text style={styles.itemPrice}>
+                  {(unitPrice * qty).toFixed(2)}€
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        <Divider style={[styles.divider, { marginTop: 10 }]} />
+
+        {/* TOTALS */}
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Subtotal</Text>
+          <Text style={styles.summaryValue}>{subtotal.toFixed(2)} €</Text>
+        </View>
+
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Shipping</Text>
+          <Text style={styles.summaryValue}>{shippingCost.toFixed(2)} €</Text>
+        </View>
+
+        <View style={[styles.summaryRow, styles.totalRow]}>
+          <Text style={[styles.totalLabel, { color: theme.colors.onSurface }]}>
+            Total
+          </Text>
+          <Text style={[styles.totalValue, { color: theme.colors.onSurface }]}>
+            {total.toFixed(2)} €
+          </Text>
+        </View>
       </Card.Content>
     </Card>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 12,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  title: {
+    marginBottom: 6,
+  },
+  sectionLabel: {
+    marginTop: 6,
+    marginBottom: 6,
+    fontWeight: "600",
+    color: "#444",
+  },
+  block: {
+    marginBottom: 6,
+    paddingVertical: 4,
+  },
+  blockLine: {
+    marginBottom: 2,
+  },
+  muted: {
+    color: "#666",
+    marginBottom: 4,
+  },
+  divider: {
+    marginVertical: 8,
+  },
+  items: {
+    marginBottom: 8,
+  },
+  itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#eee",
+  },
+  itemTitle: {
+    flex: 1,
+  },
+  itemPrice: {
+    marginLeft: 12,
+    width: 80,
+    textAlign: "right",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+  },
+  summaryLabel: {
+    color: "#444",
+  },
+  summaryValue: {
+    color: "#444",
+  },
+  totalRow: {
+    marginTop: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#ddd",
+    paddingTop: 8,
+  },
+  totalLabel: {
+    fontWeight: "700",
+  },
+  totalValue: {
+    fontWeight: "700",
+  },
+});

@@ -1,8 +1,5 @@
-/** @jest-environment jsdom */
-
-import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
-import { PLPHeaderWebTitle } from "../app/screens/productListingPage/web/components/PLPHeaderWeb";
+import { render } from "@testing-library/react-native";
+import { PLPHeaderWebTitle } from "../app/screens/productListingPage/web/components";
 
 describe("PLPHeaderWebTitle", () => {
   const defaultProps = {
@@ -14,24 +11,30 @@ describe("PLPHeaderWebTitle", () => {
   };
 
   it("renders the title and count", () => {
-    render(<PLPHeaderWebTitle {...defaultProps} />);
-    expect(screen.getByText("Products")).toBeInTheDocument();
-    expect(screen.getByText("10 items")).toBeInTheDocument();
+    const { getByText } = render(<PLPHeaderWebTitle {...defaultProps} />);
+    expect(getByText("Products")).toBeTruthy();
+    expect(getByText("10 items")).toBeTruthy();
   });
 
   it("updates the title when the prop changes", () => {
-    const { rerender } = render(<PLPHeaderWebTitle {...defaultProps} />);
+    const { rerender, getByText } = render(
+      <PLPHeaderWebTitle {...defaultProps} />
+    );
     rerender(<PLPHeaderWebTitle {...defaultProps} title="New Products" />);
-    expect(screen.getByText("New Products")).toBeInTheDocument();
+    expect(getByText("New Products")).toBeTruthy();
   });
 
   it("does not render title if empty", () => {
-    render(<PLPHeaderWebTitle {...defaultProps} title="" />);
-    expect(screen.queryByText("Products")).not.toBeInTheDocument();
+    const { queryByText } = render(
+      <PLPHeaderWebTitle {...defaultProps} title="" />
+    );
+    expect(queryByText("Products")).toBeNull();
   });
 
   it("does not render count if empty", () => {
-    render(<PLPHeaderWebTitle {...defaultProps} countText="" />);
-    expect(screen.queryByText("10 items")).not.toBeInTheDocument();
+    const { queryByText } = render(
+      <PLPHeaderWebTitle {...defaultProps} countText="" />
+    );
+    expect(queryByText("10 items")).toBeNull();
   });
 });

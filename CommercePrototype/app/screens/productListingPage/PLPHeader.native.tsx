@@ -1,8 +1,5 @@
 import { View } from "react-native";
-import { PLPHeaderTitle } from "./mobile/components/PLPHeaderTitle";
-import { PLPHeaderControls } from "./mobile/components/PLPHeaderControls";
-import { FilterModal } from "./mobile/components/FilterModal";
-import { SortModal } from "./mobile/components/SortModal";
+import { PLPHeaderTitle, PLPHeaderMobileControls } from "./mobile/components";
 import { usePLPHeaderLogic } from "./shared/usePLPHeaderLogic";
 import type { PLPHeaderProps } from "./shared/types/PLPHeaderProps";
 
@@ -24,12 +21,6 @@ export default function PLPHeader({
   const {
     title,
     countText,
-    sortVisible,
-    filterVisible,
-    openSortMenu,
-    closeSortMenu,
-    openFilterMenu,
-    closeFilterMenu,
     handleSortSelect,
     handleFilterSelect,
   } = usePLPHeaderLogic(query, productCount, selectedSort, onSortChange, onCategorySelect);
@@ -49,23 +40,11 @@ export default function PLPHeader({
         onBackPress={onBackPress}
       />
 
-      <PLPHeaderControls
-        onFilterPress={openFilterMenu}
-        onSortPress={openSortMenu}
-      />
-
-      <FilterModal
-        visible={filterVisible}
-        onClose={closeFilterMenu}
-        onSelect={handleFilterSelect}
-        selectedQuery={query}
-      />
-
-      <SortModal
-        visible={sortVisible}
+      <PLPHeaderMobileControls
         selectedSort={selectedSort}
-        onClose={closeSortMenu}
-        onSelect={handleSortSelect}
+        selectedCategory={query}
+        handleFilterSelect={handleFilterSelect}
+        handleSortSelect={handleSortSelect}
       />
     </View>
   );
