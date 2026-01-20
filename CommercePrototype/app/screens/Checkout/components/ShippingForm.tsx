@@ -1,19 +1,45 @@
 import React from "react";
 import { View } from "react-native";
-import { TextInput, HelperText, Card, Paragraph, Text } from "react-native-paper";
+import {
+  TextInput,
+  HelperText,
+  Card,
+  Paragraph,
+  Text,
+} from "react-native-paper";
 import styles from "../styles";
 
 export default function ShippingForm(props: {
-  fullName: string; setFullName: (v: string) => void;
-  email: string; setEmail: (v: string) => void;
-  address: string; setAddress: (v: string) => void;
-  city: string; setCity: (v: string) => void;
-  postalCode: string; setPostalCode: (v: string) => void;
-  country: string; countryQuery: string; setCountry: (v: string) => void; setCountryQuery: (v: string) => void;
+  fullName: string;
+  setFullName: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  address: string;
+  setAddress: (v: string) => void;
+  city: string;
+  setCity: (v: string) => void;
+  postalCode: string;
+  setPostalCode: (v: string) => void;
+  country: string;
+  countryQuery: string;
+  setCountry: (v: string) => void;
+  setCountryQuery: (v: string) => void;
 }) {
   const {
-    fullName, setFullName, email, setEmail, address, setAddress, city, setCity, postalCode, setPostalCode,
-    country, countryQuery, setCountry, setCountryQuery
+    fullName,
+    setFullName,
+    email,
+    setEmail,
+    address,
+    setAddress,
+    city,
+    setCity,
+    postalCode,
+    setPostalCode,
+    country,
+    countryQuery,
+    setCountry,
+    setCountryQuery,
   } = props;
 
   const emailValid = (e: string) => /\S+@\S+\.\S+/.test(e);
@@ -47,8 +73,13 @@ export default function ShippingForm(props: {
           accessibilityLabel="Email"
           style={styles.input}
         />
-        <HelperText type={email && !emailValid(email) ? "error" : "info"} visible={!!email}>
-          {email && !emailValid(email) ? "Insira um email válido." : "Usaremos este email para confirmação da encomenda."}
+        <HelperText
+          type={email && !emailValid(email) ? "error" : "info"}
+          visible={!!email}
+        >
+          {email && !emailValid(email)
+            ? "Insira um email válido."
+            : "Usaremos este email para confirmação da encomenda."}
         </HelperText>
 
         <TextInput
@@ -60,7 +91,7 @@ export default function ShippingForm(props: {
           accessibilityLabel="Enter your address"
           autoComplete="off"
           autoCorrect={false}
-          textContentType="streetAddress"
+          textContentType="fullStreetAddress"
         />
 
         <View style={styles.row}>
@@ -86,7 +117,10 @@ export default function ShippingForm(props: {
         <TextInput
           label="Country"
           value={countryQuery || country}
-          onChangeText={(t) => { setCountryQuery(t); setCountry(t); }}
+          onChangeText={(t) => {
+            setCountryQuery(t);
+            setCountry(t);
+          }}
           mode="outlined"
           style={styles.input}
           accessibilityLabel="Enter your country"
