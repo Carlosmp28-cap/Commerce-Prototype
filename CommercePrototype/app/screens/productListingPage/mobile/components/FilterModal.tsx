@@ -30,7 +30,7 @@ interface FilterModalProps {
  * @param {FilterModalProps} props - Component properties
  * @returns {JSX.Element} Modal component with category filter options
  */
-export function FilterModal({ visible, onClose, onSelect, selectedQuery }: FilterModalProps) {
+export default function FilterModal({ visible, onClose, onSelect, selectedQuery }: FilterModalProps) {
   const theme = useTheme();
 
   return (

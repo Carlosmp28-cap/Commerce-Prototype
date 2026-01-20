@@ -12,15 +12,43 @@ type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 export default function CartScreen({ navigation }: Props) {
   const { items, removeItem, updateQuantity } = useCart();
 
+  // prepare transferable payload for checkout (stable reference)
+  const checkoutPayload = React.useMemo(
+    () =>
+      items.map((i) => ({
+        id: i.product.id,
+        title: i.product.name,
+        qty: i.quantity,
+        price: i.product.price,
+      })),
+    [items]
+  );
+
+  // Functional updates to avoid stale state when tapping fast
+  const handleRemoveItem = React.useCallback(
+    (id: string) => {
+      removeItem(id);
+    },
+    [removeItem]
+  );
+
+  const handleUpdateQuantity = React.useCallback(
+    (id: string, newQuantity: number) => {
+      updateQuantity(id, newQuantity);
+    },
+    [updateQuantity]
+  );
+
   const subtotal = React.useMemo(
-    () => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    () =>
+      items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
     [items]
   );
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
   const renderCartItem = React.useCallback(
-    ({ item }: { item: typeof items[0] }) => (
+    ({ item }: { item: (typeof items)[0] }) => (
       <View style={styles.cartItemWrapper}>
         <View style={styles.cartItem}>
           <View style={styles.itemImageContainer}>
@@ -29,24 +57,30 @@ export default function CartScreen({ navigation }: Props) {
 
           <View style={styles.itemContent}>
             <Text style={styles.itemName}>{item.product.name}</Text>
-            <Text style={styles.itemPrice}>${item.product.price.toFixed(2)}</Text>
+            <Text style={styles.itemPrice}>
+              ${item.product.price.toFixed(2)}
+            </Text>
           </View>
 
           <View style={styles.itemActions}>
             <View style={styles.quantityControl}>
               <TouchableOpacity
                 style={styles.quantityBtn}
-              onPress={() => updateQuantity(item.product.id, item.quantity - 1)}
-            >
-              <Text style={styles.quantityBtnText}>−</Text>
-            </TouchableOpacity>
-            <Text style={styles.quantityValue}>{item.quantity}</Text>
-            <TouchableOpacity
-              style={styles.quantityBtn}
-              onPress={() => updateQuantity(item.product.id, item.quantity + 1)}
-            >
-              <Text style={styles.quantityBtnText}>+</Text>
-            </TouchableOpacity>
+                onPress={() =>
+                  handleUpdateQuantity(item.product.id, item.quantity - 1)
+                }
+              >
+                <Text style={styles.quantityBtnText}>−</Text>
+              </TouchableOpacity>
+              <Text style={styles.quantityValue}>{item.quantity}</Text>
+              <TouchableOpacity
+                style={styles.quantityBtn}
+                onPress={() =>
+                  handleUpdateQuantity(item.product.id, item.quantity + 1)
+                }
+              >
+                <Text style={styles.quantityBtnText}>+</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -72,7 +106,6 @@ export default function CartScreen({ navigation }: Props) {
           renderItem={renderCartItem}
           keyExtractor={(item) => item.product.id}
           showsVerticalScrollIndicator={false}
-
           contentContainerStyle={
             isEmpty
               ? [styles.itemsSection, styles.emptyStateLayout]
@@ -119,7 +152,12 @@ export default function CartScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.actionsContainer}>
-            <ButtonCheckout title="Proceed to Checkout" onPress={() => {}} />
+            <ButtonCheckout
+              title="Proceed to Checkout"
+              onPress={() =>
+                navigation.navigate("Checkout", { items: checkoutPayload })
+              }
+            />
             <ButtonContinueShop
               title="Continue Shopping"
               onPress={() => navigation.navigate("PLP")}

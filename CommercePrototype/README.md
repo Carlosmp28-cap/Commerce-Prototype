@@ -54,6 +54,22 @@ Testes:
 npm test -- --runInBand
 ```
 
+## Lighthouse (Performance / Unused JS / Minify JS)
+
+Os avisos de Lighthouse como **"Minify JavaScript"**, **"Reduce unused JavaScript"** e **bfcache / WebSocket** costumam aparecer quando o audit é feito no **Expo dev server** (ex.: `http://localhost:8081`), porque o bundle de desenvolvimento:
+
+- não é minificado
+- inclui dependências de dev (ex.: `react-dom-client.development.js`)
+- usa WebSocket (impede bfcache)
+
+Para resultados reais, rode Lighthouse contra o build **production** estático:
+
+```bash
+npm run web:preview
+```
+
+Depois abra `http://localhost:4173` e rode o Lighthouse nessa URL.
+
 ### Onde ficam os testes e por quê existe `test/testUtils.tsx`
 
 - As suites de teste ficam em `__tests__/` e seguem `*.test.ts(x)`.

@@ -14,12 +14,7 @@ import {
 import { IconButton, Text, useTheme } from "react-native-paper";
 
 import { useAuth } from "../hooks/useAuth";
-import CartScreen from "../screens/Cart";
-import CheckoutScreen from "../screens/Checkout/Checkout";
 import HomeScreen from "../screens/Home";
-import LoginScreen from "../screens/Login";
-import PDPScreen from "../screens/PDP";
-import PLPScreen from "../screens/PLP";
 
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
@@ -27,7 +22,8 @@ export type RootStackParamList = {
   PLP: { q?: string } | undefined;
   PDP: { id: string };
   Cart: undefined;
-  Checkout: undefined;
+  // pass items from Cart to Checkout
+  Checkout: { items?: { id: string; title: string; qty: number; price: number }[] } | undefined;
   Login: undefined;
 };
 
@@ -205,17 +201,29 @@ export default function AppNavigation() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen
           name="PLP"
-          component={PLPScreen}
+          getComponent={() => require("../screens/PLP").default}
           options={{
             headerBackVisible: false,
             headerLeft: () => null,
             title: "Product Listing Page",
           }}
         />
-        <Stack.Screen name="PDP" component={PDPScreen} />
-        <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Checkout" component={CheckoutScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen
+          name="PDP"
+          getComponent={() => require("../screens/PDP").default}
+        />
+        <Stack.Screen
+          name="Cart"
+          getComponent={() => require("../screens/Cart").default}
+        />
+        <Stack.Screen
+          name="Checkout"
+          getComponent={() => require("../screens/Checkout/Checkout").default}
+        />
+        <Stack.Screen
+          name="Login"
+          getComponent={() => require("../screens/Login").default}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

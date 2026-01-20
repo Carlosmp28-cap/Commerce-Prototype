@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react";
+import React, { useMemo, useCallback, useState, useEffect, lazy, Suspense } from "react";
 import { FlatList, View, useWindowDimensions, Platform } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation";
@@ -6,13 +6,14 @@ import { useTheme } from "../themes";
 import { getProductsByQuery } from "../data/catalog";
 import type { CatalogProduct } from "../data/catalog";
 import { createStyles } from "./PLP.styles";
-import ProductCard from "./productListingPage/components/ProductCard";
-import EmptyState from "./productListingPage/components/EmptyState";
 import { sortProducts, type SortOption } from "../scripts/helpers/productHelpers";
+import EmptyState from "./productListingPage/components/EmptyState";
+import Footer from "../components/Footer";
+const ProductCard = lazy(() => import("./productListingPage/components/ProductCard"));
 
-const PLPHeader = Platform.OS === "web"
-  ? require("./productListingPage/PLPHeader.web").default
-  : require("./productListingPage/PLPHeader.native").default;
+import PLPHeaderWeb from "./productListingPage/PLPHeader.web";
+import PLPHeaderNative from "./productListingPage/PLPHeader.native";
+const PLPHeader = Platform.OS === "web" ? PLPHeaderWeb : PLPHeaderNative;
 
 type Props = NativeStackScreenProps<RootStackParamList, "PLP">;
 
@@ -60,12 +61,14 @@ export default function PLPScreen({ navigation, route }: Props) {
 
   const renderProduct = useCallback(
     ({ item }: { item: CatalogProduct }) => (
-      <ProductCard
-        product={item}
-        onPress={() => handleProductPress(item.id)}
-        imageStyle={styles.image}
-        containerStyle={styles.itemContainer}
-      />
+      <Suspense fallback={null}>
+        <ProductCard
+          product={item}
+          onPress={() => handleProductPress(item.id)}
+          imageStyle={styles.image}
+          containerStyle={styles.itemContainer}
+        />
+      </Suspense>
     ),
     [handleProductPress, styles.image, styles.itemContainer]
   );
@@ -81,8 +84,40 @@ export default function PLPScreen({ navigation, route }: Props) {
     [q, styles.emptyContainer, styles.emptyText]
   );
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = "Products — CommercePrototype";
+
+      let meta = document.querySelector("meta[name='description']");
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.setAttribute("name", "description");
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute(
+        "content",
+        "See all available products, filter by category, and sort as you wish in our online store."
+      );
+
+      const ensure = (name: string, content: string) => {
+        let tag = document.querySelector(`meta[property='${name}']`);
+        if (!tag) {
+          tag = document.createElement("meta");
+          tag.setAttribute("property", name);
+          document.head.appendChild(tag);
+        }
+        tag.setAttribute("content", content);
+      };
+
+      ensure("og:title", "Products — CommercePrototype");
+      ensure("og:description", "See all available products, filter by category, and sort as you wish in our online store.");
+    }
+  }, []);
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <PLPHeader
         query={q}
         productCount={products.length}
@@ -100,10 +135,17 @@ export default function PLPScreen({ navigation, route }: Props) {
         data={products}
         keyExtractor={(p) => p.id}
         numColumns={numColumns}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { flexGrow: 1 }]}
         columnWrapperStyle={styles.row}
         renderItem={renderProduct}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={
+          <View style={{ flexGrow: 1, justifyContent: "flex-end" }}>
+            <View style={{ marginHorizontal: -8 }}>
+              <Footer />
+            </View>
+          </View>
+        }
       />
     </View>
   );

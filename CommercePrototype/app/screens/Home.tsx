@@ -1,11 +1,9 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
-import { useTheme as usePaperTheme } from "react-native-paper";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-import { useTheme } from "../themes";
 import type { RootStackParamList } from "../navigation";
-import { categories, getFeaturedProducts, products } from "../data/catalog";
+import { categories } from "../data/catalog";
 import { ScreenScroll } from "../layout/Screen";
 import { CenteredContent } from "../layout/CenteredContent";
 
@@ -13,47 +11,34 @@ import { HomeHero } from "./home/components/HomeHero";
 import { HomeSearch } from "./home/components/HomeSearch";
 import { HomePromos } from "./home/components/HomePromos";
 import { HomeCategoryGrid } from "./home/components/HomeCategoryGrid";
-import {
-  HomeFeaturedCarousel,
-  type HomeFeaturedProduct,
-} from "./home/components/HomeFeaturedCarousel";
+import { HomeFeaturedCarousel } from "./home/components/HomeFeaturedCarousel";
 import { HomeValueProps } from "./home/components/HomeValueProps";
 
-// Home (landing) screen.
-// Uses `ScreenScroll` so content gets footer-aware bottom padding automatically.
+import { HOME_STRINGS } from "./home/homeStrings";
+import { useHomeViewModel } from "./home/useHomeViewModel";
+
+/** Home (landing) screen. */
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export default function HomeScreen({ navigation }: Props) {
-  const theme = useTheme();
-  usePaperTheme();
-
   const { width } = useWindowDimensions();
 
-  // Keep the mobile layout identical, but let the Home page breathe more on web/desktop.
-  // This reduces the “empty left/right gutters” feeling on wide screens.
-  const homeMaxWidth = useMemo(() => {
-    if (Platform.OS !== "web") return 980;
-    if (width >= 1600) return 1400;
-    if (width >= 1280) return 1200;
-    return 980;
-  }, [width]);
-
-  const isWideWeb = Platform.OS === "web" && width >= 1024;
-
-  const [query, setQuery] = React.useState("");
-
-  const featuredProducts = useMemo((): HomeFeaturedProduct[] => {
-    return getFeaturedProducts();
-  }, []);
-
-  const categoryTiles = useMemo(() => {
-    // SFRA-style “Shop by Category” tiles: pick a representative image per category.
-    return categories.map((c) => {
-      const representative = products.find((p) => p.categoryId === c.id);
-      return { ...c, image: representative?.image };
-    });
-  }, []);
+  const {
+    homeMaxWidth,
+    isWideWeb,
+    query,
+    setQuery,
+    submitSearch,
+    heroImage,
+    categoryTiles,
+    featuredProducts,
+    goToPLP,
+    goToSale,
+    goToNew,
+    selectCategory,
+    openProduct,
+  } = useHomeViewModel(navigation, width);
 
   return (
     <ScreenScroll contentContainerStyle={styles.screenContent}>
@@ -63,81 +48,76 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={styles.desktopTopRow}>
               <View style={styles.desktopLeftCol}>
                 <HomeHero
-                  heroImage={products[0]?.image}
-                  onShopAll={() => navigation.navigate("PLP")}
-                  onShopSale={() => navigation.navigate("PLP", { q: "sale" })}
+                  heroImage={heroImage}
+                  onShopAll={goToPLP}
+                  onShopSale={goToSale}
                 />
 
                 <HomeSearch
                   query={query}
                   onChangeQuery={setQuery}
-                  onSubmit={() =>
-                    navigation.navigate("PLP", { q: query.trim() })
-                  }
+                  onSubmit={submitSearch}
                   categories={categories}
-                  onSelectCategory={(q) => navigation.navigate("PLP", { q })}
+                  onSelectCategory={selectCategory}
                 />
               </View>
 
               <View style={styles.desktopRightCol}>
                 <HomePromos
                   layout="column"
-                  onShopNew={() => navigation.navigate("PLP", { q: "new" })}
-                  onShopSale={() => navigation.navigate("PLP", { q: "sale" })}
+                  onShopNew={goToNew}
+                  onShopSale={goToSale}
                 />
               </View>
             </View>
 
             <HomeCategoryGrid
-              title="Shop by Category"
+              title={HOME_STRINGS.shopByCategoryTitle}
               categories={categoryTiles}
-              onSelectCategory={(q) => navigation.navigate("PLP", { q })}
+              onSelectCategory={selectCategory}
             />
 
             <HomeFeaturedCarousel
-              title="Featured"
+              title={HOME_STRINGS.featuredTitle}
               products={featuredProducts}
-              onSeeAll={() => navigation.navigate("PLP")}
-              onOpenProduct={(id) => navigation.navigate("PDP", { id })}
+              onSeeAll={goToPLP}
+              onOpenProduct={openProduct}
             />
 
-            <HomeValueProps title="Why shop with us" />
+            <HomeValueProps title={HOME_STRINGS.valuePropsTitle} />
           </>
         ) : (
           <>
             <HomeHero
-              heroImage={products[0]?.image}
-              onShopAll={() => navigation.navigate("PLP")}
-              onShopSale={() => navigation.navigate("PLP", { q: "sale" })}
+              heroImage={heroImage}
+              onShopAll={goToPLP}
+              onShopSale={goToSale}
             />
 
             <HomeSearch
               query={query}
               onChangeQuery={setQuery}
-              onSubmit={() => navigation.navigate("PLP", { q: query.trim() })}
+              onSubmit={submitSearch}
               categories={categories}
-              onSelectCategory={(q) => navigation.navigate("PLP", { q })}
+              onSelectCategory={selectCategory}
             />
 
-            <HomePromos
-              onShopNew={() => navigation.navigate("PLP", { q: "new" })}
-              onShopSale={() => navigation.navigate("PLP", { q: "sale" })}
-            />
+            <HomePromos onShopNew={goToNew} onShopSale={goToSale} />
 
             <HomeCategoryGrid
-              title="Shop by Category"
+              title={HOME_STRINGS.shopByCategoryTitle}
               categories={categoryTiles}
-              onSelectCategory={(q) => navigation.navigate("PLP", { q })}
+              onSelectCategory={selectCategory}
             />
 
             <HomeFeaturedCarousel
-              title="Featured"
+              title={HOME_STRINGS.featuredTitle}
               products={featuredProducts}
-              onSeeAll={() => navigation.navigate("PLP")}
-              onOpenProduct={(id) => navigation.navigate("PDP", { id })}
+              onSeeAll={goToPLP}
+              onOpenProduct={openProduct}
             />
 
-            <HomeValueProps title="Why shop with us" />
+            <HomeValueProps title={HOME_STRINGS.valuePropsTitle} />
           </>
         )}
       </CenteredContent>

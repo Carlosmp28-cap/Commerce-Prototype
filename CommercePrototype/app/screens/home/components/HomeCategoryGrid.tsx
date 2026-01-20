@@ -1,14 +1,28 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import { memo } from "react";
+import type { ImageSourcePropType } from "react-native";
+import { Platform, View } from "react-native";
 import { Card, Text, useTheme as usePaperTheme } from "react-native-paper";
 
-export function HomeCategoryGrid({
+import { HomeImage } from "./HomeImage";
+import { styles } from "./HomeCategoryGrid.styles";
+
+/**
+ * Grid of category tiles (Shop by Category).
+ *
+ * On web, uses `HomeImage` for proper alt attributes; on native, uses `Card.Cover`.
+ */
+function HomeCategoryGridComponent({
   title,
   categories,
   onSelectCategory,
 }: {
   title: string;
-  categories: Array<{ id: string; label: string; query: string; image?: any }>;
+  categories: Array<{
+    id: string;
+    label: string;
+    query: string;
+    image?: ImageSourcePropType;
+  }>;
   onSelectCategory: (categoryQuery: string) => void;
 }) {
   const paperTheme = usePaperTheme();
@@ -28,13 +42,21 @@ export function HomeCategoryGrid({
             accessibilityLabel={`Shop category ${c.label}`}
           >
             {c.image ? (
-              <Card.Cover source={c.image} style={styles.categoryTileImage} />
+              Platform.OS === "web" ? (
+                <HomeImage
+                  source={c.image}
+                  alt={`${c.label} category`}
+                  style={styles.categoryTileImage}
+                />
+              ) : (
+                <Card.Cover source={c.image} style={styles.categoryTileImage} />
+              )
             ) : null}
             <Card.Content style={styles.categoryTileContent}>
-              <Text variant="titleMedium" style={{ fontWeight: "900" }}>
+              <Text variant="titleMedium" style={styles.categoryTileLabel}>
                 {c.label}
               </Text>
-              <Text style={{ opacity: 0.7 }}>Explore</Text>
+              <Text style={styles.categoryTileSubtitle}>Explore</Text>
             </Card.Content>
           </Card>
         ))}
@@ -43,11 +65,4 @@ export function HomeCategoryGrid({
   );
 }
 
-const styles = StyleSheet.create({
-  section: { marginTop: 18 },
-  sectionTitle: { fontSize: 16, fontWeight: "900", marginBottom: 10 },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  categoryTile: { width: "48%", borderRadius: 14 },
-  categoryTileImage: { height: 110 },
-  categoryTileContent: { paddingTop: 10, gap: 2 },
-});
+export const HomeCategoryGrid = memo(HomeCategoryGridComponent);

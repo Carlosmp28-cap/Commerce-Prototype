@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import { memo } from "react";
+import { View } from "react-native";
 import {
   Card,
   Icon,
@@ -7,7 +7,14 @@ import {
   useTheme as usePaperTheme,
 } from "react-native-paper";
 
-export function HomePromos({
+import { styles } from "./HomePromos.styles";
+
+/**
+ * Promotional tiles used on Home.
+ *
+ * `layout` allows the same component to render as a row (mobile) or column (desktop web).
+ */
+function HomePromosComponent({
   onShopNew,
   onShopSale,
   layout = "row",
@@ -40,7 +47,7 @@ export function HomePromos({
               size={18}
               color={paperTheme.colors.primary}
             />
-            <Text variant="titleMedium" style={{ fontWeight: "900" }}>
+            <Text variant="titleMedium" style={styles.promoTitle}>
               New arrivals
             </Text>
           </View>
@@ -62,7 +69,7 @@ export function HomePromos({
         <Card.Content style={styles.promoContent}>
           <View style={styles.promoTitleRow}>
             <Icon source="tag" size={18} color={paperTheme.colors.primary} />
-            <Text variant="titleMedium" style={{ fontWeight: "900" }}>
+            <Text variant="titleMedium" style={styles.promoTitle}>
               Sale
             </Text>
           </View>
@@ -76,12 +83,4 @@ export function HomePromos({
   );
 }
 
-const styles = StyleSheet.create({
-  promoRow: { flexDirection: "row", gap: 12 },
-  promoRowColumn: { flexDirection: "column" },
-  promoCard: { flex: 1, borderRadius: 14 },
-  promoContent: { gap: 6, paddingTop: 14 },
-  promoTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  promoSubtitle: { opacity: 0.75 },
-  promoCta: { fontWeight: "900", marginTop: 4 },
-});
+export const HomePromos = memo(HomePromosComponent);
