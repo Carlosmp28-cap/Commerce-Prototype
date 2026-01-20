@@ -87,7 +87,7 @@ export default function CartScreen({ navigation }: Props) {
 
             <TouchableOpacity
               style={styles.deleteBtn}
-              onPress={() => handleRemoveItem(item.product.id)}
+              onPress={() => removeItem(item.product.id)}
             >
               <Text style={styles.deleteBtnIcon}>✕</Text>
             </TouchableOpacity>
@@ -95,31 +95,22 @@ export default function CartScreen({ navigation }: Props) {
         </View>
       </View>
     ),
-    [handleRemoveItem, handleUpdateQuantity]
+    [removeItem, updateQuantity]
   );
 
   const isEmpty = items.length === 0;
 
   return (
     <View style={styles.container}>
-      {/* LEFT: scrollable items (FlatList) */}
       <View style={styles.scrollContainer}>
         <FlatList
           data={items}
           renderItem={renderCartItem}
           keyExtractor={(item) => item.product.id}
           showsVerticalScrollIndicator={false}
-          // keep your padding/gap from itemsSection
           contentContainerStyle={
             isEmpty
-              ? [
-                  styles.itemsSection,
-                  {
-                    flexGrow: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  },
-                ]
+              ? [styles.itemsSection, styles.emptyStateLayout]
               : styles.itemsSection
           }
           ListEmptyComponent={
@@ -131,14 +122,12 @@ export default function CartScreen({ navigation }: Props) {
               </Text>
             </View>
           }
-          // Optional virtualization tuning
           initialNumToRender={10}
           windowSize={5}
           maxToRenderPerBatch={10}
         />
       </View>
 
-      {/* RIGHT: summary + buttons */}
       {!isEmpty && (
         <View style={styles.rightColumn}>
           <View style={styles.summarySection}>

@@ -29,7 +29,7 @@ function reducer(state: State, action: CartAction): State {
       );
 
       if (existingItem) {
-        // Produto já existe no carrinho, incrementa quantidade
+        // Product already exists in the cart; increment quantity
         return {
           items: state.items.map((item) =>
             item.product.id === action.product.id
@@ -44,7 +44,7 @@ function reducer(state: State, action: CartAction): State {
           ),
         };
       } else {
-        // Novo produto no carrinho
+        // New product in the cart
         return {
           items: [
             ...state.items,
