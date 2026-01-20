@@ -21,7 +21,7 @@ export type RootStackParamList = {
   PLP: { q?: string } | undefined;
   PDP: { id: string };
   Cart: undefined;
-  Checkout: { totalTax: number };
+  Checkout: { totalTax?: number } | undefined;
   Login: undefined;
 };
 
