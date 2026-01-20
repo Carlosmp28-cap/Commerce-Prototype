@@ -1,15 +1,44 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   Card,
-  Title,
+  Divider,
   Paragraph,
   Text,
-  Divider,
+  Title,
   useTheme,
 } from "react-native-paper";
 
-type Item = { id: string; title: string; qty: number; price: number };
+type LineWithProduct = {
+  product: { id: string | number; name: string; price: number };
+  quantity: number;
+};
+
+type FlatLine = {
+  id: string | number;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+type CartLine = LineWithProduct | FlatLine;
+
+function getLineId(line: CartLine, idx: number) {
+  return "product" in line
+    ? line.product.id ?? `line-${idx}`
+    : line.id ?? `line-${idx}`;
+}
+
+function getLineName(line: CartLine) {
+  return "product" in line ? line.product.name : line.name;
+}
+
+function getLineUnitPrice(line: CartLine) {
+  return "product" in line ? line.product.price : line.price;
+}
+
+function getLineQty(line: CartLine) {
+  return "product" in line ? line.quantity : line.quantity;
+}
 
 export default function ReviewCard(props: {
   fullName: string;
@@ -18,10 +47,10 @@ export default function ReviewCard(props: {
   city: string;
   postalCode: string;
   country: string;
-  paymentMethod: "card" | "paypal";
-  cardName?: string;
-  cardNumber?: string;
-  mockItems: Item[];
+  paymentMethod: string;
+  cardName: string;
+  cardNumber: string;
+  items: CartLine[];
   subtotal: number;
   shippingCost: number;
   total: number;
@@ -36,21 +65,13 @@ export default function ReviewCard(props: {
     paymentMethod,
     cardName,
     cardNumber,
-    mockItems,
+    items,
     subtotal,
     shippingCost,
     total,
   } = props;
 
   const theme = useTheme();
-
-  const renderItem = (it: Item) => (
-    <View key={it.id} style={styles.itemRow}>
-      <Text style={styles.itemTitle}>{it.title} × {it.qty}</Text>
-      <Text style={styles.itemPrice}>{(it.qty * it.price).toFixed(2)} €</Text>
-    </View>
-  );
-
   const maskedCard = cardNumber ? `•••• ${cardNumber.slice(-4)}` : "";
 
   return (
@@ -58,17 +79,21 @@ export default function ReviewCard(props: {
       <Card.Content>
         <Title style={styles.title}>Review order</Title>
 
+        {/* SHIPPING */}
         <Paragraph style={styles.sectionLabel}>Shipping</Paragraph>
         <View style={styles.block}>
           <Text style={styles.blockLine}>{fullName}</Text>
           {email ? <Text style={styles.muted}>{email}</Text> : null}
           <Text style={styles.blockLine}>{address}</Text>
-          <Text style={styles.blockLine}>{city} {postalCode}</Text>
+          <Text style={styles.blockLine}>
+            {city} {postalCode}
+          </Text>
           <Text style={styles.blockLine}>{country}</Text>
         </View>
 
         <Divider style={styles.divider} />
 
+        {/* PAYMENT */}
         <Paragraph style={styles.sectionLabel}>Payment</Paragraph>
         <View style={styles.block}>
           <Text style={styles.blockLine}>
@@ -80,25 +105,48 @@ export default function ReviewCard(props: {
 
         <Divider style={styles.divider} />
 
+        {/* ITEMS */}
         <Paragraph style={styles.sectionLabel}>Items</Paragraph>
         <View style={styles.items}>
-          {mockItems.map(renderItem)}
+          {items.map((line, idx) => {
+            const title = getLineName(line);
+            const qty = getLineQty(line);
+            const unitPrice = getLineUnitPrice(line);
+            const id = getLineId(line, idx);
+
+            return (
+              <View key={id} style={styles.itemRow}>
+                <Text style={styles.itemTitle}>
+                  {title} × {qty}
+                </Text>
+                <Text style={styles.itemPrice}>
+                  {(unitPrice * qty).toFixed(2)}€
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         <Divider style={[styles.divider, { marginTop: 10 }]} />
 
+        {/* TOTALS */}
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Subtotal</Text>
           <Text style={styles.summaryValue}>{subtotal.toFixed(2)} €</Text>
         </View>
+
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Shipping</Text>
           <Text style={styles.summaryValue}>{shippingCost.toFixed(2)} €</Text>
         </View>
 
         <View style={[styles.summaryRow, styles.totalRow]}>
-          <Text style={[styles.totalLabel, { color: theme.colors.onSurface }]}>Total</Text>
-          <Text style={[styles.totalValue, { color: theme.colors.onSurface }]}>{total.toFixed(2)} €</Text>
+          <Text style={[styles.totalLabel, { color: theme.colors.onSurface }]}>
+            Total
+          </Text>
+          <Text style={[styles.totalValue, { color: theme.colors.onSurface }]}>
+            {total.toFixed(2)} €
+          </Text>
         </View>
       </Card.Content>
     </Card>

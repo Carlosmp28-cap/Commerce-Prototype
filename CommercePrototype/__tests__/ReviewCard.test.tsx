@@ -1,12 +1,25 @@
-import React from "react";
-import { render } from "@testing-library/react-native";
+import { CartLine } from "@/app/screens/Checkout/components/OrderSummary";
 import ReviewCard from "../app/screens/Checkout/components/ReviewCard";
 import { renderWithProviders } from "../test/testUtils";
 
 describe("ReviewCard", () => {
-  const mockItems = [
-    { id: "1", title: "Item A", qty: 2, price: 10 },
-    { id: "2", title: "Item B", qty: 1, price: 5.5 },
+  const mockItems: CartLine[] = [
+    {
+      product: {
+        id: "1",
+        name: "Item A",
+        price: 10,
+      },
+      quantity: 2,
+    },
+    {
+      product: {
+        id: "2",
+        name: "Item B",
+        price: 5.5,
+      },
+      quantity: 1,
+    },
   ];
 
   it("renders customer, items and totals", () => {
@@ -21,7 +34,7 @@ describe("ReviewCard", () => {
         paymentMethod="card"
         cardName="John Doe"
         cardNumber="4242424242424242"
-        mockItems={mockItems}
+        items={mockItems}
         subtotal={25.5}
         shippingCost={5}
         total={30.5}

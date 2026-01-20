@@ -1,11 +1,11 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
-import ButtonCheckout from "../components/ButtonCheckout";
-import ButtonContinueShop from "../components/ButtonContinueShop";
-import type { RootStackParamList } from "../navigation";
-import { useCart } from "../hooks/useCart";
-import { styles } from "./Cart.styles";
+import ButtonCheckout from "../../components/ButtonCheckout";
+import ButtonContinueShop from "../../components/ButtonContinueShop";
+import { useCart } from "../../hooks/useCart";
+import type { RootStackParamList } from "../../navigation";
+import { styles } from "./styles/Cart.styles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Cart">;
 
@@ -56,7 +56,9 @@ export default function CartScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.itemContent}>
-            <Text style={styles.itemName}>{item.product.name}</Text>
+            <Text style={styles.itemName} accessibilityRole="header">
+              {item.product.name}
+            </Text>
             <Text style={styles.itemPrice}>
               ${item.product.price.toFixed(2)}
             </Text>
@@ -154,10 +156,11 @@ export default function CartScreen({ navigation }: Props) {
           <View style={styles.actionsContainer}>
             <ButtonCheckout
               title="Proceed to Checkout"
-              onPress={() =>
-                navigation.navigate("Checkout", { items: checkoutPayload })
-              }
+              onPress={() => {
+                navigation.navigate("Checkout", { totalTax: total });
+              }}
             />
+
             <ButtonContinueShop
               title="Continue Shopping"
               onPress={() => navigation.navigate("PLP")}

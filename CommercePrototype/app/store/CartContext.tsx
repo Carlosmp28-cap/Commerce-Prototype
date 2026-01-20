@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useReducer } from "react";
 import type { CartItem } from "../models/CartItem";
 import type { Product } from "../models/Product";
 import { loadCart, saveCart } from "../utils/storage";
@@ -62,14 +62,18 @@ function reducer(state: State, action: CartAction): State {
 
     case "REMOVE_ITEM": {
       return {
-        items: state.items.filter((item) => item.product.id !== action.productId),
+        items: state.items.filter(
+          (item) => item.product.id !== action.productId
+        ),
       };
     }
 
     case "UPDATE_QUANTITY": {
       if (action.quantity <= 0) {
         return {
-          items: state.items.filter((item) => item.product.id !== action.productId),
+          items: state.items.filter(
+            (item) => item.product.id !== action.productId
+          ),
         };
       }
 
