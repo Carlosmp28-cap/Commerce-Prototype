@@ -18,9 +18,9 @@ export default function OrderSuccess({ onReturnHome, orderId }: Props) {
         style={{ backgroundColor: paper.colors.primary, marginBottom: 16 }}
         accessibilityLabel="Order success icon"
       />
-      <Title style={{ textAlign: "center", marginBottom: 8 }}>Encomenda concluída</Title>
+      <Title style={{ textAlign: "center", marginBottom: 8 }}>Order completed</Title>
       <Paragraph style={{ textAlign: "center", color: paper.colors.onSurfaceVariant, marginBottom: 16 }}>
-        Obrigado pela sua compra. A sua encomenda {orderId ? `(${orderId}) ` : ""} foi registada com sucesso.
+        Thank you for your purchase. Your order {orderId ? `(${orderId}) ` : ""} has been placed successfully.
       </Paragraph>
 
       <Button
@@ -29,7 +29,7 @@ export default function OrderSuccess({ onReturnHome, orderId }: Props) {
         accessibilityLabel="Return to Home"
         style={{ alignSelf: "stretch", marginHorizontal: 24 }}
       >
-        Voltar para a página inicial
+        Return to Home
       </Button>
     </View>
   );
