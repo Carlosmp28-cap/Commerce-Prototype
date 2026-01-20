@@ -23,7 +23,7 @@ interface PLPHeaderTitleProps {
 /**
  * Header title section with back button and product count
  */
-export function PLPHeaderTitle({ title, countText, titleStyle, countStyle, onBackPress }: PLPHeaderTitleProps) {
+export default function PLPHeaderTitle({ title, countText, titleStyle, countStyle, onBackPress }: PLPHeaderTitleProps) {
   
     const theme = useTheme();
 

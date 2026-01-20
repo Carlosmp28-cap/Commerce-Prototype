@@ -7,14 +7,14 @@ import {
 } from "../app/data/catalog";
 
 describe("catalog", () => {
-  test("has categories", () => {
+  test("has 5 categories", () => {
     expect(categories).toHaveLength(5);
     expect(categories.map((c) => c.id)).toEqual([
       "new",
       "men",
       "women",
       "sale",
-      "new arrivals",
+      "new arrivals"
     ]);
   });
 

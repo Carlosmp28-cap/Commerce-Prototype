@@ -1,16 +1,12 @@
+export const ICON_SIZE = 18;
 import { StyleSheet } from "react-native";
+import { sharedStyles } from "../styles/PLPHeader.shared.styles";
 
-/**
- * Styles for PLPHeader component
- */
 export const styles = StyleSheet.create({
+    ...sharedStyles,
     topRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
+        ...sharedStyles.topRow,
         paddingVertical: 12,
-        paddingHorizontal: 8,
-        position: "relative",
     },
     backButton: {
         margin: 0,
@@ -18,31 +14,49 @@ export const styles = StyleSheet.create({
         left: 0,
     },
     titleContainer: {
-        flex: 1,
+        ...sharedStyles.titleContainer,
+        paddingHorizontal: 16,
+        flexDirection: "column",
         alignItems: "center",
-        paddingLeft: 12,
+        gap: 0,
     },
     controlRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
         paddingVertical: 12,
         paddingHorizontal: 16,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
     },
     button: {
-        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
         borderRadius: 12,
-        height: 44,
-        justifyContent: "center",
-        borderWidth: 1.5,
+        borderWidth: 1,
+        borderColor: '#1a237e',
+        backgroundColor: '#fff',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        marginHorizontal: 4,
+        minWidth: 120,
+        minHeight: 40,
+        shadowColor: '#000',
+        shadowOpacity: 0.04,
+        shadowRadius: 2,
+        elevation: 1,
     },
     buttonContent: {
-        flexDirection: "row-reverse",
+        ...sharedStyles.buttonContent,
         paddingHorizontal: 12,
     },
     buttonLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        marginHorizontal: 4,
+        color: '#1a237e',
+        fontWeight: '500',
+        fontSize: 15,
+        marginRight: 6,
+    },
+    buttonIcon: {
+        color: '#1a237e',
+        fontSize: 18,
+        marginLeft: 4,
     },
 });
