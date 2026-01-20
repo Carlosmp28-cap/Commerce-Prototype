@@ -7,6 +7,7 @@ import {
   ScrollView,
   useWindowDimensions,
   View,
+  Alert,
 } from "react-native";
 import {
   Avatar,
@@ -16,17 +17,17 @@ import {
   useTheme as usePaperTheme,
 } from "react-native-paper";
 
-import { useCart } from "../../hooks/useCart";
 import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
+// use the same cart hook used in Cart screen
+import { useCart } from "../../hooks/useCart";
 import styles from "./styles";
 
-import {
-  OrderSummary,
-  PaymentForm,
-  ReviewCard,
-  ShippingForm,
-} from "./components";
+import ShippingForm from "./components/ShippingForm";
+import PaymentForm from "./components/PaymentForm";
+import ReviewCard from "./components/ReviewCard";
+import OrderSummary from "./components/OrderSummary";
+import OrderSuccess from "./components/OrderSuccess";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
@@ -79,6 +80,9 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   // 4) Shipping and total (choose your source of truth)
   const shippingCost = 5.0;
   const total = totalTax + shippingCost;
+  // envio de email removido — estado relacionado eliminado
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderId, setOrderId] = useState<string | undefined>(undefined);
 
   // Option B: trust numbers from Cart (coerce anyway)
   // const subtotal = safeSubtotalCart;
@@ -179,6 +183,9 @@ export default function CheckoutScreen({ route, navigation }: Props) {
     setStep((s) => Math.max(0, s - 1));
   }, [step, navigation]);
 
+  // access cart actions (matches hook used in Cart.tsx)
+  const { clearCart, items: cartItems = [], removeItem } = useCart() as any;
+
   // place order: finalize locally and navigate back
   const placeOrder = async () => {
     if (placing) return;
@@ -187,7 +194,20 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       Keyboard.dismiss();
       // simulate processing
       await new Promise((r) => setTimeout(r, 300));
-      navigation.goBack();
+
+      // clear cart: prefer clearCart if provided by hook, otherwise remove items one-by-one
+      if (typeof clearCart === "function") {
+        clearCart();
+      } else if (Array.isArray(cartItems) && typeof removeItem === "function") {
+        cartItems.forEach((ci: any) => {
+          if (ci?.product?.id) removeItem(ci.product.id);
+        });
+      }
+
+      // simulate order id from backend and show inline success component
+      const fakeOrderId = `CP-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+      setOrderId(fakeOrderId);
+      setOrderPlaced(true);
     } finally {
       setPlacing(false);
     }
@@ -249,104 +269,116 @@ export default function CheckoutScreen({ route, navigation }: Props) {
 
         <View style={[styles.grid, isNarrow && styles.gridColumn]}>
           <View style={styles.colMain}>
-            {step === 0 && (
-              <ShippingForm
-                fullName={fullName}
-                setFullName={setFullName}
-                email={email}
-                setEmail={setEmail}
-                address={address}
-                setAddress={setAddress}
-                city={city}
-                setCity={setCity}
-                postalCode={postalCode}
-                setPostalCode={setPostalCode}
-                country={country}
-                countryQuery={countryQuery}
-                setCountry={setCountry}
-                setCountryQuery={setCountryQuery}
+            {orderPlaced ? (
+              <OrderSuccess
+                orderId={orderId}
+                onReturnHome={() => {
+                  navigation.popToTop();
+                  navigation.navigate("Home");
+                }}
               />
-            )}
-
-            {step === 1 && (
-              <PaymentForm
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-                cardName={cardName}
-                setCardName={setCardName}
-                cardNumber={cardNumber}
-                setCardNumber={setCardNumber}
-                expiry={expiry}
-                setExpiry={setExpiry}
-                cvv={cvv}
-                setCvv={setCvv}
-                cardNumberError={cardNumberError}
-                setCardNumberError={setCardNumberError}
-                expiryError={expiryError}
-                setExpiryError={setExpiryError}
-                cvvError={cvvError}
-                setCvvError={setCvvError}
-              />
-            )}
-
-            {step === 2 && (
-              <ReviewCard
-                fullName={fullName}
-                email={email}
-                address={address}
-                city={city}
-                postalCode={postalCode}
-                country={country}
-                paymentMethod={paymentMethod}
-                cardName={cardName}
-                cardNumber={cardNumber}
-                items={items}
-                subtotal={totalPrice}
-                shippingCost={shippingCost}
-                total={total}
-              />
-            )}
-
-            <View style={styles.actions}>
-              <View style={{ flex: 1, marginRight: 8 }}>
-                <Button
-                  mode="outlined"
-                  onPress={back}
-                  accessibilityRole="button"
-                  accessibilityLabel="Back"
-                  disabled={false}
-                  accessibilityState={{ disabled: false }}
-                >
-                  Back
-                </Button>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                {step < 2 ? (
-                  <Button
-                    mode="contained"
-                    onPress={next}
-                    disabled={!!isNextDisabled}
-                    accessibilityRole="button"
-                    accessibilityLabel="Next"
-                  >
-                    Next
-                  </Button>
-                ) : (
-                  <Button
-                    mode="contained"
-                    onPress={placeOrder}
-                    accessibilityRole="button"
-                    accessibilityLabel="Place order"
-                  >
-                    Place order
-                  </Button>
+            ) : (
+              <>
+                {step === 0 && (
+                  <ShippingForm
+                    fullName={fullName}
+                    setFullName={setFullName}
+                    email={email}
+                    setEmail={setEmail}
+                    address={address}
+                    setAddress={setAddress}
+                    city={city}
+                    setCity={setCity}
+                    postalCode={postalCode}
+                    setPostalCode={setPostalCode}
+                    country={country}
+                    countryQuery={countryQuery}
+                    setCountry={setCountry}
+                    setCountryQuery={setCountryQuery}
+                  />
                 )}
-              </View>
-            </View>
+
+                {step === 1 && (
+                  <PaymentForm
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    cardName={cardName}
+                    setCardName={setCardName}
+                    cardNumber={cardNumber}
+                    setCardNumber={setCardNumber}
+                    expiry={expiry}
+                    setExpiry={setExpiry}
+                    cvv={cvv}
+                    setCvv={setCvv}
+                    cardNumberError={cardNumberError}
+                    setCardNumberError={setCardNumberError}
+                    expiryError={expiryError}
+                    setExpiryError={setExpiryError}
+                    cvvError={cvvError}
+                    setCvvError={setCvvError}
+                  />
+                )}
+
+                {step === 2 && (
+                  <ReviewCard
+                    fullName={fullName}
+                    email={email}
+                    address={address}
+                    city={city}
+                    postalCode={postalCode}
+                    country={country}
+                    paymentMethod={paymentMethod}
+                    cardName={cardName}
+                    cardNumber={cardNumber}
+                    items={items}
+                    subtotal={totalPrice}
+                    shippingCost={shippingCost}
+                    total={total}
+                  />
+                )}
+
+                <View style={styles.actions}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Button
+                      mode="outlined"
+                      onPress={back}
+                      accessibilityRole="button"
+                      accessibilityLabel="Back"
+                      disabled={false}
+                      accessibilityState={{ disabled: false }}
+                    >
+                      Back
+                    </Button>
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    {step < 2 ? (
+                      <Button
+                        mode="contained"
+                        onPress={next}
+                        disabled={!!isNextDisabled}
+                        accessibilityRole="button"
+                        accessibilityLabel="Next"
+                      >
+                        Next
+                      </Button>
+                    ) : (
+                      <Button
+                        mode="contained"
+                        onPress={placeOrder}
+                        accessibilityRole="button"
+                        accessibilityLabel="Place order"
+                      >
+                        Place order
+                      </Button>
+                    )}
+                  </View>
+                </View>
+              </>
+            )}
           </View>
 
-          {step !== 2 && (
+          {!orderPlaced && (
             <View
               style={[styles.colSummary, isNarrow && styles.colSummaryNarrow]}
             >
