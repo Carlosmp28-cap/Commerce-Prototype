@@ -9,7 +9,7 @@ const mockProduct: Product = {
   name: "Test Product",
   price: 99.99,
   quantityAvailable: 10,
-  categoryId: "test",
+  categoryId: "new",
 };
 
 function TestComponent() {

@@ -61,7 +61,7 @@ export default function ShippingForm(props: {
 
         <TextInput label="Full name" value={fullName} onChangeText={setFullName} mode="outlined" style={styles.input} />
         <TextInput label="Address" value={address} onChangeText={onAddressChange} mode="outlined" style={styles.input}
-          right={ suggestionsLoading ? <TextInput.Icon name={() => <ActivityIndicator size={18} />} /> : undefined } />
+          right={ suggestionsLoading ? <TextInput.Icon icon={() => <ActivityIndicator size={18} />} /> : undefined } />
 
         {showAddressSuggestions && addressSuggestions.length > 0 && (
           <Card style={styles.suggestionsCard}>

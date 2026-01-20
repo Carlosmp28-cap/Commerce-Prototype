@@ -1,6 +1,6 @@
-import HomeScreen from "./screens/Home";
+import AppNavigation from "./navigation";
 export default function Index() {
-  return <HomeScreen navigation={{ navigate: () => {} }} />;
+  return <AppNavigation />;
 }
 {
   /*
