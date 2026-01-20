@@ -82,27 +82,6 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock("@expo/vector-icons/MaterialIcons", () => {
-  const React = require("react");
-  return {
-    default: function IconMock(props) {
-      return React.createElement("Icon", props);
-    },
-  };
-});
-jest.mock(
-  "react-native-vector-icons/MaterialIcons",
-  () => {
-    const React = require("react");
-    return {
-      default: function IconMock(props) {
-        return React.createElement("Icon", props);
-      },
-    };
-  },
-  { virtual: true }
-);
-
 // expo-linking is ESM in recent SDKs; mock to avoid Jest ESM parsing issues.
 jest.mock("expo-linking", () => ({
   createURL: () => "test://",
