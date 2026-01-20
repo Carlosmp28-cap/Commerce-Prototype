@@ -55,7 +55,9 @@ describe("PDP - cart", () => {
       expect.objectContaining({ id: product!.id }),
       1
     );
-    expect((global as unknown as { alert?: jest.Mock }).alert).toHaveBeenCalled();
+    expect(
+      (global as unknown as { alert?: jest.Mock }).alert
+    ).toHaveBeenCalled();
   });
 
   test("can select quantity and add to cart", async () => {
