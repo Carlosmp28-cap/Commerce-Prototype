@@ -11,6 +11,21 @@ export const tokens = {
     primary: "#275790",
     background: "#F2F2F7",
     text: "#111827",
+
+    // Surfaces & borders
+    surface: "#FFFFFF",
+    border: "#E5E7EB",
+    placeholder: "#E5E5EA",
+
+    // Text hierarchy
+    mutedText: "#4B5563",
+    subtleText: "#6B7280",
+
+    // Status
+    success: "#045919",
+    danger: "#ff1c1c",
+    warning: "#FFB800",
+    successBackground: "#F2F7F3",
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24 },
   typography: {

@@ -1,10 +1,24 @@
-import React from "react";
-import { Text as RNText, TextProps } from "react-native";
+import React, { useMemo } from "react";
+import { Text as RNText, type TextProps, type TextStyle } from "react-native";
 
-// Base Text wrapper to apply typography tokens via theme.
-// TODO: use useTheme() to map variants to styles.
-export default function AppText(
-  props: TextProps & { variant?: "body" | "title" }
-) {
-  return <RNText {...props} />;
+import { useTheme } from "../themes";
+
+type Variant = "body" | "title";
+
+export default function AppText({ variant = "body", style, ...rest }: TextProps & { variant?: Variant }) {
+  const theme = useTheme();
+
+  const baseStyle = useMemo<TextStyle>(() => {
+    const variantStyle =
+      variant === "title"
+        ? (theme.typography.title as TextStyle)
+        : (theme.typography.body as TextStyle);
+
+    return {
+      ...variantStyle,
+      color: theme.colors.text,
+    };
+  }, [theme, variant]);
+
+  return <RNText {...rest} style={[baseStyle, style]} />;
 }
