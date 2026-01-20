@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "web:export": "expo export -p web",
-    "web:serve": "npx serve dist -l 4173",
+    "web:serve": "npx serve dist -l 4173 -s",
     "web:preview": "npm run web:export && npm run web:serve",
     "lint": "expo lint",
     "test": "jest"
