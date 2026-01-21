@@ -45,6 +45,9 @@ builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>();
 builder.Services.AddHttpClient<ISfccApiClient, SfccApiClient>();
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
 
+// Add routing service for pathfinding
+builder.Services.AddScoped<IRouteService, RouteService>();
+
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();

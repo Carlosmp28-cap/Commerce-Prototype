@@ -1,0 +1,234 @@
+{
+  "shelves": [
+    {
+      "id": "LISBOA01_A1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "A1",
+      "x": 5.5,
+      "y": 3.5,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_A1_S2",
+      "storeId": "LISBOA01",
+      "zoneId": "A1",
+      "x": 6.6,
+      "y": 3.5,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_A1_S3",
+      "storeId": "LISBOA01",
+      "zoneId": "A1",
+      "x": 7.7,
+      "y": 3.5,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_A2_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "A2",
+      "x": 9.5,
+      "y": 3.5,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_C1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "C1",
+      "x": 22.5,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_D1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "D1",
+      "x": 28.5,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_C1_S2",
+      "storeId": "LISBOA01",
+      "zoneId": "C1",
+      "x": 25.0,
+      "y": 6.0,
+      "width": 1.0,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_D1_S2",
+      "storeId": "LISBOA01",
+      "zoneId": "D1",
+      "x": 31.5,
+      "y": 6.0,
+      "width": 1.0,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_B1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "B1",
+      "x": 15.5,
+      "y": 6.0,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_B1_S2",
+      "storeId": "LISBOA01",
+      "zoneId": "B1",
+      "x": 15.8,
+      "y": 6.0,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_B2_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "B2",
+      "x": 20.0,
+      "y": 6.0,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_E1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "E1",
+      "x": 7.5,
+      "y": 12.5,
+      "width": 0.8,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_E2_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "E2",
+      "x": 12.5,
+      "y": 12.5,
+      "width": 0.8,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_F1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "F1",
+      "x": 18.0,
+      "y": 12.5,
+      "width": 1.0,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_G1_S3",
+      "storeId": "LISBOA01",
+      "zoneId": "G1",
+      "x": 23.0,
+      "y": 12.5,
+      "width": 0.6,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_G1_S4",
+      "storeId": "LISBOA01",
+      "zoneId": "G1",
+      "x": 23.4,
+      "y": 12.5,
+      "width": 0.6,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_G2_S2",
+      "storeId": "LISBOA01",
+      "zoneId": "G2",
+      "x": 27.0,
+      "y": 12.5,
+      "width": 0.6,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_H1_S2",
+      "storeId": "LISBOA01",
+      "zoneId": "H1",
+      "x": 31.0,
+      "y": 12.5,
+      "width": 0.6,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_I1_S1",
+      "storeId": "LISBOA01",
+      "zoneId": "I1",
+      "x": 8.0,
+      "y": 18.5,
+      "width": 0.8,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "LISBOA01_J1_S3",
+      "storeId": "LISBOA01",
+      "zoneId": "J1",
+      "x": 13.5,
+      "y": 18.5,
+      "width": 0.8,
+      "height": 4.0,
+      "floor": 1
+    },
+    {
+      "id": "PORTO01_A1_S2",
+      "storeId": "PORTO01",
+      "zoneId": "A1",
+      "x": 7.5,
+      "y": 6.0,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "PORTO01_B1_S1",
+      "storeId": "PORTO01",
+      "zoneId": "B1",
+      "x": 12.5,
+      "y": 6.0,
+      "width": 0.6,
+      "height": 5.0,
+      "floor": 1
+    },
+    {
+      "id": "PORTO01_C1_S1",
+      "storeId": "PORTO01",
+      "zoneId": "C1",
+      "x": 18.0,
+      "y": 6.0,
+      "width": 1.0,
+      "height": 5.0,
+      "floor": 1
+    }
+  ]
+}

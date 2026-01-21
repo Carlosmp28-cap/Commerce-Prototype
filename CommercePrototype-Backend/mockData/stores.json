@@ -1,0 +1,91 @@
+{
+  "stores":  [
+    {
+      "storeId": "LISBOA01",
+      "storeName": "Continente Lisboa Parque das Nações",
+      "address": {
+        "street": "Av. D. João II, Lote 1. 16. 01",
+        "city": "Lisboa",
+        "postalCode": "1990-083",
+        "country": "Portugal"
+      },
+      "coordinates": {
+        "latitude": 38.7681,
+        "longitude": -9.0947
+      },
+      "gridDimensions": {
+        "width": 50,
+        "height": 30,
+        "unit": "meters"
+      },
+      "floors": 1,
+      "openingHours": {
+        "monday": "08:00-22:00",
+        "tuesday":  "08:00-22:00",
+        "wednesday": "08:00-22:00",
+        "thursday": "08:00-22:00",
+        "friday": "08:00-23:00",
+        "saturday":  "08:00-23:00",
+        "sunday":  "09:00-21:00"
+      }
+    },
+    {
+      "storeId": "PORTO01",
+      "storeName":  "Continente Porto Norte Shopping",
+      "address": {
+        "street": "Rua Sara Afonso, 105-117",
+        "city": "Porto",
+        "postalCode":  "4460-841",
+        "country": "Portugal"
+      },
+      "coordinates": {
+        "latitude": 41.1789,
+        "longitude": -8.6490
+      },
+      "gridDimensions": {
+        "width": 45,
+        "height": 28,
+        "unit": "meters"
+      },
+      "floors": 1,
+      "openingHours": {
+        "monday": "09:00-22:00",
+        "tuesday":  "09:00-22:00",
+        "wednesday": "09:00-22:00",
+        "thursday": "09:00-22:00",
+        "friday": "09:00-23:00",
+        "saturday":  "09:00-23:00",
+        "sunday": "09:00-21:00"
+      }
+    },
+    {
+      "storeId": "COIMBRA01",
+      "storeName": "Continente Coimbra Dolce Vita",
+      "address": {
+        "street": "Rua General Humberto Delgado, 287",
+        "city": "Coimbra",
+        "postalCode": "3030-327",
+        "country": "Portugal"
+      },
+      "coordinates": {
+        "latitude": 40.2108,
+        "longitude": -8.4280
+      },
+      "gridDimensions": {
+        "width": 40,
+        "height": 25,
+        "unit": "meters"
+      },
+      "floors": 1,
+      "openingHours": {
+        "monday": "09:00-22:00",
+        "tuesday": "09:00-22:00",
+        "wednesday": "09:00-22:00",
+        "thursday":  "09:00-22:00",
+        "friday": "09:00-22:00",
+        "saturday":  "09:00-22:00",
+        "sunday": "09:00-21:00"
+      }
+    }
+  ]
+}
