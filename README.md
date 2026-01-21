@@ -1,65 +1,138 @@
 # Commerce-Prototype
 
-Projeto base para protótipo SFRA em React Native usando Expo.
+Full-stack e-commerce prototype with React Native (Expo) frontend and ASP.NET Core backend integrated with Salesforce Commerce Cloud (SFCC).
 
-Resumo rápido
+## Project Structure
 
-- App principal está em `CommercePrototype/` — abra essa pasta para rodar e ver o `package.json`.
-- Implementa: catálogo determinístico, navegação (Home, PLP, PDP, Cart, Checkout, Login), tema (tokens + React Native Paper), footer “SFRA-like” e uma suite de testes (Jest + RNTL).
+```
+Commerce-Prototype/
+├── CommercePrototype/          # React Native (Expo) frontend
+├── CommercePrototype-Backend/  # ASP.NET Core Web API backend
+├── Docs/                       # Documentation and diagrams
+└── postman/                    # Postman collections and environments
+```
 
-Como rodar localmente
+## Quick Start
 
-1. Instalar dependências (na pasta `CommercePrototype`):
+### Frontend (CommercePrototype)
 
 ```bash
 cd CommercePrototype
 npm install
-```
-
-2. Iniciar app em dev (Expo):
-
-```bash
 npx expo start
 ```
 
-Testes
+See [CommercePrototype/README.md](CommercePrototype/README.md) for details.
 
-- Suite Jest configurada com `jest-expo`. Para rodar localmente:
+### Backend (CommercePrototype-Backend)
 
+```bash
+cd CommercePrototype-Backend
+dotnet restore
+dotnet run
+```
+
+Default URLs:
+- HTTP: `http://localhost:5035`
+- HTTPS: `https://localhost:7270`
+
+See [CommercePrototype-Backend/README.md](CommercePrototype-Backend/README.md) for details.
+
+## Architecture
+
+### Frontend
+- React Native + Expo (cross-platform: iOS, Android, Web)
+- TypeScript for type safety
+- React Navigation for routing
+- React Native Paper (Material Design 3)
+- Context API for cart management
+- Jest + React Native Testing Library for testing
+
+### Backend
+- ASP.NET Core 10.0 Web API
+- MVC architecture with service layer
+- SFCC Shop API integration via OCAPI
+- Dependency injection for services
+- RESTful API design
+
+### Integration
+- Backend acts as a BFF (Backend for Frontend) layer
+- Maps SFCC Shop API responses to frontend-friendly DTOs
+- Handles authentication and API calls to SFCC
+- Provides unified REST endpoints for products, categories, and cart
+
+## API Endpoints
+
+### Products
+- `GET /api/products` - Search products (supports `q`, `categoryId`, `limit`, `offset` query params)
+- `GET /api/products/{id}` - Get product details
+
+### Categories
+- `GET /api/categories` - Get category tree (supports `rootId`, `levels` query params)
+
+### Health
+- `GET /health` - Health check endpoint
+
+## Configuration
+
+### Backend SFCC Configuration
+
+Update `CommercePrototype-Backend/appsettings.Development.json`:
+
+```json
+{
+  "Sfcc": {
+    "OAuthTokenUrl": "https://account.demandware.com/dw/oauth2/access_token",
+    "ApiBaseUrl": "https://your-instance.dx.commercecloud.salesforce.com",
+    "ApiVersion": "v20_4",
+    "ClientId": "your-client-id",
+    "SiteId": "RefArch"
+  }
+}
+```
+
+See [SFCC_INTEGRATION_GUIDE.md](CommercePrototype-Backend/SFCC_INTEGRATION_GUIDE.md) for detailed setup instructions.
+
+## Testing
+
+### Frontend Tests
 ```bash
 cd CommercePrototype
 npm test -- --runInBand
 ```
 
-Notas importantes sobre testes
+### Backend Tests
+```bash
+cd CommercePrototype-Backend
+dotnet test
+```
 
-- Os testes ficam em `CommercePrototype/__tests__/` e seguem o padrão `*.test.ts(x)`.
-- Helpers compartilhados ficam fora de `__tests__/`, em `CommercePrototype/test/testUtils.tsx`.
-  - Motivo: Jest trata arquivos dentro de `__tests__/` como suites; utilitários não devem ser executados como testes.
-  - `renderWithProviders()` centraliza providers (tema/tokens + Paper Provider) e mocks necessários (ex.: ícones) para testes serem estáveis.
+## CI/CD
 
-CI (GitHub Actions)
+GitHub Actions workflow configured in `.github/workflows/ci.yml`:
+- Frontend: lint, typecheck, tests
+- Backend: build, tests (when added)
 
-- Há um workflow em `.github/workflows/ci.yml` (na raiz) chamado `CI — CommercePrototype (lint, typecheck, test)`.
-- O workflow executa os passos dentro da pasta `CommercePrototype` (instalação, lint, typecheck, tests).
-- Para melhores caches e builds reprodutíveis, adicione e commit o `package-lock.json` dentro de `CommercePrototype`.
+## Development Workflow
 
-Estrutura relevante
+1. **Backend Development**: Start the backend API first to ensure endpoints are available
+2. **Frontend Development**: Configure API base URL in frontend to point to local backend
+3. **Testing**: Run tests in both projects before committing
+4. **Commits**: Follow conventional commit messages
 
-- `CommercePrototype/app/` — código fonte Expo / routes
-- `CommercePrototype/app/components/` — componentes base (Button, Text, Card)
-- `CommercePrototype/app/screens/` — telas: Home, PLP, PDP, Cart
-- `CommercePrototype/app/hooks/` — hooks: `useAuth`, `useApi`, `useCart`
-- `CommercePrototype/app/services/` — `api`, `auth`, `cache` (esqueletos)
-- `CommercePrototype/app/navigation/` — React Navigation (native-stack) + deep linking
-- `CommercePrototype/__tests__/` — testes Jest
-- `CommercePrototype/test/` — utilitários e wrappers para testes
+## Next Steps
 
-Próximos passos sugeridos
+- [ ] Implement cart/basket endpoints in backend
+- [ ] Implement order creation workflow
+- [ ] Add authentication/customer endpoints
+- [ ] Connect frontend to backend API
+- [ ] Add comprehensive error handling
+- [ ] Implement caching strategy
+- [ ] Add monitoring and logging
+- [ ] Configure production deployments
 
-- Implementar navegação completa e telas (Tarefa 2).
-- Implementar API client + auth hooks e mocks (Tarefa 4).
-- Implementar cache e persistência do carrinho (Tarefas 5 e 6).
-- Configurar secrets no GitHub para deploys (EXPO_TOKEN, EAS_SERVICE_ACCOUNT, FIREBASE_TOKEN).
+## Documentation
 
-Se quiser, eu posso commitar mudanças pendentes e abrir um branch/PR com estas atualizações.
+- [SFCC Integration Guide](CommercePrototype-Backend/SFCC_INTEGRATION_GUIDE.md)
+- [Frontend README](CommercePrototype/README.md)
+- [Backend README](CommercePrototype-Backend/README.md)

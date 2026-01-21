@@ -1,4 +1,5 @@
 using CommercePrototype_Backend.Models;
+using CommercePrototype_Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommercePrototype_Backend.Controllers;
@@ -7,32 +8,54 @@ namespace CommercePrototype_Backend.Controllers;
 [Route("api/products")]
 public sealed class ProductsController : ControllerBase
 {
-    // In-memory sample data for the prototype.
-    // Later you can swap this for a DB or another service.
-    private static readonly IReadOnlyList<ProductDto> Products =
-    [
-        new("sku-new-001", "Lightweight Tee", 18.99m, "new", true),
-        new("sku-new-006", "Everyday Hoodie", 39.99m, "new", true),
-        new("sku-men-005", "Classic Polo", 29.99m, "men", false),
-    ];
+    private readonly ISfccShopService _shopService;
+    private readonly ILogger<ProductsController> _logger;
 
-    [HttpGet]
-    public ActionResult<IEnumerable<ProductDto>> List([FromQuery] string? q = null)
+    public ProductsController(ISfccShopService shopService, ILogger<ProductsController> logger)
     {
-        if (string.IsNullOrWhiteSpace(q)) return Ok(Products);
-
-        var filtered = Products.Where(p =>
-            p.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-            || p.CategoryId.Equals(q, StringComparison.OrdinalIgnoreCase)
-        );
-
-        return Ok(filtered);
+        _shopService = shopService;
+        _logger = logger;
     }
 
-    [HttpGet("{id}")]
-    public ActionResult<ProductDto> GetById(string id)
+    /// <summary>
+    /// Search products in SFCC Shop API. Supports optional keyword and category filter.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<ProductSearchResultDto>> Search(
+        [FromQuery] string? q = null,
+        [FromQuery] string? categoryId = null,
+        [FromQuery] int limit = 12,
+        [FromQuery] int offset = 0,
+        CancellationToken cancellationToken = default)
     {
-        var product = Products.FirstOrDefault(p => p.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
-        return product is null ? NotFound() : Ok(product);
+        try
+        {
+            var result = await _shopService.SearchProductsAsync(q, categoryId, limit, offset, cancellationToken);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching products in SFCC");
+            return StatusCode(500, new { error = "Failed to search products from SFCC", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get product detail by id from SFCC Shop API.
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProductDetailDto>> GetById(string id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var product = await _shopService.GetProductAsync(id, cancellationToken);
+            return product is null ? NotFound() : Ok(product);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching product {ProductId} from SFCC", id);
+            return StatusCode(500, new { error = "Failed to fetch product from SFCC", details = ex.Message });
+        }
     }
 }
+    
