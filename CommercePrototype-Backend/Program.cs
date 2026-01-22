@@ -1,6 +1,15 @@
 using CommercePrototype_Backend.Services;
+using CommercePrototype_Backend.Services.Algorithms;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IStoreFileReader, StoreFileReader>();
+builder.Services.AddScoped<IAStarPathFinder, AStarPathFinder>();
+builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
+
+// Add pathfinding algorithm service
+builder.Services.AddScoped<IAStarPathFinder, AStarPathFinder>();
+builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
 
 // Add services to the container.
 
@@ -46,7 +55,7 @@ builder.Services.AddHttpClient<ISfccApiClient, SfccApiClient>();
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
 
 // Add routing service for pathfinding
-builder.Services.AddScoped<IRouteService, RouteService>();
+builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
 
 builder.Services.AddHealthChecks();
 

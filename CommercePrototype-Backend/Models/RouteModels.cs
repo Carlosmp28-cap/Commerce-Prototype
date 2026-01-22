@@ -1,19 +1,5 @@
-using System.Collections.Generic;
-
 namespace CommercePrototype_Backend.Models
 {
-    public record PositionDto(double X, double Y);
-
-    public class RouteRequestDto
-    {
-        public string StoreId { get; set; } = string.Empty;
-        public string ProductId { get; set; } = string.Empty;
-        public PositionDto? Start { get; set; }
-        // If true, use grid-based A* pathfinding using store zones as obstacles
-        public bool UseAStar { get; set; } = false;
-        // Grid cell size in meters (1 = 1m resolution)
-        public int GridResolutionMeters { get; set; } = 1;
-    }
 
     public class RouteStepDto
     {
