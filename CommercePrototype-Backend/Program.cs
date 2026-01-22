@@ -45,6 +45,10 @@ builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>();
 builder.Services.AddHttpClient<ISfccApiClient, SfccApiClient>();
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
 
+// Shopper session handling (guest + login)
+builder.Services.AddSingleton<IShopperSessionStore, ShopperSessionStore>();
+builder.Services.AddScoped<SfccRequestContext>();
+
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
