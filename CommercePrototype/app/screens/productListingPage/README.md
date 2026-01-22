@@ -1,6 +1,7 @@
 # ProductListingPage Architecture
 
 ## Overview
+
 This module implements the Product Listing Page (PLP) for both mobile and web platforms, following a modular, maintainable, and scalable architecture. All logic, styles, and components are organized to maximize code reuse and minimize duplication.
 
 ---
@@ -55,47 +56,42 @@ productListingPage/
 
 ## Extending & Maintaining
 
-- **Adicionar novo componente:**
-  - Crie o componente em `mobile/components` ou `web/components` conforme a plataforma.
-  - Exporte via `index.ts`.
-  - Centralize estilos em `PLPHeader.shared.styles.ts` se forem comuns.
+- Adding a new component:
+  - Create the component in `mobile/components` or `web/components` depending on the target.
+  - Export via `index.ts` for easy imports.
+  - Centralize shared styles in `styles/PLPHeader.shared.styles.ts` when appropriate.
 
-- **Adicionar lógica compartilhada:**
-  - Crie hooks em `shared/`.
-  - Tipos em `shared/types`.
+- Shared logic:
+  - Add hooks to `shared/` and types to `shared/types`.
 
-- **Adicionar/alterar estilos:**
-  - Edite `PLPHeader.shared.styles.ts` para estilos comuns.
-  - Edite arquivos de estilos específicos para overrides.
+- Styles:
+  - Update `styles/PLPHeader.shared.styles.ts` for common styles and platform-specific overrides in their folders.
 
-- **Testes:**
-  - Recomenda-se criar testes unitários para hooks e componentes principais.
+- Tests:
+  - Add unit tests for hooks and key components.
 
 ---
 
-## Pontos de Atenção
+## Notes
 
-- **Evite duplicação:** Sempre que possível, compartilhe lógica e estilos entre plataformas.
-- **Acessibilidade:** Garanta que todos os componentes tenham roles e labels apropriados.
-- **Performance:** Use React.memo e hooks otimizados para listas grandes.
-- **Documentação:** Mantenha este README atualizado conforme a arquitetura evolui.
+- Avoid duplication: prefer shared hooks and styles between platforms.
+- Accessibility: ensure components expose proper roles and accessibility labels.
+- Performance: use `React.memo` and optimized hooks for large lists.
+- Documentation: keep this README up to date as the architecture evolves.
 
 ---
 
-## Exemplos de Importação
+## Import examples
 
 ```tsx
-// Importando header mobile
-import PLPHeader from './mobile/PLPHeader.native';
+// Import mobile header
+import PLPHeader from "./mobile/PLPHeader.native";
 
-// Importando header web
-import PLPHeader from './PLPHeader.web';
+// Import web header
+import PLPHeader from "./PLPHeader.web";
 
-// Importando componente compartilhado
-import { usePLPHeaderLogic } from './shared/usePLPHeaderLogic';
+// Import shared hook
+import { usePLPHeaderLogic } from "./shared/usePLPHeaderLogic";
 ```
 
 ---
-
-## Contato
-Dúvidas ou sugestões? Fale com o time de arquitetura/front-end.

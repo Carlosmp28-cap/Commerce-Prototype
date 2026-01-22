@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -17,10 +17,44 @@ interface PDPImageGalleryProps {
   isDesktop: boolean;
 }
 
-export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryProps) {
+export default function PDPImageGallery({
+  images,
+  isDesktop,
+}: PDPImageGalleryProps) {
   const theme = useTheme();
+  const isTestEnv =
+    typeof process !== "undefined" && process.env?.NODE_ENV === "test";
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  const primaryImage = images[0];
+  const primaryImageKey = useMemo(() => {
+    if (!primaryImage) return "none";
+    if (typeof primaryImage === "number") return `local:${primaryImage}`;
+    if (typeof primaryImage === "object" && "uri" in primaryImage) {
+      const uri = (primaryImage as { uri?: unknown }).uri;
+      if (typeof uri === "string") return `uri:${uri}`;
+    }
+    return "unknown";
+  }, [primaryImage]);
+
+  const [isGalleryReady, setIsGalleryReady] = useState(
+    isTestEnv || images.length <= 1,
+  );
+
+  useEffect(() => {
+    // When the primary image changes, reset selection and wait for it to load
+    // before rendering (and therefore loading) the rest of the gallery.
+    setSelectedImageIndex(0);
+    setIsGalleryReady(isTestEnv || images.length <= 1);
+  }, [primaryImageKey, images.length]);
+
+  useEffect(() => {
+    // Clamp selection if image count changes (e.g., after gallery becomes available).
+    setSelectedImageIndex((current) =>
+      Math.min(current, Math.max(images.length - 1, 0)),
+    );
+  }, [images.length]);
 
   const currentImage = images[selectedImageIndex];
 
@@ -33,7 +67,10 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
           animationType="fade"
           onRequestClose={() => setIsZoomed(false)}
         >
-          <Pressable style={styles.zoomModal} onPress={() => setIsZoomed(false)}>
+          <Pressable
+            style={styles.zoomModal}
+            onPress={() => setIsZoomed(false)}
+          >
             <View style={styles.zoomContainer}>
               <IconButton
                 icon="close"
@@ -54,31 +91,38 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
           </Pressable>
         </Modal>
 
-        <View style={styles.thumbnailsColumn}>
-          {images.map((item, index) => (
-            <TouchableOpacity
-              key={`thumb-${index}`}
-              accessibilityRole="button"
-              accessibilityLabel={`Select image ${index + 1}`}
-              onPress={() => setSelectedImageIndex(index)}
-              activeOpacity={0.7}
-            >
-              <Card
-                style={[
-                  styles.thumbnailCard,
-                  { borderColor: theme.colors.border },
-                  selectedImageIndex === index && { borderColor: theme.colors.primary },
-                ]}
+        {isGalleryReady && images.length > 1 ? (
+          <View style={styles.thumbnailsColumn}>
+            {images.map((item, index) => (
+              <TouchableOpacity
+                key={`thumb-${index}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Select image ${index + 1}`}
+                onPress={() => setSelectedImageIndex(index)}
+                activeOpacity={0.7}
               >
-                <Image
-                  source={item}
-                  style={styles.thumbnail}
-                  resizeMode="cover"
-                />
-              </Card>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Card
+                  style={[
+                    styles.thumbnailCard,
+                    { borderColor: theme.colors.border },
+                    selectedImageIndex === index && {
+                      borderColor: theme.colors.primary,
+                    },
+                  ]}
+                >
+                  <Image
+                    source={item}
+                    style={styles.thumbnail}
+                    resizeMode="cover"
+                  />
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          // Keep layout stable while the primary image loads.
+          <View style={styles.thumbnailsColumn} />
+        )}
 
         <View style={styles.imageColumn}>
           <TouchableOpacity
@@ -91,8 +135,13 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
               {currentImage ? (
                 <Image
                   source={currentImage}
-                  style={[styles.mainImageDesktop, { backgroundColor: theme.colors.background }]}
+                  style={[
+                    styles.mainImageDesktop,
+                    { backgroundColor: theme.colors.background },
+                  ]}
                   resizeMode="cover"
+                  onLoadEnd={() => setIsGalleryReady(true)}
+                  onError={() => setIsGalleryReady(true)}
                 />
               ) : (
                 <View
@@ -149,8 +198,13 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
           {currentImage ? (
             <Image
               source={currentImage}
-              style={[styles.mainImageMobile, { backgroundColor: theme.colors.background }]}
+              style={[
+                styles.mainImageMobile,
+                { backgroundColor: theme.colors.background },
+              ]}
               resizeMode="cover"
+              onLoadEnd={() => setIsGalleryReady(true)}
+              onError={() => setIsGalleryReady(true)}
             />
           ) : (
             <View
@@ -163,7 +217,7 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
         </Card>
       </TouchableOpacity>
 
-      {images.length > 1 && (
+      {isGalleryReady && images.length > 1 && (
         <View style={styles.thumbnailsRowContainer}>
           <ScrollView
             horizontal
@@ -182,8 +236,9 @@ export default function PDPImageGallery({ images, isDesktop }: PDPImageGalleryPr
                   style={[
                     styles.thumbnailCardMobile,
                     { borderColor: theme.colors.border },
-                    selectedImageIndex === index &&
-                      { borderColor: theme.colors.primary },
+                    selectedImageIndex === index && {
+                      borderColor: theme.colors.primary,
+                    },
                   ]}
                 >
                   <Image

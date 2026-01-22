@@ -1,14 +1,16 @@
 import type { CatalogProduct } from "../../data/catalog";
+import type { Product } from "../../models/Product";
 
 export type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
 
 /**
  * Sort products based on the selected option
+ * Works with both Product and CatalogProduct types
  */
-export const sortProducts = (
-  products: CatalogProduct[],
-  sortBy: SortOption
-): CatalogProduct[] => {
+export const sortProducts = <T extends Product | CatalogProduct>(
+  products: T[],
+  sortBy: SortOption,
+): T[] => {
   const sorted = [...products];
 
   switch (sortBy) {

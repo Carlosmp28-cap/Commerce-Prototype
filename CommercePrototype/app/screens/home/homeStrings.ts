@@ -14,13 +14,6 @@ export const HOME_STRINGS = {
   heroBody: "Shop curated picks across New, Men, Women and Sale.",
   heroAlt: "New season essentials",
   heroOpenPlpA11y: "Open product listing",
-  shopAllA11y: "Shop all products",
-  shopSaleA11y: "Shop sale",
-  shopAllLabel: "Shop all",
-  shopSaleLabel: "Shop sale",
-
-  searchPlaceholder: "Search products",
-  searchA11y: "Search products",
   categoryChipA11yPrefix: "Open category",
 
   shopByCategoryTitle: "Shop by Category",

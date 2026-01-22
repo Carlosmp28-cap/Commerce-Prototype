@@ -1,15 +1,39 @@
-import React, { useMemo, useCallback, useState, useEffect, lazy, Suspense } from "react";
-import { FlatList, View, useWindowDimensions, Platform } from "react-native";
+import React, {
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  lazy,
+  Suspense,
+} from "react";
+import {
+  FlatList,
+  View,
+  useWindowDimensions,
+  Platform,
+  ActivityIndicator,
+  ScrollView,
+  Pressable,
+} from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation";
 import { useTheme } from "../themes";
-import { getProductsByQuery } from "../data/catalog";
-import type { CatalogProduct } from "../data/catalog";
+import { useProductsPaginated } from "../hooks/useProducts";
+import { useCategories } from "../hooks/useCategories";
+import type { Product } from "../models/Product";
 import { createStyles } from "./PLP.styles";
-import { sortProducts, type SortOption } from "../scripts/helpers/productHelpers";
+import {
+  sortProducts,
+  type SortOption,
+} from "../scripts/helpers/productHelpers";
 import EmptyState from "./productListingPage/components/EmptyState";
 import Footer from "../components/Footer";
-const ProductCard = lazy(() => import("./productListingPage/components/ProductCard"));
+import Text from "../components/Text";
+import SubcategoryChips from "./productListingPage/components/SubcategoryChips";
+import { usePlpCategorySelection } from "./productListingPage/hooks/usePlpCategorySelection";
+const ProductCard = lazy(
+  () => import("./productListingPage/components/ProductCard"),
+);
 
 import PLPHeaderWeb from "./productListingPage/PLPHeader.web";
 import PLPHeaderNative from "./productListingPage/PLPHeader.native";
@@ -31,36 +55,57 @@ export default function PLPScreen({ navigation, route }: Props) {
 
   const [selectedSort, setSelectedSort] = useState<SortOption>("name-asc");
 
-  const rawProducts = useMemo(() => getProductsByQuery(q), [q]);
+  // Fetch categories to determine which category to use
+  const {
+    categories: categoryTree,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useCategories();
+
+  const { categoryId, subcategories, showSubcategories } =
+    usePlpCategorySelection(categoryTree, q);
+
+  // Fetch products from the determined category with pagination
+  const {
+    products: rawProducts,
+    loading: productsLoading,
+    error: productsError,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+    total: totalProducts,
+  } = useProductsPaginated(
+    categoryId || "",
+    undefined, // q is used for category selection, not keyword search
+    25, // Request 25 products per page (SFCC API limit)
+  );
+
   const products = useMemo(
     () => sortProducts(rawProducts, selectedSort),
-    [rawProducts, selectedSort]
+    [rawProducts, selectedSort],
   );
+
   const styles = useMemo(
     () => createStyles(theme, width, numColumns),
-    [theme, width, numColumns]
+    [theme, width, numColumns],
   );
 
   const handleProductPress = useCallback(
     (id: string) => {
       navigation.navigate("PDP", { id });
     },
-    [navigation]
+    [navigation],
   );
 
-  const handleBackPress = useCallback(() => {
-    navigation.navigate("Home");
-  }, [navigation]);
-
   const handleCategorySelect = useCallback(
-    (query: string) => {
-      navigation.setParams({ q: query || undefined });
+    (categoryIdOrName: string) => {
+      navigation.setParams({ q: categoryIdOrName || undefined });
     },
-    [navigation]
+    [navigation],
   );
 
   const renderProduct = useCallback(
-    ({ item }: { item: CatalogProduct }) => (
+    ({ item }: { item: Product }) => (
       <Suspense fallback={null}>
         <ProductCard
           product={item}
@@ -70,7 +115,7 @@ export default function PLPScreen({ navigation, route }: Props) {
         />
       </Suspense>
     ),
-    [handleProductPress, styles.image, styles.itemContainer]
+    [handleProductPress, styles.image, styles.itemContainer],
   );
 
   const renderEmpty = useCallback(
@@ -81,7 +126,7 @@ export default function PLPScreen({ navigation, route }: Props) {
         textStyle={styles.emptyText}
       />
     ),
-    [q, styles.emptyContainer, styles.emptyText]
+    [q, styles.emptyContainer, styles.emptyText],
   );
 
   useEffect(() => {
@@ -96,7 +141,7 @@ export default function PLPScreen({ navigation, route }: Props) {
       }
       meta.setAttribute(
         "content",
-        "See all available products, filter by category, and sort as you wish in our online store."
+        "See all available products, filter by category, and sort as you wish in our online store.",
       );
 
       const ensure = (name: string, content: string) => {
@@ -110,9 +155,71 @@ export default function PLPScreen({ navigation, route }: Props) {
       };
 
       ensure("og:title", "Products — CommercePrototype");
-      ensure("og:description", "See all available products, filter by category, and sort as you wish in our online store.");
+      ensure(
+        "og:description",
+        "See all available products, filter by category, and sort as you wish in our online store.",
+      );
     }
   }, []);
+
+  // Show loading state
+  const loading = categoriesLoading || productsLoading;
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.background,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={{ marginTop: 16, color: theme.colors.text }}>
+          {categoriesLoading ? "Loading categories..." : "Loading products..."}
+        </Text>
+      </View>
+    );
+  }
+
+  // Show error state
+  const error = categoriesError || productsError;
+  if (error) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.background,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          },
+        ]}
+      >
+        <Text
+          style={{
+            color: theme.colors.danger,
+            fontSize: 16,
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </Text>
+        <Text
+          style={{
+            marginTop: 8,
+            color: theme.colors.text,
+            textAlign: "center",
+          }}
+        >
+          Please check that the backend is running at http://localhost:5035
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -124,7 +231,6 @@ export default function PLPScreen({ navigation, route }: Props) {
         headerStyle={styles.header}
         titleStyle={styles.title}
         countStyle={styles.resultCount}
-        onBackPress={handleBackPress}
         selectedSort={selectedSort}
         onSortChange={setSelectedSort}
         onCategorySelect={handleCategorySelect}
@@ -138,9 +244,56 @@ export default function PLPScreen({ navigation, route }: Props) {
         contentContainerStyle={[styles.list, { flexGrow: 1 }]}
         columnWrapperStyle={styles.row}
         renderItem={renderProduct}
+        ListHeaderComponent={
+          showSubcategories ? (
+            <SubcategoryChips
+              subcategories={subcategories}
+              onSelectCategory={handleCategorySelect}
+            />
+          ) : null
+        }
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={
-          <View style={{ flexGrow: 1, justifyContent: "flex-end" }}>
+          <View style={{ width: "100%", paddingVertical: 16 }}>
+            {hasMore && (
+              <Pressable
+                onPress={loadMore}
+                disabled={isLoadingMore}
+                style={({ pressed }) => [
+                  {
+                    padding: 12,
+                    borderRadius: 8,
+                    backgroundColor: pressed
+                      ? theme.colors.primaryContainer
+                      : theme.colors.primary,
+                    marginHorizontal: 16,
+                    marginBottom: 16,
+                    opacity: isLoadingMore ? 0.6 : 1,
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: theme.colors.onPrimary,
+                    fontSize: 16,
+                    fontWeight: "600",
+                  }}
+                >
+                  {isLoadingMore ? "Loading..." : "Load More Products"}
+                </Text>
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: theme.colors.onPrimary,
+                    fontSize: 12,
+                    opacity: 0.8,
+                  }}
+                >
+                  Showing {products.length} of {totalProducts}
+                </Text>
+              </Pressable>
+            )}
             <View style={{ marginHorizontal: -8 }}>
               <Footer />
             </View>

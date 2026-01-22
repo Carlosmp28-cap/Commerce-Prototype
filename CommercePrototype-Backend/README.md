@@ -1,61 +1,48 @@
-# CommercePrototype Backend
+# CommercePrototype Backend (ASP.NET Core 10)
 
-ASP.NET Core 10.0 Web API backend for the Commerce prototype, integrated with Salesforce Commerce Cloud (SFCC) via OCAPI.
+Backend for the Commerce Prototype. Acts as a Backend‑for‑Frontend (BFF) that integrates with Salesforce Commerce Cloud (SFCC) Shop API and exposes frontend-friendly DTOs for products, categories and related operations.
 
 ## Architecture
 
-This backend follows MVC architecture with a service layer:
+This backend follows a small, service-oriented Web API structure.
 
-- **Controllers**: Handle HTTP requests and responses (`Controllers/`)
-- **Services**: Business logic and SFCC API integration (`Services/`)
-- **Models**: DTOs for API responses (`Models/`)
-- **Configuration**: SFCC connection settings (`appsettings.Development.json`)
+- `Controllers/` — HTTP controllers (products, categories, etc.)
+- `Services/` — application services and SFCC integration (see `Services/Sfcc/`)
+- `Models/` — API DTOs (now organized under `Models/Categories/` and `Models/Products/`)
+- `Options/` — typed configuration objects (for example `SfccOptions`)
+- `Services/Json/` — small JSON helpers used to parse SFCC payloads
+- `appsettings*.json` — environment configuration (development and production)
 
-### Key Components
+### Key components
 
-- **SfccApiClient**: Low-level HTTP client for SFCC Shop API calls
-- **SfccShopService**: High-level service that maps SFCC responses to DTOs
-- **ProductsController**: REST endpoints for product search and details
-- **CategoriesController**: REST endpoints for category tree navigation
+- `Services/Sfcc/Shared` — common SFCC HTTP primitives and auth helpers (`SfccApiClientBase`, `ISfccAuthService`, `SfccAuthService`)
+- `Services/Sfcc/ShopApi` — typed Shop API client and the `SfccShopService` mapping layer (partial classes are used for `Mapping` and `Images` helpers)
+- `Models/Categories` and `Models/Products` — DTO records consumed by the frontend (`CategoryNodeDto`, `ProductSummaryDto`, `ProductDetailDto`, `ProductSearchResultDto`)
+- `Options/SfccOptions.cs` — strongly-typed SFCC configuration bound from `appsettings.json`
+- `Services/Json/JsonElementExtensions.cs` — helpers that make reading SFCC JSON payloads safer and less verbose
 
-## Getting Started
+## Getting started
 
-### Prerequisites
+Prerequisites:
 
-- .NET 10.0 SDK
-- SFCC sandbox access with OCAPI credentials
+- .NET 10 SDK
+- SFCC sandbox access (Shop API / OCAPI credentials)
 
-### Configuration
-
-1. Update `appsettings.Development.json` with your SFCC sandbox credentials:
-
-```json
-{
-  "Sfcc": {
-    "OAuthTokenUrl": "https://account.demandware.com/dw/oauth2/access_token",
-    "ApiBaseUrl": "https://your-instance.dx.commercecloud.salesforce.com",
-    "ApiVersion": "v20_4",
-    "ClientId": "your-client-id",
-    "SiteId": "RefArch"
-  }
-}
-```
-
-2. Ensure your OCAPI settings in Business Manager allow your `ClientId` to access Shop API endpoints.
-
-See [SFCC_INTEGRATION_GUIDE.md](SFCC_INTEGRATION_GUIDE.md) for detailed configuration steps.
-
-### Run
+Copy your SFCC configuration into `appsettings.Development.json` (see `SFCC_INTEGRATION_GUIDE.md`) and run:
 
 ```bash
 dotnet restore
 dotnet run
 ```
 
-The API will be available at:
+Development server default: `http://localhost:5035` (adjust the launch settings or `ASPNETCORE_URLS` if needed)
 
-- HTTP: `http://localhost:5035`
-- HTTPS: `https://localhost:7270`
+What changed recently
+
+- SFCC integration: split SFCC services into `Shared` and `ShopApi` layers and added a typed `SfccShopApiClient`.
+- Models reorganized into `Models/Categories/` and `Models/Products/`.
+- Interfaces separated into individual files (e.g. `ISfccAuthService.cs`, `ISfccShopApiClient.cs`).
+- OpenAPI XML documentation enabled and controller/DTO comments added for better API docs.
 
 ## API Endpoints
 
@@ -70,7 +57,7 @@ GET /api/products
 Query parameters:
 
 - `q` (optional): Search keyword
-- `categoryId` (optional): Filter by category
+- `categoryId` (required): Filter by category (current implementation expects a `categoryId`; calling the endpoint with only `q` returns a 400 validation error)
 - `limit` (optional): Number of results (default: 12)
 - `offset` (optional): Pagination offset (default: 0)
 
@@ -164,14 +151,6 @@ Response:
 }
 ```
 
-### Health Check
-
-```
-GET /health
-```
-
-Returns `200 OK` if the service is healthy.
-
 ## SFCC Integration
 
 This backend integrates with SFCC Shop API using:
@@ -191,28 +170,27 @@ For authenticated operations (cart, orders, customer data), the backend can be e
 
 ## Development
 
-### Project Structure
+## Project Structure
 
 ```
 CommercePrototype-Backend/
-├── Controllers/
-│   ├── CategoriesController.cs
-│   └── ProductsController.cs
+├── Controllers/                      # Web API controllers (Products, Categories, ...)
 ├── Models/
-│   ├── CategoryNodeDto.cs
-│   ├── ProductDetailDto.cs
-│   ├── ProductDto.cs
-│   ├── ProductSearchResultDto.cs
-│   └── ProductSummaryDto.cs
+│   ├── Categories/                   # Category DTOs
+│   └── Products/                     # Product DTOs
+├── Options/                          # Typed configuration (SfccOptions)
 ├── Services/
-│   ├── SfccApiClient.cs
-│   ├── SfccAuthService.cs
-│   └── SfccShopService.cs
+│   ├── Sfcc/
+│   │   ├── Shared/                   # SfccApiClientBase, auth services, shared helpers
+│   │   ├── ShopApi/                   # Sfcc shop API client, SfccShopService mapping layer
+  │   └── DataApi/                    # placeholder for future Data API client
+│   └── Json/                         # JsonElement helper extensions
 ├── Properties/
 │   └── launchSettings.json
 ├── appsettings.json
 ├── appsettings.Development.json
 ├── Program.cs
+├── CommercePrototype-Backend.csproj
 └── README.md
 ```
 
@@ -262,7 +240,6 @@ Ensure production configuration includes:
 - Secure SFCC credentials (use Azure Key Vault, AWS Secrets Manager, etc.)
 - CORS restrictions
 - HTTPS enforcement
-- Health check endpoints for load balancers
 
 ## Troubleshooting
 
