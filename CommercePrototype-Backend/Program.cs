@@ -1,4 +1,6 @@
-using CommercePrototype_Backend.Services;
+using CommercePrototype_Backend.Options;
+using CommercePrototype_Backend.Services.Sfcc.ShopApi;
+using CommercePrototype_Backend.Services.Sfcc.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,9 +42,27 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddMemoryCache();
+
+// Bind SFCC settings and validate on startup so misconfigurations fail fast
+// (rather than surfacing as runtime HTTP errors when the first request hits the SFCC client).
+builder.Services
+    .AddOptions<SfccOptions>()
+    .Bind(builder.Configuration.GetSection("Sfcc"))
+    .ValidateDataAnnotations()
+    .Validate(
+        o => Uri.TryCreate(o.ApiBaseUrl, UriKind.Absolute, out _),
+        "Sfcc:ApiBaseUrl must be an absolute URL.")
+    .ValidateOnStart();
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 // Add SFCC Services
 builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>();
-builder.Services.AddHttpClient<ISfccApiClient, SfccApiClient>();
+builder.Services.AddHttpClient<ISfccShopApiClient, SfccShopApiClient>();
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
 
 builder.Services.AddHealthChecks();
@@ -54,6 +74,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseResponseCompression();
 
 app.UseHttpsRedirection();
 

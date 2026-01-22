@@ -1,19 +1,31 @@
 import React from "react";
-import { fireEvent } from "@testing-library/react-native";
+import { fireEvent, waitFor } from "@testing-library/react-native";
 
 import { HeaderActions, HeaderHomeButton } from "../app/navigation";
 import { renderWithProviders } from "../test/testUtils";
 
 describe("HeaderActions", () => {
-  test("pressing icons navigates to PLP/Login/Cart", () => {
+  test("Search opens modal; Account/Cart still navigate", async () => {
     const navigate = jest.fn();
 
-    const { getByLabelText } = renderWithProviders(
-      <HeaderActions navigation={{ navigate }} routeName="Home" />
+    const { getByLabelText, getByText } = renderWithProviders(
+      <HeaderActions navigation={{ navigate }} routeName="Home" />,
     );
 
     fireEvent.press(getByLabelText("Search"));
-    expect(navigate).toHaveBeenCalledWith("PLP");
+    expect(getByText("Search products")).toBeTruthy();
+
+    fireEvent.changeText(getByLabelText("Search products"), "sneaker");
+    fireEvent.press(getByText("Search"));
+
+    await waitFor(() => {
+      expect(getByText("Search not implemented")).toBeTruthy();
+    });
+    expect(
+      getByText(
+        /Missing implementation: search suggestions should use GET\s*\/search_suggestion\./i,
+      ),
+    ).toBeTruthy();
 
     fireEvent.press(getByLabelText("Account"));
     expect(navigate).toHaveBeenCalledWith("Login");
@@ -26,7 +38,7 @@ describe("HeaderActions", () => {
     const navigate = jest.fn();
 
     const { queryByLabelText } = renderWithProviders(
-      <HeaderActions navigation={{ navigate }} routeName="Cart" />
+      <HeaderActions navigation={{ navigate }} routeName="Cart" />,
     );
 
     expect(queryByLabelText("Cart")).toBeNull();
@@ -39,7 +51,7 @@ describe("HeaderHomeButton", () => {
     const navigate = jest.fn();
 
     const { getByLabelText } = renderWithProviders(
-      <HeaderHomeButton navigation={{ popToTop, navigate }} />
+      <HeaderHomeButton navigation={{ popToTop, navigate }} />,
     );
 
     fireEvent.press(getByLabelText("Go to Home"));
@@ -51,7 +63,7 @@ describe("HeaderHomeButton", () => {
     const navigate = jest.fn();
 
     const { getByLabelText } = renderWithProviders(
-      <HeaderHomeButton navigation={{ navigate }} />
+      <HeaderHomeButton navigation={{ navigate }} />,
     );
 
     fireEvent.press(getByLabelText("Go to Home"));

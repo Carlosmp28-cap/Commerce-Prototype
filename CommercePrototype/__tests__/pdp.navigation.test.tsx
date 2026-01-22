@@ -12,6 +12,32 @@ jest.mock("../app/hooks/useCart", () => ({
   }),
 }));
 
+jest.mock("../app/hooks/useProducts", () => {
+  const actual = jest.requireActual("../app/hooks/useProducts");
+  const { products: catalogProducts } = require("../app/data/catalog");
+
+  return {
+    ...actual,
+    useProductDetail: (id: string) => {
+      const fallback = catalogProducts[0];
+      const product = catalogProducts.find((p: any) => p.id === id) ?? {
+        ...fallback,
+        id,
+        name: `Product ${id}`,
+        quantityAvailable: 0,
+      };
+
+      return { product, loading: false, error: null };
+    },
+    useProducts: (categoryId: string) => {
+      const related = catalogProducts.filter(
+        (p: any) => p.categoryId === categoryId,
+      );
+      return { products: related, loading: false, error: null };
+    },
+  };
+});
+
 describe("PDP - navigation", () => {
   beforeEach(() => {
     jest.spyOn(RN, "useWindowDimensions").mockReturnValue({
@@ -31,7 +57,7 @@ describe("PDP - navigation", () => {
     const route: any = { params: { id: "sku-new-001" } };
 
     const { getByLabelText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
     fireEvent.press(getByLabelText("Go home"));
@@ -49,15 +75,19 @@ describe("PDP - navigation", () => {
     expect(current).toBeTruthy();
 
     const firstRelated = products.find(
-      (p) => p.categoryId === current!.categoryId && p.id !== current!.id
+      (p) => p.categoryId === current!.categoryId && p.id !== current!.id,
     );
     expect(firstRelated).toBeTruthy();
 
     const { getByLabelText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
-    fireEvent.press(getByLabelText(`Open related product ${firstRelated!.name}`));
-    expect(navigation.push).toHaveBeenCalledWith("PDP", { id: firstRelated!.id });
+    fireEvent.press(
+      getByLabelText(`Open related product ${firstRelated!.name}`),
+    );
+    expect(navigation.push).toHaveBeenCalledWith("PDP", {
+      id: firstRelated!.id,
+    });
   });
 });

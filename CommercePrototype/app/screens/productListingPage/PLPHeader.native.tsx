@@ -13,20 +13,21 @@ export default function PLPHeader({
   headerStyle,
   titleStyle,
   countStyle,
-  onBackPress,
   selectedSort,
   onSortChange,
   onCategorySelect,
 }: PLPHeaderProps) {
-  const {
-    title,
-    countText,
-    handleSortSelect,
-    handleFilterSelect,
-  } = usePLPHeaderLogic(query, productCount, selectedSort, onSortChange, onCategorySelect);
+  const { title, countText, handleSortSelect, handleFilterSelect } =
+    usePLPHeaderLogic(
+      query,
+      productCount,
+      selectedSort,
+      onSortChange,
+      onCategorySelect,
+    );
 
   return (
-    <View 
+    <View
       style={headerStyle}
       accessible={true}
       accessibilityRole="header"
@@ -37,7 +38,6 @@ export default function PLPHeader({
         countText={countText}
         titleStyle={titleStyle}
         countStyle={countStyle}
-        onBackPress={onBackPress}
       />
 
       <PLPHeaderMobileControls

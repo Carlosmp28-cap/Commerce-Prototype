@@ -1,0 +1,1 @@
+export { HomePromos } from "./HomePromos";
