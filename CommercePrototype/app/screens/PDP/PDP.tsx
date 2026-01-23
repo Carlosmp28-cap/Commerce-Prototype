@@ -83,17 +83,11 @@ export default function PDPScreen({ navigation, route }: Props) {
 
   // SEO: Meta tags dinâmicas para cada produto
   useMetaTags({
-    title: product ? `${product.name} - Commerce Prototype` : "Loading...",
-    description: product
-      ? `Buy ${product.name} for €${product.price.toFixed(2)}. ${product.description || "High-quality product available now."} Shop online with fast delivery.`
-      : "Loading product...",
-    keywords: product
-      ? `${product.name}, ${product.categoryId}, ecommerce, online shopping`
-      : "",
-    ogTitle: product?.name || "Product",
-    ogDescription: product
-      ? `${product.name} - €${product.price.toFixed(2)}`
-      : "",
+    title: `${product.name} - Commerce Prototype`,
+    description: `Buy ${product.name} for €${product.price.toFixed(2)}. ${product.description || "High-quality product available now."} Shop online with fast delivery.`,
+    keywords: `${product.name}, ${product.categoryId}, ecommerce, online shopping`,
+    ogTitle: product.name,
+    ogDescription: `${product.name} - €${product.price.toFixed(2)}`,
   });
 
   // Show loading state

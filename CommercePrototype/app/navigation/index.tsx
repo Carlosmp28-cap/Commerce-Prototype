@@ -35,6 +35,7 @@ export type RootStackParamList = {
   Checkout: { totalTax?: number } | undefined;
   Login: undefined;
   StoreMap: { storeId: string };
+  LocateProduct: { id: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -141,6 +142,7 @@ export const linkingConfig: LinkingOptions<RootStackParamList> = {
       Checkout: "checkout",
       Login: "login",
       StoreMap: "store-map/:storeId",
+      // LocateProduct: "locate/:id",
     },
   },
 };
@@ -286,6 +288,13 @@ export default function AppNavigation() {
           name="Login"
           getComponent={() => require("../screens/Login").default}
         />
+
+        {/* <Stack.Screen
+          name="LocateProduct"
+          getComponent={() =>
+            require("../screens/LocateProduct/LocateProduct").default
+          }
+        /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );

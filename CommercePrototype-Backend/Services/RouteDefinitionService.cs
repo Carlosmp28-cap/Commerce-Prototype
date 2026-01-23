@@ -922,15 +922,21 @@ namespace CommercePrototype_Backend.Services
                 var gridPath = path.Select(p => ((int)p.X, (int)p.Y)).ToList();
                 var directions = RouteInstructionsHelper.GenerateDirections(gridPath, zones);
 
-                // Build response object
-                _logger.LogInformation("GetRouteWithInstructionsAsync completed successfully");
-                Console.WriteLine("[RouteDef] GetRouteWithInstructionsAsync completed successfully");
-                return new {
+                // Build response object including store grid dimensions so frontend
+                // can map real-world meters -> SVG coordinates accurately.
+                var storeGrid = new {
+                    Width = store.GridDimensions?.Width ?? cols * gridResolution,
+                    Height = store.GridDimensions?.Height ?? rows * gridResolution,
+                    GridResolutionMeters = gridResolution
+                };
+
+                return new
+                {
                     StoreId = routeDto.StoreId,
                     ProductId = routeDto.ProductId,
                     Path = realPath,
                     Directions = directions,
-                    DebugMessages = debugMessages
+                    StoreGrid = storeGrid
                 };
             }
             catch (Exception ex)

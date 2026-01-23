@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Text, IconButton } from "react-native-paper";
+import { Text, IconButton, Button } from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { Product } from "../../../models/Product";
 import { useTheme } from "../../../themes";
+import { Platform } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../../../navigation";
+import { useIsTablet } from "@/app/hooks/useIsTablet";
+type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 interface PDPProductInfoHeaderProps {
   product: Product;
@@ -27,6 +33,11 @@ export default function PDPProductInfoHeader({
 }: PDPProductInfoHeaderProps) {
   const theme = useTheme();
   const [isFavorite, setIsFavorite] = useState(false);
+  const navigation = useNavigation<RootNav>();
+  const isTablet = useIsTablet();
+
+  const showLocateButton =
+    isDesktop || Platform.OS === "web" || isTablet === true;
 
   return (
     <View style={{ marginBottom: isDesktop ? 0 : 20 }}>
@@ -83,6 +94,21 @@ export default function PDPProductInfoHeader({
           {product.quantityAvailable > 0 ? "In stock" : "Out of stock"}
         </Text>
       </View>
+
+      {showLocateButton && (
+        <View style={styles.priceRow}>
+          <Button
+            mode="contained"
+            onPress={() =>
+              navigation.navigate("LocateProduct", { id: product.id })
+            }
+            style={[styles.button, { backgroundColor: theme.colors.primary }]}
+            labelStyle={[styles.buttonLabel, { color: theme.colors.surface }]}
+          >
+            Locate Product
+          </Button>
+        </View>
+      )}
 
       {product.description && (
         <Text style={[styles.description, { color: theme.colors.mutedText }]}>
@@ -145,5 +171,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
+  },
+  button: {
+    flex: 2,
+    borderRadius: 10,
+    paddingVertical: 6,
+  },
+  buttonLabel: {
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

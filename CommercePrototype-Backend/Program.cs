@@ -105,6 +105,14 @@ if (app.Environment.IsDevelopment())
 app.UseResponseCompression();
 
 app.UseHttpsRedirection();
+// In Development we avoid forcing HTTPS redirection so browser preflight
+// (OPTIONS) requests to the HTTP endpoint are not redirected to HTTPS
+// which can cause CORS preflight failures. Keep redirection enabled in
+// Production.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("Frontend");
 
