@@ -10,6 +10,32 @@ jest.mock("../app/hooks/useCart", () => ({
   }),
 }));
 
+jest.mock("../app/hooks/useProducts", () => {
+  const actual = jest.requireActual("../app/hooks/useProducts");
+  const { products: catalogProducts } = require("../app/data/catalog");
+
+  return {
+    ...actual,
+    useProductDetail: (id: string) => {
+      const fallback = catalogProducts[0];
+      const product = catalogProducts.find((p: any) => p.id === id) ?? {
+        ...fallback,
+        id,
+        name: `Product ${id}`,
+        quantityAvailable: 0,
+      };
+
+      return { product, loading: false, error: null };
+    },
+    useProducts: (categoryId: string) => {
+      const related = catalogProducts.filter(
+        (p: any) => p.categoryId === categoryId,
+      );
+      return { products: related, loading: false, error: null };
+    },
+  };
+});
+
 describe("PDP - rendering", () => {
   beforeEach(() => {
     jest.spyOn(RN, "useWindowDimensions").mockReturnValue({
@@ -29,7 +55,7 @@ describe("PDP - rendering", () => {
     const route: any = { params: { id: "sku-new-001" } };
 
     const { getByText, getAllByText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
     expect(getByText("Home")).toBeTruthy();
@@ -44,7 +70,7 @@ describe("PDP - rendering", () => {
     const route: any = { params: { id: "sku-new-001" } };
 
     const { getByText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
     expect(getByText(/Standard shipping/i)).toBeTruthy();
@@ -56,7 +82,7 @@ describe("PDP - rendering", () => {
     const route: any = { params: { id: "sku-men-005" } };
 
     const { getByText, queryByText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
     expect(getByText("Out of stock")).toBeTruthy();
@@ -68,7 +94,7 @@ describe("PDP - rendering", () => {
     const route: any = { params: { id: "sku-unknown-999" } };
 
     const { getByText, getAllByText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
     expect(getAllByText("Product sku-unknown-999").length).toBeGreaterThan(0);
@@ -87,7 +113,7 @@ describe("PDP - rendering", () => {
     const route: any = { params: { id: "sku-new-001" } };
 
     const { getByText, getAllByText } = renderWithProviders(
-      <PDPScreen navigation={navigation} route={route} />
+      <PDPScreen navigation={navigation} route={route} />,
     );
 
     expect(getAllByText("Lightweight Tee").length).toBeGreaterThan(0);

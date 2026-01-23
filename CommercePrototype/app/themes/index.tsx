@@ -9,12 +9,16 @@ import React, { createContext, useContext } from "react";
 export const tokens = {
   colors: {
     primary: "#275790",
+    onPrimary: "#FFFFFF",
+    primaryContainer: "#DDE7F5",
+    secondary: "#0F5FA8",
     background: "#F2F2F7",
     text: "#111827",
 
     // Surfaces & borders
     surface: "#FFFFFF",
     border: "#E5E7EB",
+    outline: "#E5E7EB",
     placeholder: "#E5E5EA",
 
     // Text hierarchy

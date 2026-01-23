@@ -1,5 +1,7 @@
 using CommercePrototype_Backend.Models;
 using CommercePrototype_Backend.Services;
+using CommercePrototype_Backend.Services.Sfcc.Shared;
+using CommercePrototype_Backend.Services.Sfcc.ShopApi;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommercePrototype_Backend.Controllers;
@@ -42,6 +44,11 @@ public sealed class CartController : ControllerBase
                 _sfccRequestContext.ShopperCookieHeader = existing.CookieHeader;
                 return sessionId;
             }
+
+            // Client provided a session id, but we don't know it (service restarted, expired, etc.).
+            // Do NOT silently create a new session because baskets are tied to the original session in SFCC.
+            _logger.LogWarning("Unknown shopper session id provided: {SessionId}", sessionId);
+            return null;
         }
 
         // 2) If we know basket -> session mapping, use it
@@ -55,7 +62,14 @@ public sealed class CartController : ControllerBase
             }
         }
 
-        // 3) Otherwise create a guest session
+        // 3) For existing basket operations, we must NOT create a new session.
+        // If we don't have a known session, the SFCC basket calls will fail with 401 anyway.
+        if (!string.IsNullOrWhiteSpace(basketId))
+        {
+            return null;
+        }
+
+        // 4) For basket creation, create a guest session.
         var guest = await _auth.GetGuestShopperSessionAsync(cancellationToken);
         var newId = _sessionStore.Save(guest);
         _sfccRequestContext.ShopperAuthToken = guest.AuthToken;
@@ -97,7 +111,11 @@ public sealed class CartController : ControllerBase
     {
         try
         {
-            await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            var sessionId = await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return Unauthorized(new { error = "UNKNOWN_OR_MISSING_SHOPPER_SESSION", header = ShopperSessionHeader });
+            }
             var basket = await _shopService.GetBasketAsync(basketId, cancellationToken);
             return basket is null ? NotFound() : Ok(basket);
         }
@@ -127,7 +145,11 @@ public sealed class CartController : ControllerBase
 
         try
         {
-            await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            var sessionId = await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return Unauthorized(new { error = "UNKNOWN_OR_MISSING_SHOPPER_SESSION", header = ShopperSessionHeader });
+            }
             var basket = await _shopService.AddItemToBasketAsync(basketId, productId, request.Quantity, cancellationToken);
             return basket is null ? NotFound() : Ok(basket);
         }
@@ -159,7 +181,11 @@ public sealed class CartController : ControllerBase
 
         try
         {
-            await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            var sessionId = await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return Unauthorized(new { error = "UNKNOWN_OR_MISSING_SHOPPER_SESSION", header = ShopperSessionHeader });
+            }
             var basket = await _shopService.UpdateBasketItemQuantityAsync(basketId, itemId, request.Quantity, cancellationToken);
             return basket is null ? NotFound() : Ok(basket);
         }
@@ -177,7 +203,11 @@ public sealed class CartController : ControllerBase
     {
         try
         {
-            await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            var sessionId = await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return Unauthorized(new { error = "UNKNOWN_OR_MISSING_SHOPPER_SESSION", header = ShopperSessionHeader });
+            }
             var basket = await _shopService.RemoveItemFromBasketAsync(basketId, itemId, cancellationToken);
             return basket is null ? NotFound() : Ok(basket);
         }
@@ -195,7 +225,11 @@ public sealed class CartController : ControllerBase
     {
         try
         {
-            await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            var sessionId = await EnsureSessionForBasketAsync(basketId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return Unauthorized(new { error = "UNKNOWN_OR_MISSING_SHOPPER_SESSION", header = ShopperSessionHeader });
+            }
             await _shopService.ClearBasketAsync(basketId, cancellationToken);
             return NoContent();
         }
@@ -216,15 +250,6 @@ public sealed class CartController : ControllerBase
                     productId = stock.ProductId,
                     requested = stock.Requested,
                     available = stock.Available
-                });
-
-            case SfccApiException sfcc when sfcc.StatusCode is not null:
-                _logger.LogError(sfcc, "{Message}", message);
-                return StatusCode((int)sfcc.StatusCode.Value, new
-                {
-                    error = "SFCC_API_ERROR",
-                    status = (int)sfcc.StatusCode.Value,
-                    details = sfcc.ResponseBody
                 });
 
             case HttpRequestException http when http.StatusCode is not null:

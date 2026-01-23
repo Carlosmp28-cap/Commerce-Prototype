@@ -10,8 +10,7 @@ export interface PLPHeaderProps {
   headerStyle: ViewStyle;
   titleStyle: TextStyle;
   countStyle: TextStyle;
-  onBackPress: () => void;
   selectedSort: SortOption;
   onSortChange: (sort: SortOption) => void;
-  onCategorySelect: (query: string) => void;
+  onCategorySelect: (categoryId: string) => void;
 }
