@@ -1,6 +1,11 @@
-using CommercePrototype_Backend.Models;
-using CommercePrototype_Backend.Services;
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using CommercePrototype_Backend.Models.Products;
+using CommercePrototype_Backend.Services.Sfcc.ShopApi;
 
 namespace CommercePrototype_Backend.Controllers;
 

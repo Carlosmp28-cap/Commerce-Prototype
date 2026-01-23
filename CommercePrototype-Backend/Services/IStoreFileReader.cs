@@ -1,4 +1,5 @@
 using CommercePrototype_Backend.Models;
+using CommercePrototype_Backend.Models.Salesforce;
 namespace CommercePrototype_Backend.Services
 {
     /// <summary>

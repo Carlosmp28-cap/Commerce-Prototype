@@ -1,4 +1,5 @@
 using CommercePrototype_Backend.Models;
+using CommercePrototype_Backend.Models.Salesforce;
 using CommercePrototype_Backend.Services.Algorithms;
 using CommercePrototype_Backend.Utils;
 

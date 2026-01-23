@@ -1,16 +1,11 @@
-import { useMemo } from "react";
-import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import type { RootStackParamList } from "../navigation";
-import { categories } from "../data/catalog";
 import { ScreenScroll } from "../layout/Screen";
 import { CenteredContent } from "../layout/CenteredContent";
 
 import { HomeHero } from "./home/components/HomeHero";
-import { HomeSearch } from "./home/components/HomeSearch";
-import { HomePromos } from "./home/components/HomePromos";
-import { HomeCategoryGrid } from "./home/components/HomeCategoryGrid";
 import { HomeFeaturedCarousel } from "./home/components/HomeFeaturedCarousel";
 import { HomeValueProps } from "./home/components/HomeValueProps";
 
@@ -24,63 +19,22 @@ type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 export default function HomeScreen({ navigation }: Props) {
   const { width } = useWindowDimensions();
 
-  const {
-    homeMaxWidth,
-    isWideWeb,
-    query,
-    setQuery,
-    submitSearch,
-    heroImage,
-    categoryTiles,
-    featuredProducts,
-    goToPLP,
-    goToSale,
-    goToNew,
-    selectCategory,
-    openProduct,
-  } = useHomeViewModel(navigation, width);
+  const { homeMaxWidth, isWideWeb, heroImage, featuredProducts, openProduct } =
+    useHomeViewModel(navigation, width);
 
   return (
     <ScreenScroll contentContainerStyle={styles.screenContent}>
+      <View style={styles.heroFullBleed}>
+        <HomeHero heroImage={heroImage} />
+      </View>
+
       <CenteredContent maxWidth={homeMaxWidth} contentStyle={styles.content}>
         {isWideWeb ? (
           <>
-            <View style={styles.desktopTopRow}>
-              <View style={styles.desktopLeftCol}>
-                <HomeHero
-                  heroImage={heroImage}
-                  onShopAll={goToPLP}
-                  onShopSale={goToSale}
-                />
-
-                <HomeSearch
-                  query={query}
-                  onChangeQuery={setQuery}
-                  onSubmit={submitSearch}
-                  categories={categories}
-                  onSelectCategory={selectCategory}
-                />
-              </View>
-
-              <View style={styles.desktopRightCol}>
-                <HomePromos
-                  layout="column"
-                  onShopNew={goToNew}
-                  onShopSale={goToSale}
-                />
-              </View>
-            </View>
-
-            <HomeCategoryGrid
-              title={HOME_STRINGS.shopByCategoryTitle}
-              categories={categoryTiles}
-              onSelectCategory={selectCategory}
-            />
-
             <HomeFeaturedCarousel
               title={HOME_STRINGS.featuredTitle}
               products={featuredProducts}
-              onSeeAll={goToPLP}
+              onSeeAll={() => navigation.navigate("PLP")}
               onOpenProduct={openProduct}
             />
 
@@ -88,32 +42,10 @@ export default function HomeScreen({ navigation }: Props) {
           </>
         ) : (
           <>
-            <HomeHero
-              heroImage={heroImage}
-              onShopAll={goToPLP}
-              onShopSale={goToSale}
-            />
-
-            <HomeSearch
-              query={query}
-              onChangeQuery={setQuery}
-              onSubmit={submitSearch}
-              categories={categories}
-              onSelectCategory={selectCategory}
-            />
-
-            <HomePromos onShopNew={goToNew} onShopSale={goToSale} />
-
-            <HomeCategoryGrid
-              title={HOME_STRINGS.shopByCategoryTitle}
-              categories={categoryTiles}
-              onSelectCategory={selectCategory}
-            />
-
             <HomeFeaturedCarousel
               title={HOME_STRINGS.featuredTitle}
               products={featuredProducts}
-              onSeeAll={goToPLP}
+              onSeeAll={() => navigation.navigate("PLP")}
               onOpenProduct={openProduct}
             />
 
@@ -127,19 +59,19 @@ export default function HomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   screenContent: {},
+  heroFullBleed: {
+    // `ScreenScroll` applies a consistent page padding. Negative margins let the hero
+    // go edge-to-edge while keeping the rest of the page aligned.
+    marginHorizontal: -16,
+  },
   content: { gap: 14 },
-  desktopTopRow: {
+  section: {
+    gap: 10,
+  },
+  sectionHeaderRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  desktopLeftCol: {
-    flex: 2,
-    minWidth: 0,
-    gap: 14,
-  },
-  desktopRightCol: {
-    flex: 1,
-    minWidth: 0,
-  },
+  sectionHeaderSpacer: {},
 });

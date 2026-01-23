@@ -1,182 +1,165 @@
 # SFCC Integration Guide
 
-This backend is configured to connect to your Salesforce Commerce Cloud (SFCC) sandbox using OCAPI (Open Commerce API) with OAuth2 authentication.
+This backend is designed to act as a BFF for the SFCC Shop API. The implementation follows a defensive, service-layered approach:
+
+- Low-level HTTP primitives and auth live under `Services/Sfcc/Shared`
+- A typed Shop API client and mapping/service layer live under `Services/Sfcc/ShopApi`
+- JSON helpers to safely read SFCC payloads live under `Services/Json` (`JsonElementExtensions`)
+
+This guide explains the configuration, DI setup, and recommended usage patterns.
 
 ## Configuration
 
-### 1. Update `appsettings.Development.json`
-
-Replace the placeholder values in your `appsettings.Development.json`:
+Add SFCC settings to `appsettings.Development.json` (or set via user-secrets / environment variables):
 
 ```json
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
   "Sfcc": {
-    "OAuthTokenUrl": "https://account.demandware.com/dw/oauth2/access_token",
-    "ApiBaseUrl": "https://your-sandbox-name.api.commercecloud.salesforce.com",
+    "ApiBaseUrl": "https://your-instance.api.commercecloud.salesforce.com",
+    "ApiVersion": "v20_4",
+    "SiteId": "RefArch",
     "ClientId": "your-client-id",
-    "Username": "your-business-manager-username",
-    "Password": "your-business-manager-password",
-    "InstanceName": "your-sandbox-name"
+    "OAuthTokenUrl": "https://account.demandware.com/dw/oauth2/access_token",
+    "InstanceName": "your-instance-name"
   }
 }
 ```
 
-**Configuration Fields:**
+Configuration notes:
 
-- **OAuthTokenUrl**: Fixed SFCC OAuth2 endpoint for getting access tokens
-- **ApiBaseUrl**: Your SFCC sandbox API endpoint (e.g., `https://myinstance.api.commercecloud.salesforce.com`)
-- **ClientId**: Your SFCC API client ID (this is used in Basic Auth along with password)
-- **Username**: Business Manager username for authentication
-- **Password**: Business Manager password (or use API token)
-- **InstanceName**: Your SFCC sandbox instance name
+- `ApiBaseUrl`: base host for the Shop API
+- `ApiVersion`: API version to use (defaults to `v1` if omitted)
+- `SiteId`: SFCC site id (for example `RefArch`)
+- `ClientId`: client id used for Shop API access (sent as `x-dw-client-id` for public Shop API calls)
+- `OAuthTokenUrl`: OAuth token endpoint (when using token-based flows)
+- `InstanceName`: optional instance name used to build absolute URLs for relative asset links
 
-## How It Works
+Sensitive values should be stored using .NET user secrets or environment variables in development and secure configuration providers in production.
 
-### Authentication Flow
+## Authentication and clients
 
-1. **Token Request**: When the app needs to call SFCC APIs, `SfccAuthService` sends a request to the OAuth2 endpoint with:
-   - Basic Auth header: `base64(clientId:password)`
-   - Form data: `grant_type=urn:demandware:params:oauth:grant-type:client-id:dwsid:dwsecuretoken&username=<username>`
+This prototype provides two complementary patterns:
 
-2. **Token Caching**: The access token is cached for its validity period (minus 1-minute buffer) to avoid repeated authentication calls
+- Public Shop API read flows using the `x-dw-client-id` header (no user token required for many read endpoints).
+- Token-based OAuth flows for operations that require authenticated access.
 
-3. **API Calls**: `SfccApiClient` attaches the token as a Bearer token to all API requests
+Key types in the codebase:
 
-### Architecture
+- `ISfccAuthService` / `SfccAuthService`: obtains and caches OAuth access tokens (uses `OAuthTokenUrl` and client credentials). The token is cached with a small safety buffer to avoid expiry during requests.
+- `SfccApiClientBase`: shared HTTP behavior (typed HttpClient, streaming responses, structured logging, JSON deserialization helpers).
+- `ISfccShopApiClient` / `SfccShopApiClient`: Shop-API-specific HTTP client that applies `x-dw-client-id` and builds SFCC shop URLs.
+- `ISfccShopService` / `SfccShopService`: application-facing service that maps SFCC JSON into `Models/Products/*` and `Models/Categories/*` DTOs.
 
-- **`ISfccAuthService`**: Handles OAuth2 token retrieval and caching
-- **`ISfccApiClient`**: Provides typed methods for GET, POST, PUT, DELETE operations to SFCC APIs
-- Both services are registered with dependency injection in `Program.cs`
+Prefer injecting `ISfccShopService` in controllers rather than calling the low-level client directly — the service centralizes mapping, paging limits and error handling.
 
-## Usage
+## Dependency Injection (example)
 
-### In Your Controllers
+Register options and typed clients in `Program.cs`:
 
-Inject `ISfccApiClient` and use it to call SFCC APIs:
+```csharp
+builder.Services.Configure<SfccOptions>(builder.Configuration.GetSection("Sfcc"));
+
+// Auth client (if you need OAuth token flow)
+builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>();
+
+// Low-level Shop API client (uses SfccApiClientBase internally)
+builder.Services.AddHttpClient<ISfccShopApiClient, SfccShopApiClient>();
+
+// Application-facing service used by controllers
+builder.Services.AddScoped<ISfccShopService, SfccShopService>();
+```
+
+Notes:
+
+- The concrete `SfccApiClientBase` and `SfccShopApiClient` implementations stream responses (`ResponseHeadersRead`) and deserialize with `JsonSerializer.DeserializeAsync<T>` to reduce memory usage on large payloads.
+- All requests propagate `CancellationToken` to allow graceful shutdown.
+
+## Using the service in controllers (recommended)
+
+Inject the higher-level `ISfccShopService` and call its methods. Example:
 
 ```csharp
 [ApiController]
 [Route("api/products")]
 public class ProductsController : ControllerBase
 {
-    private readonly ISfccApiClient _sfccApiClient;
+    private readonly ISfccShopService _sfcc;
 
-    public ProductsController(ISfccApiClient sfccApiClient)
+    public ProductsController(ISfccShopService sfcc)
     {
-        _sfccApiClient = sfccApiClient;
+        _sfcc = sfcc;
     }
 
-    [HttpGet("search")]
-    public async Task<IActionResult> Search(string query)
+    [HttpGet]
+    public async Task<IActionResult> Search([FromQuery] string? q, [FromQuery] string? categoryId, CancellationToken ct)
     {
-        // Call SFCC Shop API product search
-        var result = await _sfccApiClient.GetAsync<dynamic>($"/products?q={query}&limit=20");
+        var result = await _sfcc.SearchProductsAsync(categoryId ?? string.Empty, q, limit: 24, offset: 0, cancellationToken: ct);
         return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(string id, CancellationToken ct)
+    {
+        var product = await _sfcc.GetProductAsync(id, ct);
+        if (product == null) return NotFound();
+        return Ok(product);
     }
 }
 ```
 
-### API Methods
+For categories:
 
 ```csharp
-// GET request
-var products = await _sfccApiClient.GetAsync<ProductResponse>("/products");
-
-// POST request
-var cart = await _sfccApiClient.PostAsync<CartResponse>("/carts", new { ... });
-
-// PUT request
-var updated = await _sfccApiClient.PutAsync<OrderResponse>("/orders/{id}", new { ... });
-
-// DELETE request
-await _sfccApiClient.DeleteAsync("/baskets/{id}");
+[HttpGet("/api/categories")]
+public async Task<IActionResult> Tree([FromQuery] string rootId = "root", [FromQuery] int levels = 2, CancellationToken ct)
+{
+    var tree = await _sfcc.GetCategoryTreeAsync(rootId, levels, ct);
+    return Ok(tree);
+}
 ```
 
-## SFCC Shop API Endpoints
+## Common endpoints (exposed by this backend)
 
-Here are some common endpoints you can use:
+- `GET /api/products` — search products (maps SFCC results to `ProductSummaryDto`)
+- `GET /api/products/{id}` — product detail (`ProductDetailDto`)
+- `GET /api/categories` — category tree (`CategoryNodeDto`)
 
-### Products
+These endpoints are implemented in the `Controllers/` folder and rely on `ISfccShopService`.
 
-- `GET /products` - List products
-- `GET /products/{id}` - Get product details
-- `GET /products?q=search` - Search products
+## Testing the integration
 
-### Baskets/Carts
-
-- `GET /baskets/{id}` - Get basket
-- `POST /baskets` - Create basket
-- `PUT /baskets/{id}` - Update basket
-- `POST /baskets/{id}/items` - Add items to basket
-
-### Orders
-
-- `GET /orders/{id}` - Get order
-- `POST /orders` - Create order
-
-### Customers
-
-- `GET /customers/{id}` - Get customer profile
-- `POST /customers/{id}/addresses` - Add address
-
-For complete API documentation, refer to: [SFCC Commerce Cloud API Documentation](https://documentation.b2c.commercecloud.salesforce.com/DOC1/topic/com.demandware.dochelp/OCAPI/current/shop/index.html)
-
-## Error Handling
-
-The services include error logging and will throw exceptions on authentication or API failures. Errors are logged using the standard .NET logging framework.
-
-## Testing the Connection
-
-You can test the SFCC integration by:
-
-1. Ensure your `appsettings.Development.json` is properly configured
-2. Start the backend: `dotnet run`
-3. Call the test endpoint: `GET http://localhost:port/api/products/sfcc/catalog`
-
-If successful, you'll get products from your SFCC sandbox. If there's an error, check the console logs for details.
-
-## Security Notes
-
-- **Never commit credentials**: Do not commit `appsettings.Development.json` with real credentials to version control
-- **Use User Secrets**: For development, use .NET User Secrets to store sensitive configuration
-- **Production**: Use environment variables or secure configuration providers in production
-
-### Using User Secrets (Recommended for Development)
+Start the backend and call the public endpoints (example using `curl`):
 
 ```bash
-dotnet user-secrets init
-dotnet user-secrets set "Sfcc:ClientId" "your-client-id"
-dotnet user-secrets set "Sfcc:Username" "your-username"
-dotnet user-secrets set "Sfcc:Password" "your-password"
-dotnet user-secrets set "Sfcc:ApiBaseUrl" "your-api-url"
+dotnet run
+
+curl "http://localhost:5035/api/categories?rootId=root&levels=2"
+curl "http://localhost:5035/api/products?categoryId=mens&q=shirt&limit=12"
+curl "http://localhost:5035/api/products/25696717M"
 ```
+
+Note: calling the products search endpoint with only `q` (no `categoryId`) will return a 400 validation error in the current implementation. Update the controller if you prefer `q`-only global searches.
+
+```
+
+If you need to directly exercise the Shop API client for debugging, the `Services/Sfcc/ShopApi` code shows how URLs are composed (`/s/{siteId}/dw/shop/{apiVersion}/{endpoint}`).
 
 ## Troubleshooting
 
-### "No access token in SFCC response"
+- 401 Unauthorized: check `Sfcc:ClientId` and (if applicable) OAuth client credentials; verify token retrieval logs in `SfccAuthService`.
+- 404 Not Found: verify `ApiBaseUrl`, `ApiVersion` and constructed path (the Shop API base includes `/s/{siteId}/dw/shop/{version}` by default).
+- Unexpected payload shapes: SFCC payloads can vary by cartridge/configuration — mapping code in `SfccShopService.Mapping.cs` is defensive. Use `JsonElement` helpers in `Services/Json/JsonElementExtensions.cs` to inspect fields safely.
 
-- Verify your credentials in `appsettings.Development.json`
-- Check that your Business Manager user has API permissions
+## Security
 
-### "SFCC API request failed: 401"
+- Do not commit secrets. Use user-secrets in development and environment-based secure config in CI/CD and production.
+- Prefer `IOptions<SfccOptions>` (bound) and `IConfiguration` for runtime overrides.
 
-- Token may be expired - check logs to see if token refresh is working
-- Verify your Business Manager account is active
+## Next steps and extension points
 
-### "SFCC API request failed: 404"
+- Add Data API client under `Services/Sfcc/DataApi/` when you need admin/back-office operations.
+- Add caching (IMemoryCache or distributed cache) around category/product list responses to reduce Shop API calls.
+- Consider pagination caps and rate limiting to protect the SFCC sandbox.
 
-- Check that the endpoint path is correct
-- Verify your SFCC instance has the Shop API enabled
-
-## Next Steps
-
-1. Configure your SFCC sandbox credentials
-2. Test the `/api/products/sfcc/catalog` endpoint
-3. Implement your business logic using `ISfccApiClient`
-4. Remove or adapt the in-memory sample data as needed
+If you want, I can also add a short Checklist to validate your SFCC credentials and a minimal Postman collection for quick testing.
+```

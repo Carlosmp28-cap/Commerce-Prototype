@@ -1,18 +1,20 @@
+
 namespace CommercePrototype_Backend.Models
 {
-    /// <summary>
-    /// Represents a mock product with an optional position for testing and prototyping.
-    /// </summary>
     public class ProductLocationDto
     {
-        /// <summary>
-        /// The unique identifier for the product.
-        /// </summary>
-        public string ProductId { get; set; } = string.Empty;
+        public string Product__c { get; set; } = string.Empty;
+        public string Shelf__c { get; set; } = string.Empty;
+        public int Quantity__c { get; set; }
+        public int? Level__c { get; set; }
+        public string? Product_Name__c { get; set; }
 
-        /// <summary>
-        /// The position of the product in the store (optional).
-        /// </summary>
-        public PositionDto? Position { get; set; }
+        // Compatibilidade com código legado
+        public string ProductId { get => Product__c; set => Product__c = value; }
+        public string ShelfId { get => Shelf__c; set => Shelf__c = value; }
+        public int Quantity { get => Quantity__c; set => Quantity__c = value; }
+        public int? Level { get => Level__c; set => Level__c = value; }
+        public string? ProductName { get => Product_Name__c; set => Product_Name__c = value; }
+        public PositionDto? Position { get; set; } // Se necessário, pode ser populado externamente
     }
 }
