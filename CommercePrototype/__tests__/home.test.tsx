@@ -2,39 +2,38 @@ import React from "react";
 import { fireEvent } from "@testing-library/react-native";
 
 import HomeScreen from "../app/screens/Home";
-import { categories } from "../app/data/catalog";
 import { renderWithProviders } from "../test/testUtils";
 
 describe("Home screen", () => {
-  test("renders key sections and supports search submit", () => {
+  test("renders key sections and allows See all navigation", () => {
     const navigation: any = { navigate: jest.fn() };
     const route: any = { key: "Home", name: "Home" };
 
-    const { getByLabelText } = renderWithProviders(
-      <HomeScreen navigation={navigation} route={route} />
+    const { getByText, getByLabelText, queryByLabelText } = renderWithProviders(
+      <HomeScreen navigation={navigation} route={route} />,
     );
 
-    // Searchbar
-    const search = getByLabelText("Search products");
-    fireEvent.changeText(search, "  sneaker ");
-    fireEvent(search, "submitEditing");
+    // Search moved to the global header (not on Home anymore)
+    expect(queryByLabelText("Search products")).toBeNull();
 
-    expect(navigation.navigate).toHaveBeenCalledWith("PLP", { q: "sneaker" });
+    expect(getByText("Featured")).toBeTruthy();
+    expect(getByText("Why shop with us")).toBeTruthy();
+
+    fireEvent.press(getByLabelText("See all products"));
+    expect(navigation.navigate).toHaveBeenCalledWith("PLP");
   });
 
-  test("category chip navigates to PLP", () => {
+  test("tapping a featured product opens PDP", () => {
     const navigation: any = { navigate: jest.fn() };
     const route: any = { key: "Home", name: "Home" };
 
-    const firstCategory = categories[0];
-
     const { getByLabelText } = renderWithProviders(
-      <HomeScreen navigation={navigation} route={route} />
+      <HomeScreen navigation={navigation} route={route} />,
     );
 
-    fireEvent.press(getByLabelText(`Open category ${firstCategory.label}`));
-    expect(navigation.navigate).toHaveBeenCalledWith("PLP", {
-      q: firstCategory.query,
+    fireEvent.press(getByLabelText("Open product Lightweight Tee"));
+    expect(navigation.navigate).toHaveBeenCalledWith("PDP", {
+      id: "sku-new-001",
     });
   });
 });

@@ -1,65 +1,59 @@
 # Commerce-Prototype
 
-Projeto base para protótipo SFRA em React Native usando Expo.
+Lightweight full-stack e-commerce prototype demonstrating an Expo + React Native frontend coupled with an ASP.NET Core backend that integrates with Salesforce Commerce Cloud (SFCC).
 
-Resumo rápido
+Repository layout
 
-- App principal está em `CommercePrototype/` — abra essa pasta para rodar e ver o `package.json`.
-- Implementa: catálogo determinístico, navegação (Home, PLP, PDP, Cart, Checkout, Login), tema (tokens + React Native Paper), footer “SFRA-like” e uma suite de testes (Jest + RNTL).
+```
+Commerce-Prototype/
+├── CommercePrototype/          # Frontend (Expo + React Native)
+├── CommercePrototype-Backend/  # Backend (ASP.NET Core 10)
+├── docs/                       # Documentation and diagrams
+└── postman/                    # Postman collections and environments
+```
 
-Como rodar localmente
+Quick start
 
-1. Instalar dependências (na pasta `CommercePrototype`):
+Frontend (development):
 
 ```bash
 cd CommercePrototype
 npm install
-```
-
-2. Iniciar app em dev (Expo):
-
-```bash
 npx expo start
 ```
 
-Testes
+Backend (development):
 
-- Suite Jest configurada com `jest-expo`. Para rodar localmente:
+```bash
+cd CommercePrototype-Backend
+dotnet restore
+dotnet run
+```
+
+Default backend base URL (development): `http://localhost:5035`
+
+What’s included
+
+- Frontend: Expo + React Native app (mobile + web), typed API client, per-feature component organization for Home/PLP/PDP.
+- Backend: ASP.NET Core 10 API acting as a BFF for SFCC Shop API, DTO mapping, and API documentation via OpenAPI XML.
+
+Testing
+
+Frontend:
 
 ```bash
 cd CommercePrototype
 npm test -- --runInBand
 ```
 
-Notas importantes sobre testes
+Backend:
 
-- Os testes ficam em `CommercePrototype/__tests__/` e seguem o padrão `*.test.ts(x)`.
-- Helpers compartilhados ficam fora de `__tests__/`, em `CommercePrototype/test/testUtils.tsx`.
-  - Motivo: Jest trata arquivos dentro de `__tests__/` como suites; utilitários não devem ser executados como testes.
-  - `renderWithProviders()` centraliza providers (tema/tokens + Paper Provider) e mocks necessários (ex.: ícones) para testes serem estáveis.
+```bash
+cd CommercePrototype-Backend
+dotnet test
+```
 
-CI (GitHub Actions)
+Notes
 
-- Há um workflow em `.github/workflows/ci.yml` (na raiz) chamado `CI — CommercePrototype (lint, typecheck, test)`.
-- O workflow executa os passos dentro da pasta `CommercePrototype` (instalação, lint, typecheck, tests).
-- Para melhores caches e builds reprodutíveis, adicione e commit o `package-lock.json` dentro de `CommercePrototype`.
-
-Estrutura relevante
-
-- `CommercePrototype/app/` — código fonte Expo / routes
-- `CommercePrototype/app/components/` — componentes base (Button, Text, Card)
-- `CommercePrototype/app/screens/` — telas: Home, PLP, PDP, Cart
-- `CommercePrototype/app/hooks/` — hooks: `useAuth`, `useApi`, `useCart`
-- `CommercePrototype/app/services/` — `api`, `auth`, `cache` (esqueletos)
-- `CommercePrototype/app/navigation/` — React Navigation (native-stack) + deep linking
-- `CommercePrototype/__tests__/` — testes Jest
-- `CommercePrototype/test/` — utilitários e wrappers para testes
-
-Próximos passos sugeridos
-
-- Implementar navegação completa e telas (Tarefa 2).
-- Implementar API client + auth hooks e mocks (Tarefa 4).
-- Implementar cache e persistência do carrinho (Tarefas 5 e 6).
-- Configurar secrets no GitHub para deploys (EXPO_TOKEN, EAS_SERVICE_ACCOUNT, FIREBASE_TOKEN).
-
-Se quiser, eu posso commitar mudanças pendentes e abrir um branch/PR com estas atualizações.
+- SFCC configuration is stored in `CommercePrototype-Backend/appsettings.Development.json`. See the backend README for details.
+- The repository contains focused READMEs for frontend and backend: `CommercePrototype/README.md` and `CommercePrototype-Backend/README.md`.

@@ -24,6 +24,10 @@ A **release** is a *tag* on `main` (e.g. `v1.0.0`). Creating/pushing the tag tri
   - `npm --prefix CommercePrototype run web:preview`
 - Manually click through the critical flows (Home → PLP → PDP → Cart → Checkout).
 
+Notes (important):
+- The exported web build is a single-page app. If you serve `dist/` without SPA fallback, refreshing a deep link like `/pdp/sku-new-006` will return `404`.
+- The `web:serve` script uses `serve -s` to always fall back to `index.html` so refresh works.
+
 **Mobile QA (requires EAS setup):**
 - If you use EAS builds, start a preview build from `staging` and validate on devices.
 

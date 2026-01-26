@@ -1,0 +1,57 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDEs
+.vscode/
+.vs/
+.idea/
+*.swp
+
+# Rider
+*.sln.iml
+
+# NuGet
+*.nupkg
+# NuGet Packages folder (for older NuGet)
+#packages/
+
+# Dotnet tools
+.dotnet/
+
+# ASP.NET Core
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# Secrets / local config
+secrets.json
+*.pfx
+*.p12
+*.pem
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+
+# Coverage
+coverage/
+coverage.cobertura.xml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Publishing output (optional - keep if you export/publish locally)
+publish/
+
+# Local tooling artifacts
+backend.log

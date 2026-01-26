@@ -8,9 +8,9 @@ import {
   useTheme as usePaperTheme,
 } from "react-native-paper";
 
-import { HomeImage } from "./HomeImage";
+import { HomeImage } from "../shared/HomeImage";
 
-import { getAvailabilityLabel } from "../../../utils/stock";
+import { getAvailabilityLabel } from "../../../../utils/stock";
 import { styles } from "./HomeFeaturedCarousel.styles";
 
 /**

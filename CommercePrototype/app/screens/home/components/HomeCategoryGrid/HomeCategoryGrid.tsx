@@ -3,7 +3,7 @@ import type { ImageSourcePropType } from "react-native";
 import { Platform, View } from "react-native";
 import { Card, Text, useTheme as usePaperTheme } from "react-native-paper";
 
-import { HomeImage } from "./HomeImage";
+import { HomeImage } from "../shared/HomeImage";
 import { styles } from "./HomeCategoryGrid.styles";
 
 /**

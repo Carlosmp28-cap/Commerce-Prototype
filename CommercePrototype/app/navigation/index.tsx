@@ -1,3 +1,4 @@
+import React from "react";
 import {
   NavigationContainer,
   type LinkingOptions,
@@ -11,10 +12,20 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { IconButton, Text, useTheme } from "react-native-paper";
+import {
+  Button,
+  Dialog,
+  IconButton,
+  Portal,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
 
 import { useAuth } from "../hooks/useAuth";
+import { useCategories, getMainCategories } from "../hooks/useCategories";
 import HomeScreen from "../screens/Home";
+import AppHeader from "./AppHeader";
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
   Home: undefined;
@@ -146,14 +157,66 @@ export function HeaderActions({
   const isCompact = isNative && width < 390;
   const iconSize = isNative ? (isCompact ? 20 : 22) : 24;
 
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [isSearchMissingOpen, setIsSearchMissingOpen] = React.useState(false);
+
+  const closeSearch = React.useCallback(() => setIsSearchOpen(false), []);
+  const openSearch = React.useCallback(() => setIsSearchOpen(true), []);
+
+  const submitSearch = React.useCallback(() => {
+    closeSearch();
+    if (searchQuery.trim().length > 0) {
+      setIsSearchMissingOpen(true);
+    }
+  }, [closeSearch, searchQuery]);
+
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
       <IconButton
         icon="magnify"
         size={iconSize}
-        onPress={() => navigation.navigate("PLP")}
+        onPress={openSearch}
         accessibilityLabel="Search"
       />
+
+      <Portal>
+        <Dialog visible={isSearchOpen} onDismiss={closeSearch}>
+          <Dialog.Title>Search products</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              mode="outlined"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search products"
+              autoFocus
+              returnKeyType="search"
+              onSubmitEditing={submitSearch}
+              accessibilityLabel="Search products"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={closeSearch}>Cancel</Button>
+            <Button onPress={submitSearch}>Search</Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        <Dialog
+          visible={isSearchMissingOpen}
+          onDismiss={() => setIsSearchMissingOpen(false)}
+        >
+          <Dialog.Title>Search not implemented</Dialog.Title>
+          <Dialog.Content>
+            <Text>
+              Missing implementation: search suggestions should use GET
+              /search_suggestion.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setIsSearchMissingOpen(false)}>OK</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
 
       <IconButton
         icon="account"
@@ -176,24 +239,18 @@ export function HeaderActions({
 
 export default function AppNavigation() {
   const { isAuthenticated } = useAuth();
+  const { categories: categoryTree } = useCategories("root", 3);
+
+  const mainCategories = getMainCategories(categoryTree);
 
   return (
     <NavigationContainer linking={linkingConfig}>
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={({ navigation, route }) => ({
-          headerTitleAlign: "center",
-          headerTitle: () => (
-            <HeaderHomeButton navigation={navigation as any} />
+          header: (props) => (
+            <AppHeader {...props} mainCategories={mainCategories} />
           ),
-          headerRight: () => {
-            return (
-              <HeaderActions
-                navigation={navigation as any}
-                routeName={route.name as keyof RootStackParamList}
-              />
-            );
-          },
         })}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
