@@ -251,6 +251,18 @@
       "barcode":  "5601012180029",
       "stock": 35,
       "description": "Fraldas tamanho 4"
+    },
+    {
+      "productId": "SKU004101",
+      "name": "Peito de Frango 1kg",
+      "brand": "Continente",
+      "category": "Carnes/Aves",
+      "price": 4.99,
+      "currency": "EUR",
+      "imageUrl": "https://example.com/products/peito-frango-1kg.jpg",
+      "barcode": "5601012190030",
+      "stock": 40,
+      "description": "Peito de frango fresco 1kg"
     }
   ]
 }

@@ -1,21 +1,81 @@
 {
   "shelves": [
-    { "id": "LISBOA01_ROW1_S1", "storeId": "LISBOA01", "zoneId": "A1", "x": 6.0, "y": 4.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "LISBOA01_ROW1_S2", "storeId": "LISBOA01", "zoneId": "A1", "x": 12.0, "y": 4.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "LISBOA01_ROW2_S1", "storeId": "LISBOA01", "zoneId": "B1", "x": 6.0, "y": 12.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "LISBOA01_ROW2_S2", "storeId": "LISBOA01", "zoneId": "B1", "x": 12.0, "y": 14.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "LISBOA01_ROW3_S1", "storeId": "LISBOA01", "zoneId": "C1", "x": 6.0, "y": 20.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "LISBOA01_ROW3_S2", "storeId": "LISBOA01", "zoneId": "C1", "x": 12.0, "y": 20.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "LISBOA01_ENDCAP1", "storeId": "LISBOA01", "zoneId": "A1", "x": 5.0, "y": 2.0, "width": 1.0, "height": 1.0, "floor": 1 },
-    { "id": "LISBOA01_ENDCAP2", "storeId": "LISBOA01", "zoneId": "C1", "x": 11.0, "y": 26.0, "width": 1.0, "height": 1.0, "floor": 1 }
-    ,
-    { "id": "PORTO01_ROW1_S1", "storeId": "PORTO01", "zoneId": "A1", "x": 6.0, "y": 4.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "PORTO01_ROW1_S2", "storeId": "PORTO01", "zoneId": "A1", "x": 12.0, "y": 4.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "PORTO01_ROW2_S1", "storeId": "PORTO01", "zoneId": "B1", "x": 6.0, "y": 12.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "PORTO01_ROW2_S2", "storeId": "PORTO01", "zoneId": "B1", "x": 12.0, "y": 12.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "PORTO01_ROW3_S1", "storeId": "PORTO01", "zoneId": "C1", "x": 6.0, "y": 20.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "PORTO01_ROW3_S2", "storeId": "PORTO01", "zoneId": "C1", "x": 12.0, "y": 20.0, "width": 0.6, "height": 4.0, "floor": 1 },
-    { "id": "PORTO01_ENDCAP1", "storeId": "PORTO01", "zoneId": "A1", "x": 5.0, "y": 2.0, "width": 1.0, "height": 1.0, "floor": 1 },
-    { "id": "PORTO01_ENDCAP2", "storeId": "PORTO01", "zoneId": "C1", "x": 11.0, "y": 26.0, "width": 1.0, "height": 1.0, "floor": 1 }
+    { "id": "LISBOA01_R1C1_S2", "storeId": "LISBOA01", "zoneId": "R1C1", "x": 6.0,    "y": 3.0,  "width": 0.6, "height": 4.0 },
+
+    { "id": "LISBOA01_R1C2_S1", "storeId": "LISBOA01", "zoneId": "R1C2", "x": 9.666, "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C2_S2", "storeId": "LISBOA01", "zoneId": "R1C2", "x": 13.0,   "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C2_S3", "storeId": "LISBOA01", "zoneId": "R1C2", "x": 16.333, "y": 3.0,  "width": 0.6, "height": 4.0 },
+
+    { "id": "LISBOA01_R1C3_S1", "storeId": "LISBOA01", "zoneId": "R1C3", "x": 20.0,   "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C3_S2", "storeId": "LISBOA01", "zoneId": "R1C3", "x": 24.0,   "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C3_S3", "storeId": "LISBOA01", "zoneId": "R1C3", "x": 28.0,   "y": 3.0,  "width": 0.6, "height": 4.0 },
+
+    { "id": "LISBOA01_R1C4_S1", "storeId": "LISBOA01", "zoneId": "R1C4", "x": 31.75,  "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C4_S2", "storeId": "LISBOA01", "zoneId": "R1C4", "x": 35.25,  "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C4_S3", "storeId": "LISBOA01", "zoneId": "R1C4", "x": 38.75,  "y": 3.0,  "width": 0.6, "height": 4.0 },
+    { "id": "LISBOA01_R1C4_S4", "storeId": "LISBOA01", "zoneId": "R1C4", "x": 42.25,  "y": 3.0,  "width": 0.6, "height": 4.0 },
+
+    { "id": "LISBOA01_R1C5_S1", "storeId": "LISBOA01", "zoneId": "R1C5", "x": 47.0,   "y": 3.0,  "width": 1.2, "height": 4.0 },
+
+    { "id": "LISBOA01_R2C1_S1", "storeId": "LISBOA01", "zoneId": "R2C1", "x": 2.0,    "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C1_S2", "storeId": "LISBOA01", "zoneId": "R2C1", "x": 6.0,    "y": 10.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R2C2_S1", "storeId": "LISBOA01", "zoneId": "R2C2", "x": 9.666, "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C2_S2", "storeId": "LISBOA01", "zoneId": "R2C2", "x": 13.0,   "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C2_S3", "storeId": "LISBOA01", "zoneId": "R2C2", "x": 16.333, "y": 10.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R2C3_S1", "storeId": "LISBOA01", "zoneId": "R2C3", "x": 20.0,   "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C3_S3", "storeId": "LISBOA01", "zoneId": "R2C3", "x": 28.0,   "y": 10.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R2C4_S1", "storeId": "LISBOA01", "zoneId": "R2C4", "x": 31.75,  "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C4_S2", "storeId": "LISBOA01", "zoneId": "R2C4", "x": 35.25,  "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C4_S3", "storeId": "LISBOA01", "zoneId": "R2C4", "x": 38.75,  "y": 10.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R2C4_S4", "storeId": "LISBOA01", "zoneId": "R2C4", "x": 42.25,  "y": 10.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R2C5_S1", "storeId": "LISBOA01", "zoneId": "R2C5", "x": 47.0,   "y": 10.0, "width": 1.2, "height": 6.0 },
+
+    { "id": "LISBOA01_R3C1_S1", "storeId": "LISBOA01", "zoneId": "R3C1", "x": 2.0,    "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C1_S2", "storeId": "LISBOA01", "zoneId": "R3C1", "x": 6.0,    "y": 18.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R3C2_S1", "storeId": "LISBOA01", "zoneId": "R3C2", "x": 9.666, "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C2_S2", "storeId": "LISBOA01", "zoneId": "R3C2", "x": 13.0,   "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C2_S3", "storeId": "LISBOA01", "zoneId": "R3C2", "x": 16.333, "y": 18.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R3C3_S1", "storeId": "LISBOA01", "zoneId": "R3C3", "x": 20.0,   "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C3_S2", "storeId": "LISBOA01", "zoneId": "R3C3", "x": 24.0,   "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C3_S3", "storeId": "LISBOA01", "zoneId": "R3C3", "x": 28.0,   "y": 18.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R3C4_S1", "storeId": "LISBOA01", "zoneId": "R3C4", "x": 31.75,  "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C4_S2", "storeId": "LISBOA01", "zoneId": "R3C4", "x": 35.25,  "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C4_S3", "storeId": "LISBOA01", "zoneId": "R3C4", "x": 38.75,  "y": 18.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R3C4_S4", "storeId": "LISBOA01", "zoneId": "R3C4", "x": 42.25,  "y": 18.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R3C5_S1", "storeId": "LISBOA01", "zoneId": "R3C5", "x": 47.0,   "y": 18.0, "width": 1.2, "height": 6.0 },
+
+    { "id": "LISBOA01_R4C1_S1", "storeId": "LISBOA01", "zoneId": "R4C1", "x": 2.0,    "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C1_S2", "storeId": "LISBOA01", "zoneId": "R4C1", "x": 6.0,    "y": 26.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R4C2_S1", "storeId": "LISBOA01", "zoneId": "R4C2", "x": 9.666, "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C2_S2", "storeId": "LISBOA01", "zoneId": "R4C2", "x": 13.0,   "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C2_S3", "storeId": "LISBOA01", "zoneId": "R4C2", "x": 16.333, "y": 26.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R4C3_S1", "storeId": "LISBOA01", "zoneId": "R4C3", "x": 20.0,   "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C3_S2", "storeId": "LISBOA01", "zoneId": "R4C3", "x": 24.0,   "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C3_S3", "storeId": "LISBOA01", "zoneId": "R4C3", "x": 28.0,   "y": 26.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R4C4_S1", "storeId": "LISBOA01", "zoneId": "R4C4", "x": 31.75,  "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C4_S2", "storeId": "LISBOA01", "zoneId": "R4C4", "x": 35.25,  "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C4_S3", "storeId": "LISBOA01", "zoneId": "R4C4", "x": 38.75,  "y": 26.0, "width": 0.6, "height": 6.0 },
+    { "id": "LISBOA01_R4C4_S4", "storeId": "LISBOA01", "zoneId": "R4C4", "x": 42.25,  "y": 26.0, "width": 0.6, "height": 6.0 },
+
+    { "id": "LISBOA01_R4C5_S1", "storeId": "LISBOA01", "zoneId": "R4C5", "x": 47.0,   "y": 26.0, "width": 1.2, "height": 6.0 },
+
+    { "id": "LISBOA01_ENDCAP_A", "storeId": "LISBOA01", "zoneId": "R1C1", "x": 1.5,  "y": 1.5,  "width": 1.0, "height": 1.0 },
+    { "id": "LISBOA01_ENDCAP_B", "storeId": "LISBOA01", "zoneId": "R1C5", "x": 49.5, "y": 1.5,  "width": 1.0, "height": 1.0 },
+    { "id": "LISBOA01_CENTER_KIOSK", "storeId": "LISBOA01", "zoneId": "R2C3", "x": 24.0, "y": 9.0, "width": 2.0, "height": 2.0 },
+
+    { "id": "PORTO01_ROW1_S1", "storeId": "PORTO01", "zoneId": "A1", "x": 6.0, "y": 6.0, "width": 1.0, "height": 4.0, "floor": 1 },
+    { "id": "PORTO01_ROW1_S2", "storeId": "PORTO01", "zoneId": "A1", "x": 12.0, "y": 6.0, "width": 1.0, "height": 4.0, "floor": 1 },
+    { "id": "PORTO01_ROW2_S1", "storeId": "PORTO01", "zoneId": "B1", "x": 6.0, "y": 14.0, "width": 1.0, "height": 4.0, "floor": 1 }
   ]
 }

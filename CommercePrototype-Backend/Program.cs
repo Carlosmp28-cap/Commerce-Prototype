@@ -1,6 +1,8 @@
 using CommercePrototype_Backend.Options;
 using CommercePrototype_Backend.Services.Sfcc.ShopApi;
 using CommercePrototype_Backend.Services.Sfcc.Shared;
+using CommercePrototype_Backend.Services.Zone;
+using CommercePrototype_Backend.Services.Sfcc.Shelf;
 using CommercePrototype_Backend.Services;
 using CommercePrototype_Backend.Services.Algorithms;
 
@@ -11,8 +13,8 @@ builder.Services.AddScoped<IAStarPathFinder, AStarPathFinder>();
 builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
 
 // Add pathfinding algorithm service
-builder.Services.AddScoped<IAStarPathFinder, AStarPathFinder>();
-builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
+// builder.Services.AddScoped<IAStarPathFinder, AStarPathFinder>();
+// builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
 
 // Add services to the container.
 
@@ -71,9 +73,21 @@ builder.Services.AddResponseCompression(options =>
 });
 
 // Add SFCC Services
-builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>();
-builder.Services.AddHttpClient<ISfccShopApiClient, SfccShopApiClient>();
+var sfccApiBase = builder.Configuration.GetValue<string>("Sfcc:ApiBaseUrl");
+builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>(client => {
+    if (!string.IsNullOrEmpty(sfccApiBase)) client.BaseAddress = new Uri(sfccApiBase);
+});
+builder.Services.AddHttpClient<ISfccShopApiClient, SfccShopApiClient>(client => {
+    if (!string.IsNullOrEmpty(sfccApiBase)) client.BaseAddress = new Uri(sfccApiBase);
+});
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
+// Register zone and shelf services (use HttpClient-based implementations)
+builder.Services.AddHttpClient<IZoneService, ZoneService>(client => {
+    if (!string.IsNullOrEmpty(sfccApiBase)) client.BaseAddress = new Uri(sfccApiBase);
+});
+builder.Services.AddHttpClient<IShelfService, ShelfService>(client => {
+    if (!string.IsNullOrEmpty(sfccApiBase)) client.BaseAddress = new Uri(sfccApiBase);
+});
 
 // Add routing service for pathfinding
 builder.Services.AddScoped<IRouteDefinitionService, RouteDefinitionService>();
