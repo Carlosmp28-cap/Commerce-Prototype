@@ -28,7 +28,7 @@ Prerequisites:
 - .NET 10 SDK
 - SFCC sandbox access (Shop API / OCAPI credentials)
 
-Copy your SFCC configuration into `appsettings.Development.json` (see `SFCC_INTEGRATION_GUIDE.md`) and run:
+Copy your SFCC configuration into a local `.env` file (copy the provided `.env.example` and fill values — do NOT commit `.env`). You can also set values via environment variables or .NET user-secrets. See `SFCC_INTEGRATION_GUIDE.md` for details. Then run:
 
 ```bash
 dotnet restore
@@ -188,7 +188,7 @@ CommercePrototype-Backend/
 ├── Properties/
 │   └── launchSettings.json
 ├── appsettings.json
-├── appsettings.Development.json
+├── .env.example        # copy to `.env` and fill values for local development
 ├── Program.cs
 ├── CommercePrototype-Backend.csproj
 └── README.md

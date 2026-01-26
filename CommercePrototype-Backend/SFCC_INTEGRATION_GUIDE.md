@@ -10,19 +10,16 @@ This guide explains the configuration, DI setup, and recommended usage patterns.
 
 ## Configuration
 
-Add SFCC settings to `appsettings.Development.json` (or set via user-secrets / environment variables):
+Add SFCC settings to a local `.env` file (copy `./.env.example` to `.env` and fill values), or set via user-secrets / environment variables:
 
-```json
-{
-  "Sfcc": {
-    "ApiBaseUrl": "https://your-instance.api.commercecloud.salesforce.com",
-    "ApiVersion": "v20_4",
-    "SiteId": "RefArch",
-    "ClientId": "your-client-id",
-    "OAuthTokenUrl": "https://account.demandware.com/dw/oauth2/access_token",
-    "InstanceName": "your-instance-name"
-  }
-}
+```dotenv
+# SFCC settings (copy these into `.env`)
+Sfcc__OAuthTokenUrl=https://account.demandware.com/dw/oauth2/access_token
+Sfcc__ApiBaseUrl=https://your-instance.dx.commercecloud.salesforce.com
+Sfcc__ApiVersion=v20_4
+Sfcc__ClientId=your-client-id
+Sfcc__SiteId=RefArch
+Sfcc__InstanceName=your-instance-name
 ```
 
 Configuration notes:
