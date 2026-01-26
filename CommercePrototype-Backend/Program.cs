@@ -1,6 +1,13 @@
 using CommercePrototype_Backend.Options;
 using CommercePrototype_Backend.Services.Sfcc.ShopApi;
 using CommercePrototype_Backend.Services.Sfcc.Shared;
+using CommercePrototype_Backend;
+
+// Load a local `.env` file into environment variables early so local secrets
+// (ClientId, Api keys, etc.) can be provided without committing them to
+// appsettings files. The backend configuration will then pick them up via
+// the normal IConfiguration environment provider (env vars override appsettings).
+DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 

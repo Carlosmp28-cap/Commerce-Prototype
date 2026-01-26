@@ -106,7 +106,7 @@ dotnet run --urls "http://0.0.0.0:5035"
 
 ```powershell
 ipconfig
-# note the IPv4 address for your active network adapter (e.g. 192.168.1.159)
+# note the IPv4 address for your active network adapter (e.g. X.X.X.X)
 ```
 
 3. Create a local `.env` using `.env.example` and replace `<HOST_LAN_IP>`, or set the env var in your shell for one session.
