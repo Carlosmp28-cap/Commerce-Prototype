@@ -1103,14 +1103,13 @@ export default function StoreMap({
                           try {
                             const shelf = shelves.find(
                               (sh) =>
-                                sh.id === pz.shelfId ||
-                                sh.id === (pz.shelfId ?? pz.ShelfId),
+                                sh.id === pz.shelfId || sh.id === pz.ShelfId,
                             );
                             if (shelf) {
                               const zone = zones.find(
                                 (z) =>
                                   z.zoneId === shelf.zoneId ||
-                                  z.zoneId === (shelf.zoneId ?? shelf.ZoneId),
+                                  z.zoneId === shelf.ZoneId,
                               );
                               if (zone) setSelectedZone(zone);
                             }
