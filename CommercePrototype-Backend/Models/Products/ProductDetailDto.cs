@@ -16,6 +16,9 @@ namespace CommercePrototype_Backend.Models.Products;
 /// <param name="Features">Product feature list, if available.</param>
 /// <param name="ShippingType">Shipping method label, if available.</param>
 /// <param name="ShippingEstimate">Estimated delivery time, if available.</param>
+/// <param name="ProductType">Product type/classification, if available.</param>
+/// <param name="MasterId">Master product identifier for variation groups, if available.</param>
+/// <param name="Variants">Variant list, if available.</param>
 public sealed record ProductDetailDto(
     string Id,
     string Name,

@@ -90,8 +90,13 @@ public sealed class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<ShopperSessionDto>> Login([FromBody] LoginRequestDto request, CancellationToken cancellationToken)
     {
-        var username = request?.EffectiveUsername?.Trim();
-        var password = request?.Password;
+        if (request is null)
+        {
+            return BadRequest(new { error = "login/username and password are required" });
+        }
+
+        var username = request.EffectiveUsername?.Trim();
+        var password = request.Password;
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
@@ -120,12 +125,13 @@ public sealed class AuthController : ControllerBase
                 {
                     ApplyShopperSession(guestSession);
                     var guestBasket = await _shopService.GetBasketAsync(request.BasketId, cancellationToken);
-                    if (guestBasket is not null && guestBasket.Items.Count > 0)
+                    var guestItems = guestBasket?.Items;
+                    if (guestBasket is not null && guestItems is not null && guestItems.Count > 0)
                     {
                         ApplyShopperSession(session);
                         var customerBasket = await _shopService.CreateBasketAsync(guestBasket.Currency, cancellationToken);
 
-                        foreach (var item in guestBasket.Items)
+                        foreach (var item in guestItems)
                         {
                             await _shopService.AddItemToBasketAsync(
                                 customerBasket.BasketId,

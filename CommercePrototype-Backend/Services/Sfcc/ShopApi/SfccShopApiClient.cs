@@ -25,6 +25,8 @@ public sealed class SfccShopApiClient : SfccApiClientBase, ISfccShopApiClient
     /// </summary>
     /// <param name="httpClient">HTTP client provided by <c>IHttpClientFactory</c>.</param>
     /// <param name="sfccOptions">Bound SFCC configuration.</param>
+    /// <param name="requestContext">Per-request context used to apply shopper/client authentication.</param>
+    /// <param name="authService">Auth service used to create a guest shopper session when needed.</param>
     /// <param name="logger">Logger for request diagnostics.</param>
     public SfccShopApiClient(
         HttpClient httpClient,

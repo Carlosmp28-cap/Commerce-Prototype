@@ -34,6 +34,9 @@ public sealed partial class SfccShopService : ISfccShopService
     /// Initializes a new instance of the <see cref="SfccShopService"/>.
     /// </summary>
     /// <param name="apiClient">Low-level Shop API client.</param>
+    /// <param name="dataApiClient">Low-level Data API client (used for datasets not available in Shop API).</param>
+    /// <param name="authService">Auth service used to create/refresh shopper sessions when needed.</param>
+    /// <param name="requestContext">Per-request context used to apply shopper/client authentication.</param>
     /// <param name="cache">In-memory cache used for small, frequently-read datasets.</param>
     /// <param name="sfccOptions">Bound SFCC configuration.</param>
     /// <param name="logger">Logger for operational diagnostics.</param>
