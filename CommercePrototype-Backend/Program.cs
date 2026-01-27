@@ -1,7 +1,12 @@
 using CommercePrototype_Backend.Options;
 using CommercePrototype_Backend.Services;
+using CommercePrototype_Backend.Services.Auth;
+using CommercePrototype_Backend.Services.Sfcc.DataApi;
 using CommercePrototype_Backend.Services.Sfcc.ShopApi;
 using CommercePrototype_Backend.Services.Sfcc.Shared;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +23,9 @@ builder.Services.AddCors(options =>
             policy
                 .AllowAnyOrigin()
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                // Expo Web (browser) can only read custom response headers if they are exposed.
+                .WithExposedHeaders("X-Shopper-Session-Id");
             return;
         }
 
@@ -35,7 +42,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(origins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .WithExposedHeaders("X-Shopper-Session-Id");
     });
 });
 
@@ -44,6 +52,20 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddMemoryCache();
+
+var redisConnectionString = builder.Configuration.GetValue<string>("SessionStore:RedisConnectionString");
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = "CommercePrototype-Backend:";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 
 // Bind SFCC settings and validate on startup so misconfigurations fail fast
 // (rather than surfacing as runtime HTTP errors when the first request hits the SFCC client).
@@ -56,6 +78,12 @@ builder.Services
         "Sfcc:ApiBaseUrl must be an absolute URL.")
     .ValidateOnStart();
 
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection("Jwt"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
@@ -64,13 +92,35 @@ builder.Services.AddResponseCompression(options =>
 // Add SFCC Services
 builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>();
 builder.Services.AddHttpClient<ISfccShopApiClient, SfccShopApiClient>();
+builder.Services.AddHttpClient<ISfccDataApiClient, SfccDataApiClient>();
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 // Shopper session handling (guest + login)
 builder.Services.AddSingleton<IShopperSessionStore, ShopperSessionStore>();
 builder.Services.AddScoped<SfccRequestContext>();
 
 builder.Services.AddHealthChecks();
+
+var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>();
+if (jwtOptions is not null)
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key))
+            };
+        });
+}
 
 var app = builder.Build();
 
@@ -85,6 +135,8 @@ app.UseResponseCompression();
 app.UseHttpsRedirection();
 
 app.UseCors("Frontend");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

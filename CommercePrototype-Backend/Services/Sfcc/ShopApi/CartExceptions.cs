@@ -1,4 +1,4 @@
-namespace CommercePrototype_Backend.Services;
+namespace CommercePrototype_Backend.Services.Sfcc.ShopApi;
 
 public sealed class OutOfStockException : Exception
 {

@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import * as React from "react";
+import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import ButtonCheckout from "../../components/ButtonCheckout";
 import ButtonContinueShop from "../../components/ButtonContinueShop";
 import { useCart } from "../../hooks/useCart";
@@ -52,7 +52,15 @@ export default function CartScreen({ navigation }: Props) {
       <View style={styles.cartItemWrapper}>
         <View style={styles.cartItem}>
           <View style={styles.itemImageContainer}>
-            <Text style={styles.itemImage}>📦</Text>
+            {item.product.image ? (
+              <Image
+                source={item.product.image}
+                style={styles.itemProductImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.itemImage}>📦</Text>
+            )}
           </View>
 
           <View style={styles.itemContent}>

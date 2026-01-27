@@ -1,4 +1,5 @@
 using CommercePrototype_Backend.Models;
+using CommercePrototype_Backend.Models.Basket;
 using CommercePrototype_Backend.Services;
 using CommercePrototype_Backend.Services.Sfcc.Shared;
 using CommercePrototype_Backend.Services.Sfcc.ShopApi;
@@ -51,25 +52,14 @@ public sealed class CartController : ControllerBase
             return null;
         }
 
-        // 2) If we know basket -> session mapping, use it
-        if (!string.IsNullOrWhiteSpace(basketId) && _sessionStore.TryGetSessionIdByBasket(basketId, out var mappedId))
-        {
-            if (_sessionStore.TryGet(mappedId, out var mapped))
-            {
-                _sfccRequestContext.ShopperAuthToken = mapped.AuthToken;
-                _sfccRequestContext.ShopperCookieHeader = mapped.CookieHeader;
-                return mappedId;
-            }
-        }
-
-        // 3) For existing basket operations, we must NOT create a new session.
-        // If we don't have a known session, the SFCC basket calls will fail with 401 anyway.
+        // 2) For existing basket operations, the caller must always provide the shopper session id.
+        // Basket ids are not treated as authorization.
         if (!string.IsNullOrWhiteSpace(basketId))
         {
             return null;
         }
 
-        // 4) For basket creation, create a guest session.
+        // 3) For basket creation, create a guest session.
         var guest = await _auth.GetGuestShopperSessionAsync(cancellationToken);
         var newId = _sessionStore.Save(guest);
         _sfccRequestContext.ShopperAuthToken = guest.AuthToken;
@@ -243,6 +233,14 @@ public sealed class CartController : ControllerBase
     {
         switch (ex)
         {
+            case VariantSelectionRequiredException variant:
+                return Conflict(new
+                {
+                    error = "VARIANT_SELECTION_REQUIRED",
+                    masterProductId = variant.MasterProductId,
+                    variantIds = variant.VariantIds
+                });
+
             case OutOfStockException stock:
                 return Conflict(new
                 {

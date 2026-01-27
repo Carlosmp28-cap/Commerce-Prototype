@@ -5,4 +5,5 @@ public sealed class SfccRequestContext
 {
     public string? ShopperAuthToken { get; set; }
     public string? ShopperCookieHeader { get; set; }
+    public string? ClientAuthToken { get; set; }
 }

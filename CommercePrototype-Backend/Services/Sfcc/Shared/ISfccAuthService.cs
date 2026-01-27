@@ -21,5 +21,14 @@ public interface ISfccAuthService
     /// Creates a shopper session for a registered customer using credentials.
     /// </summary>
     Task<SfccShopperSession> GetCustomerShopperSessionAsync(string username, string password, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates or retrieves a cached trusted-system shopper session.
+    /// </summary>
+    /// <remarks>
+    /// This is used for Shop API operations that require a trusted system context
+    /// (for example, customer creation in environments where anonymous creation is forbidden).
+    /// </remarks>
+    Task<SfccShopperSession> GetTrustedSystemShopperSessionAsync(CancellationToken cancellationToken = default);
 }
 

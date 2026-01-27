@@ -4,6 +4,8 @@ using CommercePrototype_Backend.Models.Categories;
 using CommercePrototype_Backend.Models.Products;
 using CommercePrototype_Backend.Options;
 using CommercePrototype_Backend.Services.Json;
+using CommercePrototype_Backend.Services.Sfcc.DataApi;
+using CommercePrototype_Backend.Services.Sfcc.Shared;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -24,6 +26,9 @@ public sealed partial class SfccShopService : ISfccShopService
     private readonly ILogger<SfccShopService> _logger;
     private readonly IMemoryCache _cache;
     private readonly IOptionsMonitor<SfccOptions> _sfccOptions;
+    private readonly ISfccAuthService _authService;
+    private readonly SfccRequestContext _requestContext;
+    private readonly ISfccDataApiClient _dataApiClient;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SfccShopService"/>.
@@ -34,11 +39,17 @@ public sealed partial class SfccShopService : ISfccShopService
     /// <param name="logger">Logger for operational diagnostics.</param>
     public SfccShopService(
         ISfccShopApiClient apiClient,
+        ISfccDataApiClient dataApiClient,
+        ISfccAuthService authService,
+        SfccRequestContext requestContext,
         IMemoryCache cache,
         IOptionsMonitor<SfccOptions> sfccOptions,
         ILogger<SfccShopService> logger)
     {
         _apiClient = apiClient;
+        _dataApiClient = dataApiClient;
+        _authService = authService;
+        _requestContext = requestContext;
         _cache = cache;
         _sfccOptions = sfccOptions;
         _logger = logger;
@@ -121,7 +132,8 @@ public sealed partial class SfccShopService : ISfccShopService
     public async Task<ProductDetailDto?> GetProductAsync(string productId, CancellationToken cancellationToken = default)
     {
         // `expand` is required to reliably get `image_groups` (and therefore gallery/main image).
-        var path = $"/products/{productId}?expand=images,prices,availability";
+        // Include variations so the PDP can resolve and select orderable variants.
+        var path = $"/products/{productId}?expand=images,prices,availability,variations";
 
         try
         {

@@ -33,7 +33,7 @@ export function useProducts(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (signal?: AbortSignal) => {
     if (!categoryId) {
       setProducts([]);
       setLoading(false);
@@ -44,15 +44,21 @@ export function useProducts(
       setLoading(true);
       setError(null);
 
-      const result = await api.products.search({
-        categoryId,
-        q: query,
-        limit,
-      });
+      const result = await api.products.search(
+        {
+          categoryId,
+          q: query,
+          limit,
+        },
+        { signal },
+      );
 
       const mappedProducts = result.items.map(mapProductSummary);
       setProducts(mappedProducts);
     } catch (err) {
+      if (err instanceof Error && err.name === "CanceledError") {
+        return;
+      }
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch products";
       setError(errorMessage);
@@ -63,7 +69,9 @@ export function useProducts(
   };
 
   useEffect(() => {
-    fetchProducts();
+    const controller = new AbortController();
+    fetchProducts(controller.signal);
+    return () => controller.abort();
   }, [categoryId, query, limit]);
 
   return {
@@ -93,7 +101,11 @@ export function useProductsPaginated(
   const [total, setTotal] = useState(0);
 
   const fetchProducts = useCallback(
-    async (pageOffset: number = 0, append: boolean = false) => {
+    async (
+      pageOffset: number = 0,
+      append: boolean = false,
+      signal?: AbortSignal,
+    ) => {
       if (!categoryId) {
         setProducts([]);
         setLoading(false);
@@ -105,12 +117,15 @@ export function useProductsPaginated(
         setIsLoadingMore(append);
         setError(null);
 
-        const result = await api.products.search({
-          categoryId,
-          q: query,
-          limit,
-          offset: pageOffset,
-        });
+        const result = await api.products.search(
+          {
+            categoryId,
+            q: query,
+            limit,
+            offset: pageOffset,
+          },
+          { signal },
+        );
 
         const mappedProducts = result.items.map(mapProductSummary);
 
@@ -123,6 +138,9 @@ export function useProductsPaginated(
 
         setTotal(result.total || 0);
       } catch (err) {
+        if (err instanceof Error && err.name === "CanceledError") {
+          return;
+        }
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch products";
         setError(errorMessage);
@@ -137,7 +155,9 @@ export function useProductsPaginated(
 
   useEffect(() => {
     setOffset(0);
-    fetchProducts(0, false);
+    const controller = new AbortController();
+    fetchProducts(0, false, controller.signal);
+    return () => controller.abort();
   }, [categoryId, query, limit, fetchProducts]);
 
   const loadMore = useCallback(() => {
@@ -178,15 +198,18 @@ export function useProductDetail(productId: string): UseProductDetailResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProduct = async () => {
+  const fetchProduct = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
 
-      const result = await api.products.getById(productId);
+      const result = await api.products.getById(productId, { signal });
       const mappedProduct = mapProductDetail(result);
       setProduct(mappedProduct);
     } catch (err) {
+      if (err instanceof Error && err.name === "CanceledError") {
+        return;
+      }
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch product";
       setError(errorMessage);
@@ -198,14 +221,17 @@ export function useProductDetail(productId: string): UseProductDetailResult {
 
   useEffect(() => {
     if (productId) {
-      fetchProduct();
+      const controller = new AbortController();
+      fetchProduct(controller.signal);
+      return () => controller.abort();
     }
+    return undefined;
   }, [productId]);
 
   return {
     product,
     loading,
     error,
-    refetch: fetchProduct,
+    refetch: () => fetchProduct(),
   };
 }

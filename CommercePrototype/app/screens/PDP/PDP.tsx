@@ -1,10 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   ScrollView,
   useWindowDimensions,
   ActivityIndicator,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTheme } from "../../themes";
 import type { RootStackParamList } from "../../navigation";
@@ -47,6 +48,25 @@ export default function PDPScreen({ navigation, route }: Props) {
   // Fetch product details from API
   const { product, loading, error } = useProductDetail(id);
 
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
+  // Hybrid behavior:
+  // - If there's exactly one orderable variant, auto-select it.
+  // - If multiple, require selection.
+  useEffect(() => {
+    if (!product?.variants || product.variants.length === 0) {
+      setSelectedVariantId(null);
+      return;
+    }
+
+    const orderable = product.variants.filter((v) => v.orderable !== false);
+    if (orderable.length === 1) {
+      setSelectedVariantId(orderable[0].id);
+    } else {
+      setSelectedVariantId(null);
+    }
+  }, [product?.id]);
+
   // Fetch related products from the same category
   const { products: relatedProducts } = useProducts(
     product?.categoryId || "",
@@ -76,9 +96,19 @@ export default function PDPScreen({ navigation, route }: Props) {
   }, [product]);
 
   const handleAddToCart = (quantity: number) => {
-    if (product) {
-      addItem(product, quantity);
+    if (!product) return;
+
+    const hasVariants = Boolean(product.variants && product.variants.length > 0);
+    if (hasVariants && !selectedVariantId) {
+      alert("Please select a variant (e.g. size/color) before adding to cart.");
+      return;
     }
+
+    const productForCart: Product = selectedVariantId
+      ? { ...product, id: selectedVariantId }
+      : product;
+
+    addItem(productForCart, quantity);
   };
 
   // SEO: Meta tags dinâmicas para cada produto
@@ -159,6 +189,38 @@ export default function PDPScreen({ navigation, route }: Props) {
       contentContainerStyle={styles.scrollContent}
     >
       <PDPBreadcrumb product={product} navigation={navigation} />
+
+      {product.variants && product.variants.length > 0 && (
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ color: theme.colors.text, fontWeight: "700", marginBottom: 6 }}>
+            Choose variant
+          </Text>
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              borderRadius: 8,
+              overflow: "hidden",
+              backgroundColor: theme.colors.surface,
+            }}
+          >
+            <Picker
+              selectedValue={selectedVariantId ?? ""}
+              onValueChange={(value) => setSelectedVariantId(value ? String(value) : null)}
+            >
+              <Picker.Item label="Select…" value="" />
+              {product.variants.map((v) => {
+                const label = v.variationValues
+                  ? Object.entries(v.variationValues)
+                      .map(([k, val]) => `${k}: ${val}`)
+                      .join(" • ")
+                  : v.id;
+                return <Picker.Item key={v.id} label={label} value={v.id} />;
+              })}
+            </Picker>
+          </View>
+        </View>
+      )}
 
       {isDesktop ? (
         <View style={styles.contentRow}>

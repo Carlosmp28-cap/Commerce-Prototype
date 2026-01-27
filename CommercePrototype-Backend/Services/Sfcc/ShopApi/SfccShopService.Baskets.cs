@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using CommercePrototype_Backend.Models;
-using CommercePrototype_Backend.Services;
+using CommercePrototype_Backend.Models.Basket;
 using CommercePrototype_Backend.Services.Json;
 
 namespace CommercePrototype_Backend.Services.Sfcc.ShopApi;
@@ -32,7 +31,8 @@ public sealed partial class SfccShopService
             return null;
         }
 
-        return MapBasket(basketJson.Value);
+        var basket = MapBasket(basketJson.Value);
+        return await EnrichBasketAsync(basket, cancellationToken);
     }
 
     public async Task<BasketDto?> AddItemToBasketAsync(string basketId, string productId, int quantity = 1, CancellationToken cancellationToken = default)
@@ -40,13 +40,17 @@ public sealed partial class SfccShopService
         productId = productId?.Trim() ?? string.Empty;
         if (quantity <= 0) throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be > 0");
 
+        // SFCC does not allow adding master products to a basket. If we receive a master id,
+        // try to resolve a concrete (orderable) variant id.
+        var orderableProductId = await ResolveOrderableProductIdAsync(productId, cancellationToken);
+
         var basketJson = await GetBasketJsonOrNullAsync(basketId, cancellationToken);
         if (basketJson is null) return null;
 
-        var existing = FindBasketItemByProductId(basketJson.Value, productId);
+        var existing = FindBasketItemByProductId(basketJson.Value, orderableProductId);
         var desiredQuantity = existing is null ? quantity : existing.Value.Quantity + quantity;
 
-        await ValidateInventoryAsync(productId, desiredQuantity, cancellationToken);
+        await ValidateInventoryAsync(orderableProductId, desiredQuantity, cancellationToken);
 
         var updated = default(JsonElement);
         if (existing is not null)
@@ -57,11 +61,13 @@ public sealed partial class SfccShopService
         {
             updated = await _apiClient.PostAsync<JsonElement>(
                 $"/baskets/{basketId}/items",
-                new[] { new { product_id = productId, quantity } },
+                new[] { new { product_id = orderableProductId, quantity } },
                 cancellationToken);
         }
 
-        return updated.ValueKind == JsonValueKind.Undefined ? null : MapBasket(updated);
+        if (updated.ValueKind == JsonValueKind.Undefined) return null;
+        var mapped = MapBasket(updated);
+        return await EnrichBasketAsync(mapped, cancellationToken);
     }
 
     public async Task<BasketDto?> UpdateBasketItemQuantityAsync(string basketId, string itemId, int quantity, CancellationToken cancellationToken = default)
@@ -86,7 +92,9 @@ public sealed partial class SfccShopService
         await ValidateInventoryAsync(item.Value.ProductId?.Trim() ?? string.Empty, quantity, cancellationToken);
 
         var updated = await _apiClient.PatchAsync<JsonElement>($"/baskets/{basketId}/items/{itemId}", new { quantity }, cancellationToken);
-        return updated.ValueKind == JsonValueKind.Undefined ? null : MapBasket(updated);
+        if (updated.ValueKind == JsonValueKind.Undefined) return null;
+        var mapped = MapBasket(updated);
+        return await EnrichBasketAsync(mapped, cancellationToken);
     }
 
     public async Task<BasketDto?> RemoveItemFromBasketAsync(string basketId, string itemId, CancellationToken cancellationToken = default)
@@ -94,7 +102,9 @@ public sealed partial class SfccShopService
         try
         {
             var updated = await _apiClient.DeleteAsync<JsonElement>($"/baskets/{basketId}/items/{itemId}", cancellationToken);
-            return updated.ValueKind == JsonValueKind.Undefined ? null : MapBasket(updated);
+            if (updated.ValueKind == JsonValueKind.Undefined) return null;
+            var mapped = MapBasket(updated);
+            return await EnrichBasketAsync(mapped, cancellationToken);
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
@@ -152,6 +162,67 @@ public sealed partial class SfccShopService
         }
     }
 
+    private async Task<string> ResolveOrderableProductIdAsync(string productId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(productId)) return productId;
+
+        // Heuristic: variants are directly orderable; masters are not.
+        // Use expand=variations so we can see variant ids.
+        try
+        {
+            var json = await _apiClient.GetAsync<JsonElement>($"/products/{Uri.EscapeDataString(productId)}?expand=variations", cancellationToken);
+
+            var type = json.GetPropertyOrDefault("type") ?? json.GetPropertyOrDefault("product_type");
+            var isMaster = string.Equals(type, "master", StringComparison.OrdinalIgnoreCase);
+
+            if (!isMaster)
+            {
+                // Some SFCC responses may omit type; assume it's already orderable.
+                return productId;
+            }
+
+            if (json.TryGetProperty("variants", out var variants) && variants.ValueKind == JsonValueKind.Array)
+            {
+                var allIds = new List<string>();
+                var orderableIds = new List<string>();
+                foreach (var v in variants.EnumerateArray())
+                {
+                    if (v.ValueKind != JsonValueKind.Object) continue;
+
+                    var id = v.GetPropertyOrDefault("product_id") ?? v.GetPropertyOrDefault("id");
+                    if (string.IsNullOrWhiteSpace(id)) continue;
+
+                    allIds.Add(id);
+
+                    // Prefer orderable variants when the flag exists.
+                    if (v.TryGetProperty("orderable", out var orderableNode) && orderableNode.ValueKind == JsonValueKind.True)
+                    {
+                        orderableIds.Add(id);
+                    }
+                }
+
+                // Hybrid rule:
+                // - If there's exactly 1 orderable variant, auto-select it.
+                // - If there are variants but multiple orderable (or unknown), force selection.
+                if (orderableIds.Count == 1) return orderableIds[0];
+
+                if (allIds.Count == 1) return allIds[0];
+
+                if (allIds.Count > 1)
+                {
+                    throw new VariantSelectionRequiredException(productId, allIds);
+                }
+            }
+
+            return productId;
+        }
+        catch (HttpRequestException)
+        {
+            // If we can't resolve, fall back to original id.
+            return productId;
+        }
+    }
+
     private async Task<int?> GetProductAvailableToSellAsync(string productId, CancellationToken cancellationToken)
     {
         try
@@ -192,7 +263,7 @@ public sealed partial class SfccShopService
         }
     }
 
-    private static BasketDto MapBasket(JsonElement node)
+    private BasketDto MapBasket(JsonElement node)
     {
         var basketId = node.GetPropertyOrDefault("basket_id")
                       ?? node.GetPropertyOrDefault("id")
@@ -239,7 +310,7 @@ public sealed partial class SfccShopService
             orderTotal);
     }
 
-    private static BasketItemDto? MapBasketItem(JsonElement node)
+    private BasketItemDto? MapBasketItem(JsonElement node)
     {
         var itemId = node.GetPropertyOrDefault("item_id") ?? node.GetPropertyOrDefault("id");
         var productId = node.GetPropertyOrDefault("product_id")?.Trim();
@@ -249,15 +320,65 @@ public sealed partial class SfccShopService
         var quantity = node.GetIntOrDefault("quantity") ?? 0;
 
         var price = node.GetNestedDecimalOrDefault("price", "value")
-                 ?? node.GetDecimalOrDefault("price");
+             ?? node.GetDecimalOrDefault("price")
+             ?? node.GetNestedDecimalOrDefault("price_after_item_discount", "value")
+             ?? node.GetDecimalOrDefault("price_after_item_discount")
+             ?? node.GetNestedDecimalOrDefault("price_adjusted", "value")
+             ?? node.GetDecimalOrDefault("price_adjusted")
+             ?? node.GetNestedDecimalOrDefault("unit_price", "value")
+             ?? node.GetDecimalOrDefault("unit_price")
+             ?? node.GetNestedDecimalOrDefault("tax_basis", "value")
+             ?? node.GetDecimalOrDefault("tax_basis");
 
         var basePrice = node.GetNestedDecimalOrDefault("base_price", "value")
-                     ?? node.GetDecimalOrDefault("base_price");
+                 ?? node.GetDecimalOrDefault("base_price")
+                 ?? node.GetNestedDecimalOrDefault("unit_price", "value")
+                 ?? node.GetDecimalOrDefault("unit_price");
 
-        var imageUrl = node.GetNestedStringOrDefault("image", "link")
-                    ?? node.GetNestedStringOrDefault("c_image", "link");
+        var imageUrl = ExtractAndNormalizeImageUrl(node);
 
         return new BasketItemDto(itemId, productId, productName, quantity, price, basePrice, imageUrl);
+    }
+
+    private async Task<BasketDto> EnrichBasketAsync(BasketDto basket, CancellationToken cancellationToken)
+    {
+        // Some SFCC configurations omit/zero out per-item prices in basket payloads for certain categories.
+        // To keep the frontend consistent, fill missing/zero prices (and missing images) using product detail.
+        var changed = false;
+        var items = basket.Items.ToList();
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            var hasPrice = (item.Price ?? 0m) > 0m || (item.BasePrice ?? 0m) > 0m;
+            var hasImage = !string.IsNullOrWhiteSpace(item.ImageUrl);
+
+            if (hasPrice && hasImage) continue;
+
+            try
+            {
+                var product = await GetProductAsync(item.ProductId, cancellationToken);
+                if (product is null) continue;
+
+                var newPrice = hasPrice ? item.Price : (product.Price > 0m ? product.Price : item.Price);
+                var newBasePrice = hasPrice ? item.BasePrice : (product.Price > 0m ? product.Price : item.BasePrice);
+                var newImage = hasImage ? item.ImageUrl : product.ImageUrl;
+
+                var updated = item with { Price = newPrice, BasePrice = newBasePrice, ImageUrl = newImage };
+
+                if (!Equals(updated, item))
+                {
+                    items[i] = updated;
+                    changed = true;
+                }
+            }
+            catch
+            {
+                // Best-effort: don't fail basket calls if enrichment can't be done.
+            }
+        }
+
+        return changed ? basket with { Items = items } : basket;
     }
 
     private static (string ItemId, string ProductId, int Quantity)? FindBasketItemByProductId(JsonElement basket, string productId)

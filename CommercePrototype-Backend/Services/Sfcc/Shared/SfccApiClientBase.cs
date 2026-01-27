@@ -154,8 +154,15 @@ public abstract class SfccApiClientBase
                     (int)response.StatusCode,
                     error);
 
+                var reason = response.ReasonPhrase ?? response.StatusCode.ToString();
+                var errorSnippet = string.IsNullOrWhiteSpace(error)
+                    ? string.Empty
+                    : (error.Length <= 2000 ? error : error[..2000] + "...");
+
                 throw new HttpRequestException(
-                    $"SFCC API request failed: {response.StatusCode}",
+                    string.IsNullOrEmpty(errorSnippet)
+                        ? $"SFCC API request failed: {(int)response.StatusCode} {reason}"
+                        : $"SFCC API request failed: {(int)response.StatusCode} {reason} - {errorSnippet}",
                     null,
                     response.StatusCode);
             }

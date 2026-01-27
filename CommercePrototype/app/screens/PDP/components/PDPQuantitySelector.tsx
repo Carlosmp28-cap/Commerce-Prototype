@@ -20,7 +20,8 @@ export default function PDPQuantitySelector({
   const [menuVisible, setMenuVisible] = useState(false);
   const anchorRef = useRef(null);
 
-  if (product.quantityAvailable === 0) return null;
+  const hasVariants = Boolean(product.variants && product.variants.length > 0);
+  if (product.quantityAvailable === 0 && !hasVariants) return null;
 
   const handleAddToCart = () => {
     setIsAdding(true);
@@ -57,7 +58,7 @@ export default function PDPQuantitySelector({
             }
           >
             {Array.from(
-              { length: Math.min(product.quantityAvailable, 10) },
+              { length: Math.min(product.quantityAvailable > 0 ? product.quantityAvailable : 10, 10) },
               (_, i) => i + 1
             ).map((num) => (
               <Menu.Item

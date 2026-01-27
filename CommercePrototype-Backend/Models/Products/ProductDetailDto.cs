@@ -29,5 +29,8 @@ public sealed record ProductDetailDto(
     int? ReviewCount,
     IReadOnlyList<string>? Features,
     string? ShippingType,
-    string? ShippingEstimate
+    string? ShippingEstimate,
+    string? ProductType = null,
+    string? MasterId = null,
+    IReadOnlyList<ProductVariantDto>? Variants = null
 );

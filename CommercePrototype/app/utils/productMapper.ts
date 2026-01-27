@@ -37,6 +37,14 @@ export function mapProductDetail(dto: ProductDetailDto): Product {
     rating: dto.rating ?? undefined,
     reviewCount: dto.reviewCount ?? undefined,
     features: dto.features ?? undefined,
+    productType: dto.productType ?? undefined,
+    masterId: dto.masterId ?? undefined,
+    variants:
+      dto.variants?.map((v) => ({
+        id: v.id,
+        orderable: v.orderable ?? undefined,
+        variationValues: v.variationValues ?? undefined,
+      })) ?? undefined,
     shipping:
       dto.shippingType || dto.shippingEstimate
         ? {

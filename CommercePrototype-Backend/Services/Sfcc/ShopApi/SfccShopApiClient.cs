@@ -50,11 +50,19 @@ public sealed class SfccShopApiClient : SfccApiClientBase, ISfccShopApiClient
             request.Headers.Add("x-dw-client-id", clientId);
         }
 
-        var needsShopper = request.RequestUri?.AbsolutePath.Contains("/baskets", StringComparison.OrdinalIgnoreCase) == true;
+        var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+        var needsShopper = path.Contains("/baskets", StringComparison.OrdinalIgnoreCase)
+                           || path.Contains("/customers", StringComparison.OrdinalIgnoreCase)
+                           || path.Contains("/orders", StringComparison.OrdinalIgnoreCase);
         if (needsShopper)
         {
             var authToken = _requestContext.ShopperAuthToken;
             var cookieHeader = _requestContext.ShopperCookieHeader;
+
+            if (string.IsNullOrWhiteSpace(authToken) && !string.IsNullOrWhiteSpace(_requestContext.ClientAuthToken))
+            {
+                authToken = _requestContext.ClientAuthToken;
+            }
 
             if (string.IsNullOrWhiteSpace(authToken) && string.IsNullOrWhiteSpace(cookieHeader))
             {

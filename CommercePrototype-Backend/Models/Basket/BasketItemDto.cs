@@ -1,4 +1,4 @@
-namespace CommercePrototype_Backend.Models;
+namespace CommercePrototype_Backend.Models.Basket;
 
 public sealed record BasketItemDto(
     string ItemId,
