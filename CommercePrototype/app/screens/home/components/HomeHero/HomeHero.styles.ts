@@ -2,14 +2,15 @@ import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   heroCard: {
-    borderRadius: 16,
+    borderRadius: 0,
+    alignSelf: "stretch",
   },
   heroClip: {
-    borderRadius: 16,
+    borderRadius: 0,
     overflow: "hidden",
   },
   heroImageBg: {
-    minHeight: 190,
+    minHeight: 240,
     justifyContent: "flex-end",
   },
   heroImage: {
@@ -24,8 +25,8 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.28)",
   },
   heroContent: {
-    paddingTop: 18,
-    paddingBottom: 16,
+    paddingTop: 26,
+    paddingBottom: 22,
   },
   heroKicker: {
     color: "rgba(255,255,255,0.9)",
@@ -43,16 +44,5 @@ export const styles = StyleSheet.create({
     marginTop: 6,
     color: "rgba(255,255,255,0.9)",
     opacity: 0.95,
-  },
-  heroCtas: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
-    flexWrap: "wrap",
-  },
-  heroCtaButton: {
-    // On narrow screens, avoid shrinking (which causes Paper's label to ellipsize).
-    // With flexWrap enabled on the container, this will wrap buttons onto the next line instead.
-    flexShrink: 0,
   },
 });

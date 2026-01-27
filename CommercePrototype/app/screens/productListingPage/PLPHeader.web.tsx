@@ -14,7 +14,6 @@ export default function PLPHeader({
   headerStyle,
   titleStyle,
   countStyle,
-  onBackPress,
   selectedSort,
   onSortChange,
   onCategorySelect,
@@ -31,7 +30,13 @@ export default function PLPHeader({
     closeFilterMenu,
     handleSortSelect,
     handleFilterSelect,
-  } = usePLPHeaderLogic(query, productCount, selectedSort, onSortChange, onCategorySelect);
+  } = usePLPHeaderLogic(
+    query,
+    productCount,
+    selectedSort,
+    onSortChange,
+    onCategorySelect,
+  );
 
   return (
     <View style={headerStyle}>
@@ -41,7 +46,6 @@ export default function PLPHeader({
           countText={countText}
           titleStyle={titleStyle}
           countStyle={countStyle}
-          onBackPress={onBackPress}
         />
 
         <PLPHeaderWebControls
