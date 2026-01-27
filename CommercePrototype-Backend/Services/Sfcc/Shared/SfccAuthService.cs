@@ -237,10 +237,11 @@ public class SfccAuthService : ISfccAuthService
 
         _cachedGuestSession = new SfccShopperSession(authToken, cookieHeader, customerId, expiresAtUtc);
 
-        _logger.LogInformation(
+        /*_logger.LogInformation(
             "Obtained SFCC guest shopper session (customer_id={CustomerId}) expiring at {ExpiresAtUtc}",
             customerId ?? "(unknown)",
             expiresAtUtc);
+        */
 
         return _cachedGuestSession;
     }
