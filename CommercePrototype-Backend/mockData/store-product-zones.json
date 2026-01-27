@@ -14,6 +14,30 @@
 
     { "id": "PORTO01_SKU001234", "storeId": "PORTO01", "productId": "SKU001234", "zoneId": "PORTO01_A1", "shelfId": "PORTO01_ROW1_S2", "aisle": "Corredor A", "shelf": "Prateleira 2", "position": "Esquerda", "updatedAt": "2026-01-26T10:00:00Z" },
     { "id": "PORTO01_SKU002100", "storeId": "PORTO01", "productId": "SKU002100", "zoneId": "PORTO01_B1", "shelfId": "PORTO01_ROW2_S1", "aisle": "Corredor B", "shelf": "Frigorífico 1", "position": "Superior", "updatedAt": "2026-01-26T10:00:00Z" },
-    { "id": "PORTO01_SKU003001", "storeId": "PORTO01", "productId": "SKU003001", "zoneId": "PORTO01_C1", "shelfId": "PORTO01_ROW3_S1", "aisle": "Padaria", "shelf": "Expositor 1", "position": "Frente", "updatedAt": "2026-01-26T10:00:00Z" }
+    { "id": "PORTO01_SKU003001", "storeId": "PORTO01", "productId": "SKU003001", "zoneId": "PORTO01_C1", "shelfId": "PORTO01_ROW3_S1", "aisle": "Padaria", "shelf": "Expositor 1", "position": "Frente", "updatedAt": "2026-01-26T10:00:00Z" },
+
+    { "id": "PORTO01_SKU001234", "storeId": "PORTO01", "productId": "SKU001234", "zoneId": "PORTO01_R1C1", "shelfId": "PORTO01_R1C1_S1", "aisle": "Aisle 1", "shelf": "Shelf 1", "position": "Middle", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU001235", "storeId": "PORTO01", "productId": "SKU001235", "zoneId": "PORTO01_R1C1", "shelfId": "PORTO01_R1C1_S1", "aisle": "Aisle 1", "shelf": "Shelf 2", "position": "Right", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU002100", "storeId": "PORTO01", "productId": "SKU002100", "zoneId": "PORTO01_R2C1", "shelfId": "PORTO01_R2C1_S1", "aisle": "Aisle 6", "shelf": "Fridge 1", "position": "Top", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU002101", "storeId": "PORTO01", "productId": "SKU002101", "zoneId": "PORTO01_R2C2", "shelfId": "PORTO01_R2C2_S1", "aisle": "Aisle 7", "shelf": "Fridge 2", "position": "Middle", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU003001_DUP", "storeId": "PORTO01", "productId": "SKU003001", "zoneId": "PORTO01_R1C3", "shelfId": "PORTO01_R1C3_S1", "aisle": "Bakery", "shelf": "Display 1", "position": "Front", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU003002", "storeId": "PORTO01", "productId": "SKU003002", "zoneId": "PORTO01_R1C3", "shelfId": "PORTO01_R1C3_S1", "aisle": "Bakery", "shelf": "Display 2", "position": "Center", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU004100", "storeId": "PORTO01", "productId": "SKU004100", "zoneId": "PORTO01_R3C1", "shelfId": "PORTO01_R3C1_S1", "aisle": "Produce", "shelf": "Shelf A", "position": "Left", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU004101", "storeId": "PORTO01", "productId": "SKU004101", "zoneId": "PORTO01_R3C2", "shelfId": "PORTO01_R3C2_S1", "aisle": "Meat", "shelf": "Shelf 1", "position": "Middle", "updatedAt": "2026-01-26T10:00:00Z" },
+
+    { "id": "PORTO01_SKU010000", "storeId": "PORTO01", "productId": "SKU010000", "zoneId": "PORTO01_R4C4", "shelfId": "PORTO01_R4C4_S1", "aisle": "Electronics", "shelf": "Shelf 1", "position": "Center", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "PORTO01_SKU010001", "storeId": "PORTO01", "productId": "SKU010001", "zoneId": "PORTO01_R2C4", "shelfId": "PORTO01_R2C4_S1", "aisle": "Oils", "shelf": "Shelf 1", "position": "Bottom", "updatedAt": "2026-01-26T10:00:00Z" },
+
+    { "id": "COIMBRA01_SKU001234", "storeId": "COIMBRA01", "productId": "SKU001234", "zoneId": "COIMBRA01_R1C1", "shelfId": "COIMBRA01_R1C1_S1", "aisle": "Aisle 1", "shelf": "Shelf 1", "position": "Middle", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU001235", "storeId": "COIMBRA01", "productId": "SKU001235", "zoneId": "COIMBRA01_R1C1", "shelfId": "COIMBRA01_R1C1_S1", "aisle": "Aisle 1", "shelf": "Shelf 2", "position": "Right", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU002100", "storeId": "COIMBRA01", "productId": "SKU002100", "zoneId": "COIMBRA01_R2C1", "shelfId": "COIMBRA01_R2C1_S1", "aisle": "Aisle 6", "shelf": "Fridge 1", "position": "Top", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU002101", "storeId": "COIMBRA01", "productId": "SKU002101", "zoneId": "COIMBRA01_R2C2", "shelfId": "COIMBRA01_R2C2_S1", "aisle": "Aisle 7", "shelf": "Fridge 2", "position": "Middle", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU003001", "storeId": "COIMBRA01", "productId": "SKU003001", "zoneId": "COIMBRA01_R1C3", "shelfId": "COIMBRA01_R1C3_S1", "aisle": "Bakery", "shelf": "Display 1", "position": "Front", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU003002", "storeId": "COIMBRA01", "productId": "SKU003002", "zoneId": "COIMBRA01_R1C3", "shelfId": "COIMBRA01_R1C3_S1", "aisle": "Bakery", "shelf": "Display 2", "position": "Center", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU004100", "storeId": "COIMBRA01", "productId": "SKU004100", "zoneId": "COIMBRA01_R3C1", "shelfId": "COIMBRA01_R3C1_S1", "aisle": "Produce", "shelf": "Shelf A", "position": "Left", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU004101", "storeId": "COIMBRA01", "productId": "SKU004101", "zoneId": "COIMBRA01_R3C2", "shelfId": "COIMBRA01_R3C2_S1", "aisle": "Meat", "shelf": "Shelf 1", "position": "Middle", "updatedAt": "2026-01-26T10:00:00Z" },
+
+    { "id": "COIMBRA01_SKU010000", "storeId": "COIMBRA01", "productId": "SKU010000", "zoneId": "COIMBRA01_R4C4", "shelfId": "COIMBRA01_R4C4_S1", "aisle": "Electronics", "shelf": "Shelf 1", "position": "Center", "updatedAt": "2026-01-26T10:00:00Z" },
+    { "id": "COIMBRA01_SKU010001", "storeId": "COIMBRA01", "productId": "SKU010001", "zoneId": "COIMBRA01_R2C4", "shelfId": "COIMBRA01_R2C4_S1", "aisle": "Oils", "shelf": "Shelf 1", "position": "Bottom", "updatedAt": "2026-01-26T10:00:00Z" }
   ]
 }

@@ -100,7 +100,7 @@ export default function PDPProductInfoHeader({
           <Button
             mode="contained"
             onPress={() =>
-              navigation.navigate("LocateProduct", { id: product.id })
+              navigation.navigate("StoreMap", { storeId: product.id })
             }
             style={[styles.button, { backgroundColor: theme.colors.primary }]}
             labelStyle={[styles.buttonLabel, { color: theme.colors.surface }]}
