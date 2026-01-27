@@ -35,7 +35,8 @@ public sealed class ProductsController : ControllerBase
     {
         try
         {
-            var result = await _shopService.SearchProductsAsync(q, categoryId, limit, offset, cancellationToken);
+            // SfccShopService.SearchProductsAsync expects categoryId first, then query
+            var result = await _shopService.SearchProductsAsync(categoryId, q, limit, offset, cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)
