@@ -91,3 +91,42 @@ Deep linking is configured for web/mobile using `expo-linking`.
 ## CI (GitHub Actions)
 
 There is a workflow in `.github/workflows/ci.yml` (root) that runs typecheck and tests for the frontend.
+
+## Running on device / emulator (LAN)
+
+To test the mobile app against your local .NET backend from a physical device or emulators that don't share the host `localhost`, bind the backend to all interfaces and point Expo at your machine LAN IP.
+
+1. Start the backend bound to all interfaces (allows other devices on your network to reach it):
+
+```powershell
+dotnet run --urls "http://0.0.0.0:5035"
+```
+
+2. Find your machine LAN IP (Windows):
+
+```powershell
+ipconfig
+# note the IPv4 address for your active network adapter (e.g. X.X.X.X)
+```
+
+3. Create a local `.env` using `.env.example` and replace `<HOST_LAN_IP>`, or set the env var in your shell for one session.
+
+PowerShell example (replace X.X.X.X):
+
+```powershell
+$env:EXPO_PUBLIC_API_URL="http://X.X.X.X:5035"
+npx expo start --host lan
+```
+
+Or use the convenience npm script (edit `package.json` to replace `<HOST_LAN_IP>` first):
+
+```bash
+npm run start:dev:lan
+```
+
+Notes:
+
+- For Android Studio AVD, you can use `http://10.0.2.2:5035` to reach the host's `localhost`.
+- Genymotion uses `http://10.0.3.2:5035`.
+- To avoid changing URLs in code, run `adb reverse tcp:5035 tcp:5035` and then `npm run android` to map emulator localhost to host localhost.
+- Ensure Windows Firewall allows inbound TCP port `5035` on your network profile.

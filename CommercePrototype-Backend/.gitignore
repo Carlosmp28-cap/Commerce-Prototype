@@ -35,6 +35,7 @@ secrets.json
 *.pfx
 *.p12
 *.pem
+.env
 
 # Logs
 *.log
