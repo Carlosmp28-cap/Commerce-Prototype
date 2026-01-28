@@ -20,7 +20,12 @@ Add SFCC settings to `appsettings.Development.json` (or set via user-secrets / e
     "SiteId": "RefArch",
     "ClientId": "your-client-id",
     "OAuthTokenUrl": "https://account.demandware.com/dw/oauth2/access_token",
-    "InstanceName": "your-instance-name"
+        "InstanceName": "your-instance-name",
+
+        // Some sandboxes require trusted-system auth for customer operations.
+        // Prefer storing these via user-secrets or environment variables (do not commit real values).
+        "TrustedSystemLogin": "",
+        "TrustedSystemPassword": ""
   }
 }
 ```
@@ -33,6 +38,22 @@ Configuration notes:
 - `ClientId`: client id used for Shop API access (sent as `x-dw-client-id` for public Shop API calls)
 - `OAuthTokenUrl`: OAuth token endpoint (when using token-based flows)
 - `InstanceName`: optional instance name used to build absolute URLs for relative asset links
+- `TrustedSystemLogin` / `TrustedSystemPassword`: credentials used for Shop API `POST /customers/auth/trustedsystem` (required only in some sandboxes)
+
+### Recommended: use .NET User Secrets for trusted-system credentials
+
+From the `CommercePrototype-Backend` folder:
+
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "Sfcc:TrustedSystemLogin" "<your-login>"
+dotnet user-secrets set "Sfcc:TrustedSystemPassword" "<your-password>"
+```
+
+Environment variable equivalents (use `__` as a separator):
+
+- `Sfcc__TrustedSystemLogin`
+- `Sfcc__TrustedSystemPassword`
 
 Sensitive values should be stored using .NET user secrets or environment variables in development and secure configuration providers in production.
 
@@ -118,11 +139,59 @@ public async Task<IActionResult> Tree([FromQuery] string rootId = "root", [FromQ
 }
 ```
 
+For cart/basket operations (requires shopper session management):
+
+```csharp
+[ApiController]
+[Route("api/cart")]
+public class CartController : ControllerBase
+{
+    private readonly ISfccShopService _shopService;
+    private readonly ISfccAuthService _auth;
+    private readonly IShopperSessionStore _sessionStore;
+    private readonly SfccRequestContext _sfccRequestContext;
+
+    // Basket endpoints delegate to _shopService basket methods:
+    // CreateBasketAsync, GetBasketAsync, AddItemToBasketAsync,
+    // UpdateBasketItemQuantityAsync, RemoveItemFromBasketAsync, ClearBasketAsync
+
+    [HttpPost]
+    public async Task<ActionResult<BasketDto>> Create([FromBody] CreateBasketRequestDto? request, CancellationToken ct)
+    {
+        var sessionId = await EnsureSessionForBasketAsync(null, ct);
+        var basket = await _shopService.CreateBasketAsync(request?.Currency, ct);
+        _sessionStore.LinkBasketToSession(basket.BasketId, sessionId);
+        Response.Headers["X-Shopper-Session-Id"] = sessionId;
+        return CreatedAtAction(nameof(GetById), new { basketId = basket.BasketId }, basket);
+    }
+
+    [HttpPost("{basketId}/items")]
+    public async Task<ActionResult<BasketDto>> AddItem(string basketId, [FromBody] AddBasketItemRequestDto request, CancellationToken ct)
+    {
+        var sessionId = await EnsureSessionForBasketAsync(basketId, ct);
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            return Unauthorized(new { error = "UNKNOWN_OR_MISSING_SHOPPER_SESSION" });
+        }
+        var basket = await _shopService.AddItemToBasketAsync(basketId, request.ProductId, request.Quantity, ct);
+        return basket is null ? NotFound() : Ok(basket);
+    }
+
+    // ... (similar for other basket operations)
+}
+```
+
 ## Common endpoints (exposed by this backend)
 
 - `GET /api/products` — search products (maps SFCC results to `ProductSummaryDto`)
 - `GET /api/products/{id}` — product detail (`ProductDetailDto`)
 - `GET /api/categories` — category tree (`CategoryNodeDto`)
+- `POST /api/cart` — create basket (`BasketDto`)
+- `GET /api/cart/{basketId}` — get basket details
+- `POST /api/cart/{basketId}/items` — add item to basket
+- `PATCH /api/cart/{basketId}/items/{itemId}` — update item quantity
+- `DELETE /api/cart/{basketId}/items/{itemId}` — remove item
+- `DELETE /api/cart/{basketId}` — clear/delete basket
 
 These endpoints are implemented in the `Controllers/` folder and rely on `ISfccShopService`.
 

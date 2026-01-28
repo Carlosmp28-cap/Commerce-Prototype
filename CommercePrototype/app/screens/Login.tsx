@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }: Props) {
   const handleSignIn = async () => {
     setSubmitting(true);
     try {
-      await signIn({ email });
+      await signIn({ email, password });
       navigation.goBack();
     } finally {
       setSubmitting(false);
@@ -95,6 +95,16 @@ export default function LoginScreen({ navigation }: Props) {
             >
               Continue as guest
             </Button>
+
+            {!isAuthenticated ? (
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate("Register")}
+                accessibilityLabel="Create account"
+              >
+                Create account
+              </Button>
+            ) : null}
           </Card.Content>
         </Card>
 

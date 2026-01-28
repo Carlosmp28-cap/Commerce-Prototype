@@ -1,4 +1,7 @@
+using CommercePrototype_Backend.Models;
+using CommercePrototype_Backend.Models.Basket;
 using CommercePrototype_Backend.Models.Categories;
+using CommercePrototype_Backend.Models.Customers;
 using CommercePrototype_Backend.Models.Products;
 
 namespace CommercePrototype_Backend.Services.Sfcc.ShopApi;
@@ -39,4 +42,19 @@ public interface ISfccShopService
     /// <param name="cancellationToken">Request cancellation token.</param>
     /// <returns>The product detail, or <see langword="null"/> if not found.</returns>
     Task<ProductDetailDto?> GetProductAsync(string productId, CancellationToken cancellationToken = default);
+
+    Task<BasketDto> CreateBasketAsync(string? currency = null, CancellationToken cancellationToken = default);
+    Task<BasketDto?> GetBasketAsync(string basketId, CancellationToken cancellationToken = default);
+    Task<BasketDto?> AddItemToBasketAsync(string basketId, string productId, int quantity = 1, CancellationToken cancellationToken = default);
+    Task<BasketDto?> UpdateBasketItemQuantityAsync(string basketId, string itemId, int quantity, CancellationToken cancellationToken = default);
+    Task<BasketDto?> RemoveItemFromBasketAsync(string basketId, string itemId, CancellationToken cancellationToken = default);
+    Task ClearBasketAsync(string basketId, CancellationToken cancellationToken = default);
+
+    Task<CustomerProfileDto> RegisterCustomerAsync(RegisterCustomerRequestDto request, CancellationToken cancellationToken = default);
+    Task<CustomerProfileDto?> GetCustomerProfileAsync(string customerId, CancellationToken cancellationToken = default);
+    Task<CustomerProfileDto?> UpdateCustomerProfileAsync(string customerId, UpdateCustomerProfileRequestDto request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CustomerAddressDto>> GetCustomerAddressesAsync(string customerId, CancellationToken cancellationToken = default);
+    Task<CustomerAddressDto?> AddCustomerAddressAsync(string customerId, AddCustomerAddressRequestDto request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CustomerOrderDto>> GetCustomerOrdersAsync(string customerId, CancellationToken cancellationToken = default);
 }
+

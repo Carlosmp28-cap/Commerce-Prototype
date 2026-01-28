@@ -36,6 +36,19 @@ export type Product = {
     shippingType?: string;
     estimatedDays?: string;
   };
+
+  /** SFCC product type (e.g. master/variant/standard), when available. */
+  productType?: string;
+
+  /** Master product id when this is a variant, when available. */
+  masterId?: string;
+
+  /** Variant list for master products (used by PDP to force selection). */
+  variants?: Array<{
+    id: string;
+    orderable?: boolean;
+    variationValues?: Record<string, string>;
+  }>;
 };
 
 // Extend with attributes, variants and pricing models as needed.

@@ -34,6 +34,7 @@ export type RootStackParamList = {
   Cart: undefined;
   Checkout: { totalTax?: number } | undefined;
   Login: undefined;
+  Register: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -278,6 +279,10 @@ export default function AppNavigation() {
         <Stack.Screen
           name="Login"
           getComponent={() => require("../screens/Login").default}
+        />
+        <Stack.Screen
+          name="Register"
+          getComponent={() => require("../screens/Register").default}
         />
       </Stack.Navigator>
     </NavigationContainer>
