@@ -55,4 +55,19 @@ public sealed class SfccOptions
     /// Optional SFCC instance name used when building some asset/image URLs.
     /// </summary>
     public string? InstanceName { get; init; }
+
+    /// <summary>
+    /// Optional customer list id used for Data API customer registration.
+    /// </summary>
+    public string? CustomerListId { get; init; }
+
+    /// <summary>
+    /// Optional trusted system login used by Shop API <c>/customers/auth/trustedsystem</c>.
+    /// </summary>
+    public string? TrustedSystemLogin { get; init; }
+
+    /// <summary>
+    /// Optional trusted system password used by Shop API <c>/customers/auth/trustedsystem</c>.
+    /// </summary>
+    public string? TrustedSystemPassword { get; init; }
 }

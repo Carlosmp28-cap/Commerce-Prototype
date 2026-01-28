@@ -1,0 +1,219 @@
+{
+  "info": {
+    "_postman_id": "9b8f9e6a-4f9b-4d0f-8a02-72c2f6d11111",
+    "name": "CommercePrototype Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Auth - Guest Session",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const session = pm.response.headers.get('X-Shopper-Session-Id');",
+              "if (session) pm.environment.set('shopperSessionId', session);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/auth/guest"
+      }
+    },
+    {
+      "name": "Cart - Create Basket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const session = pm.response.headers.get('X-Shopper-Session-Id');",
+              "if (session) pm.environment.set('shopperSessionId', session);",
+              "const json = pm.response.json();",
+              "if (json?.basketId) pm.environment.set('basketId', json.basketId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"currency\": \"EUR\"\n}" },
+        "url": "{{baseUrl}}/api/cart"
+      }
+    },
+    {
+      "name": "Cart - Get Basket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "const first = Array.isArray(json?.items) ? json.items[0] : null;",
+              "if (first?.itemId) pm.environment.set('itemId', first.itemId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }],
+        "url": "{{baseUrl}}/api/cart/{{basketId}}"
+      }
+    },
+    {
+      "name": "Cart - Add Item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "const first = Array.isArray(json?.items) ? json.items[0] : null;",
+              "if (first?.itemId) pm.environment.set('itemId', first.itemId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1\n}"
+        },
+        "url": "{{baseUrl}}/api/cart/{{basketId}}/items"
+      }
+    },
+    {
+      "name": "Cart - Update Item Quantity",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"quantity\": 2\n}" },
+        "url": "{{baseUrl}}/api/cart/{{basketId}}/items/{{itemId}}"
+      }
+    },
+    {
+      "name": "Cart - Remove Item",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }],
+        "url": "{{baseUrl}}/api/cart/{{basketId}}/items/{{itemId}}"
+      }
+    },
+    {
+      "name": "Cart - Clear Basket",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }],
+        "url": "{{baseUrl}}/api/cart/{{basketId}}"
+      }
+    },
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"{{firstName}}\",\n  \"lastName\": \"{{lastName}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Auth - Login (returns JWT + optional merged basket)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const session = pm.response.headers.get('X-Shopper-Session-Id');",
+              "if (session) pm.environment.set('shopperSessionId', session);",
+              "const json = pm.response.json();",
+              "if (json?.jwtToken) pm.environment.set('accessToken', json.jwtToken);",
+              "if (json?.basketId) pm.environment.set('basketId', json.basketId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"basketId\": \"{{basketId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Customers - Me (JWT)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/customers/me"
+      }
+    },
+    {
+      "name": "Auth - Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.environment.unset('accessToken');",
+              "pm.environment.unset('basketId');",
+              "pm.environment.unset('itemId');",
+              "// Optional: keep shopperSessionId if you want to keep using guest baskets",
+              "// pm.environment.unset('shopperSessionId');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Shopper-Session-Id", "value": "{{shopperSessionId}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/auth/logout"
+      }
+    }
+  ]
+}

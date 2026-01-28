@@ -31,7 +31,7 @@ export function useCategories(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
@@ -39,7 +39,7 @@ export function useCategories(
       const result = await api.categories.getTree({
         rootId,
         levels,
-      });
+      }, { signal });
 
       setCategories(result);
     } catch (err) {
@@ -55,13 +55,15 @@ export function useCategories(
   };
 
   useEffect(() => {
-    fetchCategories();
+    const controller = new AbortController();
+    fetchCategories(controller.signal);
+    return () => controller.abort();
   }, [rootId, levels]);
 
   return {
     categories,
     loading,
     error,
-    refetch: fetchCategories,
+    refetch: () => fetchCategories(),
   };
 }

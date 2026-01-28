@@ -80,6 +80,12 @@ export const styles = {
     fontSize: isWeb ? 40 : isIOS ? 36 : 32,
   },
 
+  itemProductImage: {
+    width: "100%" as const,
+    height: "100%" as const,
+    borderRadius: isWeb ? 10 : isIOS ? 8 : 6,
+  },
+
   itemContent: {
     flex: 1,
     gap: isWeb ? 6 : isIOS ? 5 : 4,

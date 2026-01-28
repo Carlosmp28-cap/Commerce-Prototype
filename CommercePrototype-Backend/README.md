@@ -37,6 +37,15 @@ dotnet run
 
 Development server default: `http://localhost:5035` (adjust the launch settings or `ASPNETCORE_URLS` if needed)
 
+### SFCC trusted-system auth (customer operations)
+
+Some SFCC sandboxes require Shop API trusted-system auth for customer operations (for example, creating customers).
+If you see an error like:
+
+> Missing configuration: Sfcc:TrustedSystemLogin and Sfcc:TrustedSystemPassword are required for /customers/auth/trustedsystem
+
+configure those values via .NET User Secrets or environment variables (recommended), as described in `SFCC_INTEGRATION_GUIDE.md`.
+
 What changed recently
 
 - SFCC integration: split SFCC services into `Shared` and `ShopApi` layers and added a typed `SfccShopApiClient`.
@@ -151,6 +160,155 @@ Response:
 }
 ```
 
+### Cart / Basket
+
+The backend provides full cart/basket management through SFCC Shop API basket endpoints.
+
+**Authentication**: All basket operations require a shopper session. The backend manages sessions via the `X-Shopper-Session-Id` header (returned on basket creation or guest login).
+
+#### Create Basket
+
+```
+POST /api/cart
+```
+
+Headers:
+- `X-Shopper-Session-Id` (optional): If not provided, a guest session is created automatically
+
+Request body (optional):
+
+```json
+{
+  "currency": "EUR"
+}
+```
+
+Response (201 Created):
+
+```json
+{
+  "basketId": "634bd9b675d8d3fbdc9cb77da4",
+  "currency": "EUR",
+  "items": [],
+  "itemCount": 0,
+  "productTotal": 0.0,
+  "shippingTotal": 0.0,
+  "taxTotal": 0.0,
+  "orderTotal": 0.0
+}
+```
+
+Response headers:
+- `X-Shopper-Session-Id`: Session ID to use in subsequent requests
+
+#### Get Basket
+
+```
+GET /api/cart/{basketId}
+```
+
+Headers:
+- `X-Shopper-Session-Id`: Required
+
+Response (200 OK):
+
+```json
+{
+  "basketId": "634bd9b675d8d3fbdc9cb77da4",
+  "currency": "EUR",
+  "items": [
+    {
+      "itemId": "c7983fa9014eae7fbf9c83f43a",
+      "productId": "008884304078M",
+      "productName": "Classic Shirt",
+      "quantity": 2,
+      "price": 49.99,
+      "basePrice": 49.99,
+      "imageUrl": "https://..."
+    }
+  ],
+  "itemCount": 2,
+  "productTotal": 99.98,
+  "shippingTotal": 5.00,
+  "taxTotal": 10.50,
+  "orderTotal": 115.48
+}
+```
+
+#### Add Item to Basket
+
+```
+POST /api/cart/{basketId}/items
+```
+
+Headers:
+- `X-Shopper-Session-Id`: Required
+
+Request body:
+
+```json
+{
+  "productId": "008884304078M",
+  "quantity": 1
+}
+```
+
+Response (200 OK): Updated basket with the new item
+
+Error responses:
+- `409 Conflict`: Product out of stock
+  ```json
+  {
+    "error": "OUT_OF_STOCK",
+    "productId": "008884304078M",
+    "requested": 10,
+    "available": 5
+  }
+  ```
+
+#### Update Item Quantity
+
+```
+PATCH /api/cart/{basketId}/items/{itemId}
+```
+
+Headers:
+- `X-Shopper-Session-Id`: Required
+
+Request body:
+
+```json
+{
+  "quantity": 3
+}
+```
+
+Note: Setting `quantity` to 0 removes the item from the basket.
+
+Response (200 OK): Updated basket
+
+#### Remove Item
+
+```
+DELETE /api/cart/{basketId}/items/{itemId}
+```
+
+Headers:
+- `X-Shopper-Session-Id`: Required
+
+Response (200 OK): Updated basket after removal
+
+#### Clear Basket
+
+```
+DELETE /api/cart/{basketId}
+```
+
+Headers:
+- `X-Shopper-Session-Id`: Required
+
+Response (204 No Content)
+
 ## SFCC Integration
 
 This backend integrates with SFCC Shop API using:
@@ -174,15 +332,16 @@ For authenticated operations (cart, orders, customer data), the backend can be e
 
 ```
 CommercePrototype-Backend/
-├── Controllers/                      # Web API controllers (Products, Categories, ...)
+├── Controllers/                      # Web API controllers (Products, Categories, Cart, ...)
 ├── Models/
 │   ├── Categories/                   # Category DTOs
-│   └── Products/                     # Product DTOs
+│   ├── Products/                     # Product DTOs
+│   └── Basket/                       # Basket/Cart DTOs (BasketDto, BasketItemDto, CartRequestsDto)
 ├── Options/                          # Typed configuration (SfccOptions)
 ├── Services/
 │   ├── Sfcc/
 │   │   ├── Shared/                   # SfccApiClientBase, auth services, shared helpers
-│   │   ├── ShopApi/                   # Sfcc shop API client, SfccShopService mapping layer
+│   │   ├── ShopApi/                   # Sfcc shop API client, SfccShopService mapping layer (includes basket operations)
   │   └── DataApi/                    # placeholder for future Data API client
 │   └── Json/                         # JsonElement helper extensions
 ├── Properties/

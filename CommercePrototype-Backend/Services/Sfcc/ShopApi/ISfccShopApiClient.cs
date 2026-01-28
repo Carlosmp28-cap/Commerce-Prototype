@@ -29,6 +29,16 @@ public interface ISfccShopApiClient
     Task<T?> PutAsync<T>(string endpoint, object? payload = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Issues a PATCH request and deserializes the JSON response.
+    /// </summary>
+    Task<T?> PatchAsync<T>(string endpoint, object? payload = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Issues a DELETE request.
+    /// </summary>
+    Task<T?> DeleteAsync<T>(string endpoint, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Issues a DELETE request.
     /// </summary>
     Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default);

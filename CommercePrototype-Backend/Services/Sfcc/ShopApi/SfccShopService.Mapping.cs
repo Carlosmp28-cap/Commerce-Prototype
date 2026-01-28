@@ -62,8 +62,12 @@ public sealed partial class SfccShopService
         var name = node.GetPropertyOrDefault("name") ?? node.GetPropertyOrDefault("product_name") ?? id;
         var categoryId = node.GetPropertyOrDefault("primary_category_id");
         var price = node.GetNestedDecimalOrDefault("price", "value")
-                    ?? node.GetDecimalOrDefault("price")
-                    ?? 0m;
+                ?? node.GetDecimalOrDefault("price")
+                ?? node.GetNestedDecimalOrDefault("price_min", "value")
+                ?? node.GetDecimalOrDefault("price_min")
+                ?? node.GetNestedDecimalOrDefault("price_max", "value")
+                ?? node.GetDecimalOrDefault("price_max")
+                ?? 0m;
         var description = node.GetPropertyOrDefault("long_description") ?? node.GetPropertyOrDefault("short_description");
 
         // Inventory shapes differ per SFCC configuration; keep a safe default (0).
@@ -92,6 +96,59 @@ public sealed partial class SfccShopService
         var shippingType = node.GetNestedStringOrDefault("c_shipping", "type") ?? node.GetPropertyOrDefault("shipping_type");
         var shippingEstimate = node.GetNestedStringOrDefault("c_shipping", "estimatedDays") ?? node.GetPropertyOrDefault("shipping_estimate");
 
+        var productType = node.GetPropertyOrDefault("type") ?? node.GetPropertyOrDefault("product_type");
+
+        string? masterId = null;
+        if (TryGetMasterProductId(node, out var resolvedMaster))
+        {
+            masterId = resolvedMaster;
+        }
+
+        List<ProductVariantDto>? variants = null;
+        if (node.TryGetProperty("variants", out var variantsNode) && variantsNode.ValueKind == JsonValueKind.Array)
+        {
+            variants = new List<ProductVariantDto>();
+            foreach (var v in variantsNode.EnumerateArray())
+            {
+                if (v.ValueKind != JsonValueKind.Object) continue;
+
+                var vid = v.GetPropertyOrDefault("product_id") ?? v.GetPropertyOrDefault("id");
+                if (string.IsNullOrWhiteSpace(vid)) continue;
+
+                bool? orderable = null;
+                if (v.TryGetProperty("orderable", out var orderableNode) && (orderableNode.ValueKind == JsonValueKind.True || orderableNode.ValueKind == JsonValueKind.False))
+                {
+                    orderable = orderableNode.GetBoolean();
+                }
+
+                Dictionary<string, string>? variationValues = null;
+                if (v.TryGetProperty("variation_values", out var vv) && vv.ValueKind == JsonValueKind.Object)
+                {
+                    variationValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var prop in vv.EnumerateObject())
+                    {
+                        if (prop.Value.ValueKind == JsonValueKind.String)
+                        {
+                            var s = prop.Value.GetString();
+                            if (!string.IsNullOrWhiteSpace(s))
+                            {
+                                variationValues[prop.Name] = s;
+                            }
+                        }
+                    }
+
+                    if (variationValues.Count == 0)
+                    {
+                        variationValues = null;
+                    }
+                }
+
+                variants.Add(new ProductVariantDto(vid, orderable, variationValues));
+            }
+
+            if (variants.Count == 0) variants = null;
+        }
+
         return new ProductDetailDto(
             id,
             name,
@@ -105,7 +162,10 @@ public sealed partial class SfccShopService
             reviewCount,
             features,
             shippingType,
-            shippingEstimate
+            shippingEstimate,
+            productType,
+            masterId,
+            variants
         );
     }
 }
