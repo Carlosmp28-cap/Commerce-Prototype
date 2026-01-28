@@ -28,7 +28,7 @@ Prerequisites:
 - .NET 10 SDK
 - SFCC sandbox access (Shop API / OCAPI credentials)
 
-Copy your SFCC configuration into `appsettings.Development.json` (see `SFCC_INTEGRATION_GUIDE.md`) and run:
+Copy your SFCC configuration into a local `.env` file (copy the provided `.env.example` and fill values — do NOT commit `.env`). You can also set values via environment variables or .NET user-secrets. See `SFCC_INTEGRATION_GUIDE.md` for details. Then run:
 
 ```bash
 dotnet restore
@@ -52,6 +52,20 @@ What changed recently
 - Models reorganized into `Models/Categories/` and `Models/Products/`.
 - Interfaces separated into individual files (e.g. `ISfccAuthService.cs`, `ISfccShopApiClient.cs`).
 - OpenAPI XML documentation enabled and controller/DTO comments added for better API docs.
+
+## Observability (Sentry + OpenTelemetry)
+
+The backend now ships traces and application logs to Sentry using the Sentry .NET SDK together with OpenTelemetry instrumentation.
+
+- **What's enabled:** automatic ASP.NET Core and `HttpClient` instrumentation; OpenTelemetry activities are forwarded to Sentry as spans. Application logs are forwarded to Sentry via the logging integration.
+- **Configuration:** set environment variables (or put them in a local `.env` copied from `.env.example`):
+  - `SENTRY_DSN` — your Sentry project DSN (required to enable Sentry)
+  - `SENTRY_TRACES_SAMPLE_RATE` — optional sampling rate for traces (0.0–1.0). In Development the default is `1.0` if not set.
+  - `SENTRY_DEBUG` — set to `1` to make the app send a one-off startup test message and enable extra SDK debug output.
+- **No additional OTLP/collector required:** traces are forwarded to Sentry directly; OTLP exporters were removed to simplify local setup.
+- **Disabling:** unset `SENTRY_DSN` to disable Sentry in local development.
+
+See `Program.cs` for the exact SDK initialization and the OpenTelemetry wiring.
 
 ## API Endpoints
 
@@ -173,6 +187,7 @@ POST /api/cart
 ```
 
 Headers:
+
 - `X-Shopper-Session-Id` (optional): If not provided, a guest session is created automatically
 
 Request body (optional):
@@ -199,6 +214,7 @@ Response (201 Created):
 ```
 
 Response headers:
+
 - `X-Shopper-Session-Id`: Session ID to use in subsequent requests
 
 #### Get Basket
@@ -208,6 +224,7 @@ GET /api/cart/{basketId}
 ```
 
 Headers:
+
 - `X-Shopper-Session-Id`: Required
 
 Response (200 OK):
@@ -229,8 +246,8 @@ Response (200 OK):
   ],
   "itemCount": 2,
   "productTotal": 99.98,
-  "shippingTotal": 5.00,
-  "taxTotal": 10.50,
+  "shippingTotal": 5.0,
+  "taxTotal": 10.5,
   "orderTotal": 115.48
 }
 ```
@@ -242,6 +259,7 @@ POST /api/cart/{basketId}/items
 ```
 
 Headers:
+
 - `X-Shopper-Session-Id`: Required
 
 Request body:
@@ -256,6 +274,7 @@ Request body:
 Response (200 OK): Updated basket with the new item
 
 Error responses:
+
 - `409 Conflict`: Product out of stock
   ```json
   {
@@ -273,6 +292,7 @@ PATCH /api/cart/{basketId}/items/{itemId}
 ```
 
 Headers:
+
 - `X-Shopper-Session-Id`: Required
 
 Request body:
@@ -294,6 +314,7 @@ DELETE /api/cart/{basketId}/items/{itemId}
 ```
 
 Headers:
+
 - `X-Shopper-Session-Id`: Required
 
 Response (200 OK): Updated basket after removal
@@ -305,6 +326,7 @@ DELETE /api/cart/{basketId}
 ```
 
 Headers:
+
 - `X-Shopper-Session-Id`: Required
 
 Response (204 No Content)
@@ -347,7 +369,7 @@ CommercePrototype-Backend/
 ├── Properties/
 │   └── launchSettings.json
 ├── appsettings.json
-├── appsettings.Development.json
+├── .env.example        # copy to `.env` and fill values for local development
 ├── Program.cs
 ├── CommercePrototype-Backend.csproj
 └── README.md

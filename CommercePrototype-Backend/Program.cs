@@ -8,7 +8,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CommercePrototype_Backend;
-
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Extensions.Hosting;
+using Sentry;
+using Sentry.OpenTelemetry;
+using Microsoft.Extensions.Logging;
 // Load a local `.env` file into environment variables early so local secrets
 // (ClientId, Api keys, etc.) can be provided without committing them to
 // appsettings files. The backend configuration will then pick them up via
@@ -16,6 +23,29 @@ using CommercePrototype_Backend;
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Initialize Sentry (reads DSN from `SENTRY_DSN` env var or configuration)
+// Use `SENTRY_TRACES_SAMPLE_RATE` to control sampling or set `TracesSampleRate` below.
+builder.WebHost.UseSentry(o =>
+{
+    // Prefer explicit config, fall back to environment variable
+    o.Dsn = builder.Configuration["SENTRY_DSN"] ?? Environment.GetEnvironmentVariable("SENTRY_DSN");
+    // Default to no sampling in production unless explicitly set; use 1.0 for dev.
+    if (double.TryParse(builder.Configuration["SENTRY_TRACES_SAMPLE_RATE"], out var sampleRate))
+    {
+        o.TracesSampleRate = sampleRate;
+    }
+    else if (builder.Environment.IsDevelopment())
+    {
+        o.TracesSampleRate = 1.0;
+    }
+
+    o.Environment = builder.Environment.EnvironmentName;
+    o.AttachStacktrace = true;
+});
+
+// Forward application logs to Sentry (optional but useful for correlating errors)
+builder.Logging.AddSentry();
 
 // Add services to the container.
 
@@ -59,6 +89,30 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddMemoryCache();
+
+// OpenTelemetry: Traces + Metrics
+// Instrument ASP.NET Core and HttpClient and forward activities to Sentry.
+// OpenTelemetry: Traces + Metrics
+// Create and register TracerProvider and MeterProvider directly so we don't
+// rely on the IServiceCollection extension methods (which can vary by package).
+builder.Services.AddSingleton<OpenTelemetry.Trace.TracerProvider>(sp =>
+{
+    return Sdk.CreateTracerProviderBuilder()
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("CommercePrototypeBackend"))
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        // Forward OpenTelemetry activities to Sentry as spans
+        .AddSentry()
+        .Build();
+});
+
+builder.Services.AddSingleton<OpenTelemetry.Metrics.MeterProvider>(sp =>
+{
+    return Sdk.CreateMeterProviderBuilder()
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("CommercePrototypeBackend"))
+        .AddAspNetCoreInstrumentation()
+        .Build();
+});
 
 var redisConnectionString = builder.Configuration.GetValue<string>("SessionStore:RedisConnectionString");
 if (!string.IsNullOrWhiteSpace(redisConnectionString))
@@ -150,5 +204,33 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 
 app.MapControllers();
+
+// On application start, log whether Sentry is enabled and optionally send a
+// one-off test message when `SENTRY_DEBUG=1` to validate connectivity.
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    try
+    {
+        if (SentrySdk.IsEnabled)
+        {
+            logger.LogInformation("Sentry SDK is enabled.");
+            var debugFlag = builder.Configuration["SENTRY_DEBUG"] ?? Environment.GetEnvironmentVariable("SENTRY_DEBUG");
+            if (debugFlag == "1")
+            {
+                logger.LogInformation("SENTRY_DEBUG=1, sending a one-off Sentry test message.");
+                SentrySdk.CaptureMessage("Sentry startup test message - debug");
+            }
+        }
+        else
+        {
+            logger.LogWarning("Sentry SDK is not enabled. Ensure SENTRY_DSN is set.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error while performing Sentry startup check.");
+    }
+});
 
 app.Run();

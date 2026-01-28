@@ -55,5 +55,5 @@ dotnet test
 
 Notes
 
-- SFCC configuration is stored in `CommercePrototype-Backend/appsettings.Development.json`. See the backend README for details.
+- SFCC configuration is stored in `CommercePrototype-Backend/.env` (copy from `.env.example` and fill values). See the backend README for details.
 - The repository contains focused READMEs for frontend and backend: `CommercePrototype/README.md` and `CommercePrototype-Backend/README.md`.
