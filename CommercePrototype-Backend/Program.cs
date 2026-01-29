@@ -115,6 +115,10 @@ builder.Services.AddHttpClient<ISfccAuthService, SfccAuthService>(client => {
 builder.Services.AddHttpClient<ISfccShopApiClient, SfccShopApiClient>(client => {
     if (!string.IsNullOrEmpty(sfccApiBase)) client.BaseAddress = new Uri(sfccApiBase);
 });
+// Register SFCC Data API client (needed by SfccShopService)
+builder.Services.AddHttpClient<ISfccDataApiClient, SfccDataApiClient>(client => {
+    if (!string.IsNullOrEmpty(sfccApiBase)) client.BaseAddress = new Uri(sfccApiBase);
+});
 builder.Services.AddScoped<ISfccShopService, SfccShopService>();
 // Register zone and shelf services (use HttpClient-based implementations)
 builder.Services.AddHttpClient<IZoneService, ZoneService>(client => {
