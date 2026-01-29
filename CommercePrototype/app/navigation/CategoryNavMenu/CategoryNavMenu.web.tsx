@@ -126,23 +126,20 @@ export default function CategoryNavMenuWeb({
                 onPress={() => openForParent(parent.id)}
                 style={[
                   styles.webTopItem,
-                  {
-                    backgroundColor: isActive
-                      ? paperTheme.colors.primary
-                      : paperTheme.colors.surface,
-                    borderColor: paperTheme.colors.outline ?? "#00000022",
-                  },
+                  isActive ? styles.webTopItemActive : null,
                 ]}
               >
                 <Text
                   style={{
                     color: isActive
-                      ? paperTheme.colors.onPrimary
+                      ? paperTheme.colors.primary
                       : paperTheme.colors.onSurface,
-                    fontWeight: 700,
                   }}
                 >
-                  {parent.name} <Text aria-hidden>{"▾"}</Text>
+                  <Text style={styles.webTopItemText}>{parent.name}</Text>{" "}
+                  <Text aria-hidden style={{ opacity: 0.7 }}>
+                    {"▾"}
+                  </Text>
                 </Text>
               </Pressable>
             );

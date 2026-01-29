@@ -398,7 +398,10 @@ export function useCart() {
     0,
   );
 
-  const addItem = async (product: Product, quantity: number) => {
+  const addItem = async (
+    product: Product,
+    quantity: number,
+  ): Promise<boolean> => {
     if (quantity <= 0) return;
 
     if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") {
@@ -409,7 +412,7 @@ export function useCart() {
     }
 
     const basketId = await ensureBasketId();
-    if (!basketId) return;
+    if (!basketId) return false;
 
     try {
       const basket = await api.cart.addItem(basketId, {
@@ -418,6 +421,7 @@ export function useCart() {
       });
       dispatch({ type: "SET_BASKET", basket });
       syncSessionFromApi();
+      return true;
     } catch (error) {
       if (
         error instanceof Error &&
@@ -431,23 +435,24 @@ export function useCart() {
 
         try {
           const newBasketId = await ensureBasketId();
-          if (!newBasketId) return;
+          if (!newBasketId) return false;
           const basket = await api.cart.addItem(newBasketId, {
             productId: product.id,
             quantity,
           });
           dispatch({ type: "SET_BASKET", basket });
           syncSessionFromApi();
-          return;
+          return true;
         } catch (retryError) {
           console.warn(
             "Failed to add item after session recovery:",
             retryError,
           );
-          return;
+          return false;
         }
       }
       console.warn("Failed to add item to basket:", error);
+      return false;
     }
   };
 

@@ -105,15 +105,16 @@ export default function PDPScreen({ navigation, route }: Props) {
       product.variants && product.variants.length > 0,
     );
     if (hasVariants && !selectedVariantId) {
-      alert("Please select a variant (e.g. size/color) before adding to cart.");
-      return;
+      throw new Error(
+        "Please select a variant (e.g. size/color) before adding to cart.",
+      );
     }
 
     const productForCart: Product = selectedVariantId
       ? { ...product, id: selectedVariantId }
       : product;
 
-    addItem(productForCart, quantity);
+    return addItem(productForCart, quantity);
   };
 
   // SEO: Meta tags dinâmicas para cada produto

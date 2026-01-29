@@ -49,8 +49,7 @@ describe("PDP - cart", () => {
       scale: 1,
       fontScale: 1,
     });
-    // PDPQuantitySelector uses alert()
-    (global as unknown as { alert?: jest.Mock }).alert = jest.fn();
+    // previous implementation used alert(); now we show a Snackbar instead
   });
 
   afterEach(() => {
@@ -81,9 +80,8 @@ describe("PDP - cart", () => {
       expect.objectContaining({ id: product!.id }),
       1,
     );
-    expect(
-      (global as unknown as { alert?: jest.Mock }).alert,
-    ).toHaveBeenCalled();
+    // Snackbar with success message should be visible
+    expect(getByText(/added to cart/)).toBeTruthy();
   });
 
   test("can select quantity and add to cart", async () => {
