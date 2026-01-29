@@ -1,8 +1,9 @@
 // ProductHelpers operate on either backend `Product` or test fixtures.
 import type { Product } from "../../models/Product";
-type CatalogProduct = any;
-
-export type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
+import type { SortOption } from "../../types";
+import { SORT_OPTIONS } from "../../types";
+// CatalogProduct previously used in fixtures; prefer Product-like type instead of `any`.
+type CatalogProduct = Product | { name: string; price: number };
 
 /**
  * Sort products based on the selected option
@@ -30,9 +31,4 @@ export const sortProducts = <T extends ProductLike>(
   }
 };
 
-export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "name-asc", label: "Name: A-Z" },
-  { value: "name-desc", label: "Name: Z-A" },
-  { value: "price-asc", label: "Price: Low to High" },
-  { value: "price-desc", label: "Price: High to Low" },
-];
+// Use centralized SORT_OPTIONS from app/types

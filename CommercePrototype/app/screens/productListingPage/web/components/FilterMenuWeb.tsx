@@ -44,7 +44,7 @@ export function FilterMenuWeb({
       contentStyle={styles.menuContent}
       statusBarHeight={60}
     >
-      {flat.map((category: any, index: number) => (
+      {flat.map((category: { id: string; name: string }, index: number) => (
         <View key={category.id}>
           <Menu.Item
             onPress={() => handleFilterSelect(category.id)}

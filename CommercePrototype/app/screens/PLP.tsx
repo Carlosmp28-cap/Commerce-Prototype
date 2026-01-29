@@ -22,10 +22,8 @@ import { useProductsPaginated } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useCategories";
 import type { Product } from "../models/Product";
 import { createStyles } from "./PLP.styles";
-import {
-  sortProducts,
-  type SortOption,
-} from "../scripts/helpers/productHelpers";
+import { sortProducts } from "../scripts/helpers/productHelpers";
+import type { SortOption } from "../types";
 import EmptyState from "./productListingPage/components/EmptyState";
 import Footer from "../components/Footer";
 import Text from "../components/Text";

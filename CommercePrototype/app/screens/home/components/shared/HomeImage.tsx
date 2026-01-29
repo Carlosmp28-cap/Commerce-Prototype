@@ -1,9 +1,15 @@
 import React from "react";
-import { Image, Platform, StyleProp, type ImageStyle } from "react-native";
+import {
+  Image,
+  Platform,
+  StyleProp,
+  type ImageStyle,
+  type ImageSourcePropType,
+} from "react-native";
 
 type Props = {
   /** Image source (kept broad to support `expo-image` on web). */
-  source: any;
+  source: ImageSourcePropType;
   /** Alt text for web (also used as an accessibility label). */
   alt: string;
   style?: StyleProp<ImageStyle>;
@@ -18,8 +24,14 @@ type Props = {
  */
 export function HomeImage({ source, alt, style, priority }: Props) {
   // Avoid importing expo-image in Jest (ESM) by requiring it only on web.
-  const WebImage: any =
-    Platform.OS === "web" ? (require("expo-image") as any).Image : null;
+  const WebImage =
+    Platform.OS === "web"
+      ? (
+          require("expo-image") as unknown as {
+            Image: React.ComponentType<any>;
+          }
+        ).Image
+      : null;
 
   if (Platform.OS === "web" && WebImage) {
     return (

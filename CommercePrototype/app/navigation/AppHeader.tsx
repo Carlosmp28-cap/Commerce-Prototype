@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { IconButton, useTheme as usePaperTheme } from "react-native-paper";
 
-import type { RootStackParamList } from "./index";
+import type { RootStackParamList } from "../types";
 import { HeaderActions, HeaderHomeButton } from "./HeaderParts";
 import type { CategoryNodeDto } from "../models";
 import CategoryNavMenu from "./CategoryNavMenu/index";
@@ -46,12 +46,12 @@ export default function AppHeader(props: Props) {
         </View>
 
         <View style={styles.center}>
-          <HeaderHomeButton navigation={navigation as any} />
+          <HeaderHomeButton navigation={navigation} />
         </View>
 
         <View style={styles.right}>
           <HeaderActions
-            navigation={navigation as any}
+            navigation={navigation}
             routeName={route.name as keyof RootStackParamList}
           />
         </View>
@@ -70,7 +70,7 @@ export default function AppHeader(props: Props) {
           <CategoryNavMenu
             categories={props.mainCategories}
             onSelectCategory={(categoryId) =>
-              (navigation as any).navigate("PLP", { q: categoryId })
+              navigation.navigate("PLP", { q: categoryId })
             }
           />
         </View>

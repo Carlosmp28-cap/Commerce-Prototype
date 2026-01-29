@@ -1,7 +1,5 @@
-import {
-  sortProducts,
-  type SortOption,
-} from "../app/scripts/helpers/productHelpers";
+import { sortProducts } from "../app/scripts/helpers/productHelpers";
+import type { SortOption } from "../app/types";
 import { getProductsByQuery } from "./fixtures/catalogMock";
 import type { CatalogProduct } from "./fixtures/catalogMock";
 

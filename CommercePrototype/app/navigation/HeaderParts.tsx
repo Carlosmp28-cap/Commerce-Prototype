@@ -8,9 +8,14 @@ import {
   Button,
   Text,
 } from "react-native-paper";
+import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 
-export function HeaderHomeButton({ navigation }: { navigation: any }) {
-  const paperTheme = {} as any; // placeholder for theme usage in index
+export function HeaderHomeButton({
+  navigation,
+}: {
+  navigation: NavigationProp<ParamListBase> | Record<string, any>;
+}) {
+  // Intentionally lightweight typing for navigation shape used by header.
   // We will rely on the caller to style via the shared styles in index.tsx
   const { width } = useWindowDimensions();
   const isNative = Platform.OS !== "web";
@@ -21,21 +26,24 @@ export function HeaderHomeButton({ navigation }: { navigation: any }) {
       accessibilityRole="button"
       accessibilityLabel="Go to Home"
       onPress={() => {
-        const nav = navigation as any;
-        if (typeof nav.reset === "function") {
-          try {
-            nav.reset({ index: 0, routes: [{ name: "Home" }] });
-            return;
-          } catch {}
-        }
-        if (typeof nav.popToTop === "function") {
-          try {
-            nav.popToTop();
-            return;
-          } catch {}
-        }
         try {
-          nav.navigate("Home");
+          if (typeof navigation.reset === "function") {
+            navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+            return;
+          }
+        } catch {}
+
+        try {
+          if (typeof (navigation as any).popToTop === "function") {
+            (navigation as any).popToTop();
+            return;
+          }
+        } catch {}
+
+        try {
+          if (typeof navigation.navigate === "function") {
+            navigation.navigate("Home");
+          }
         } catch {
           // ignore
         }
@@ -80,7 +88,7 @@ export function HeaderActions({
   navigation,
   routeName,
 }: {
-  navigation: any;
+  navigation: NavigationProp<ParamListBase> | Record<string, any>;
   routeName: string;
 }) {
   const { width } = useWindowDimensions();

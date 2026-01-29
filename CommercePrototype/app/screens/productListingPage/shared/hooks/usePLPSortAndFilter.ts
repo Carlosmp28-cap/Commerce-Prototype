@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SortOption } from "../../../../scripts/helpers/productHelpers";
+import type { SortOption } from "../../../../types";
 
 export function usePLPSortAndFilter(initialSort: SortOption) {
   const [sortVisible, setSortVisible] = useState(false);

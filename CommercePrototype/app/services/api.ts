@@ -3,6 +3,7 @@ import axios, {
   type AxiosError,
   type AxiosRequestConfig,
 } from "axios";
+import { logger } from "../utils/logger";
 import type {
   ProductSearchResultDto,
   ProductDetailDto,
@@ -164,9 +165,7 @@ apiClient.interceptors.response.use(
           return apiClient.request(config);
         }
       } catch (refreshError) {
-        if (SHOULD_LOG_ERRORS) {
-          console.error("Token refresh failed:", refreshError);
-        }
+        logger.error("Token refresh failed:", refreshError);
       }
     }
 
@@ -187,23 +186,17 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error
       const apiError = error.response.data;
-      if (SHOULD_LOG_ERRORS) {
-        console.error("API Error:", apiError);
-      }
+      logger.error("API Error:", apiError);
       return Promise.reject(new Error(apiError.error || "An error occurred"));
     } else if (error.request) {
       // Request made but no response
-      if (SHOULD_LOG_ERRORS) {
-        console.error("Network Error:", error.message);
-      }
+      logger.error("Network Error:", error.message);
       return Promise.reject(
         new Error("Network error. Please check your connection."),
       );
     } else {
       // Something else happened
-      if (SHOULD_LOG_ERRORS) {
-        console.error("Request Error:", error.message);
-      }
+      logger.error("Request Error:", error.message);
       return Promise.reject(new Error(error.message));
     }
   },

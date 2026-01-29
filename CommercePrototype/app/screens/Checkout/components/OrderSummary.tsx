@@ -1,25 +1,13 @@
-import { View } from "react-native";
+import { View, type ImageSourcePropType } from "react-native";
 import { Card, Divider, Paragraph, Text } from "react-native-paper";
 import styles from "../styles";
+import type { CartItem } from "../../../types";
+
+// Compatibility alias for older tests/components importing `CartLine`
+export type CartLine = CartItem;
 
 // Matches your current cart item structure:
 // { product: { id, name, price, ... }, quantity: number }
-export type CartLine = {
-  product: {
-    id: string | number;
-    name: string;
-    price: number;
-    // optional fields we won't render here, but exist:
-    image?: any;
-    images?: any[];
-    description?: string;
-    categoryId?: string;
-    rating?: number;
-    reviewCount?: number;
-    shipping?: { shippingType?: string; estimatedDays?: string };
-  };
-  quantity: number;
-};
 
 export default function OrderSummary({
   items,
@@ -28,7 +16,7 @@ export default function OrderSummary({
   total,
   totalTax,
 }: {
-  items: CartLine[];
+  items: CartItem[];
   subtotal: number;
   shippingCost: number;
   total: number;
@@ -38,7 +26,7 @@ export default function OrderSummary({
   try {
     console.log(
       "🧾 OrderSummary items sample:",
-      JSON.stringify(items.slice(0, 3), null, 2)
+      JSON.stringify(items.slice(0, 3), null, 2),
     );
   } catch {}
 

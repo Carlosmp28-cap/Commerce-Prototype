@@ -6,7 +6,7 @@ import {
 } from "react-native";
 // The UI accepts backend-backed `Product` model; legacy `CatalogProduct` is
 // no longer used at runtime. Keep types broad enough for tests/fixtures.
-import type { Product } from "../../../models/Product";
+import type { Product } from "../../../types";
 import { useCategories, findCategoryById } from "../../../hooks/useCategories";
 import { useTheme } from "../../../themes";
 import Card from "../../../components/Card";
@@ -21,7 +21,7 @@ import { styles } from "./ProductCard.styles";
  * @property {any} containerStyle - Style object applied to the card container
  */
 type ProductCardProps = {
-  product: Product | any;
+  product: Product;
   onPress: () => void;
   imageStyle: ImageStyle;
   containerStyle: ViewStyle;

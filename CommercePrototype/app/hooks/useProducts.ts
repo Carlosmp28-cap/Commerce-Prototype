@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../services/api";
+import { logger } from "../utils/logger";
 import type { Product } from "../models/Product";
 import { mapProductSummary, mapProductDetail } from "../utils/productMapper";
 
@@ -63,9 +64,7 @@ export function useProducts(
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch products";
       setError(errorMessage);
-      if (typeof process !== "undefined" && process.env?.NODE_ENV !== "test") {
-        console.error("Error fetching products:", err);
-      }
+      logger.error("Error fetching products:", err);
     } finally {
       setLoading(false);
     }
@@ -147,12 +146,7 @@ export function useProductsPaginated(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch products";
         setError(errorMessage);
-        if (
-          typeof process !== "undefined" &&
-          process.env?.NODE_ENV !== "test"
-        ) {
-          console.error("Error fetching products:", err);
-        }
+        logger.error("Error fetching products:", err);
       } finally {
         setLoading(false);
         setIsLoadingMore(false);
@@ -234,9 +228,7 @@ export function useProductDetail(productId: string): UseProductDetailResult {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch product";
       setError(errorMessage);
-      if (typeof process !== "undefined" && process.env?.NODE_ENV !== "test") {
-        console.error("Error fetching product:", err);
-      }
+      logger.error("Error fetching product:", err);
     } finally {
       setLoading(false);
     }
