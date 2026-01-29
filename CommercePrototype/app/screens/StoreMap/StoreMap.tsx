@@ -130,6 +130,7 @@ export default function StoreMap({
   const [startY, setStartY] = useState<string>("0");
   const [routePath, setRoutePath] = useState<{ x: number; y: number }[]>([]);
   const [routeLoading, setRouteLoading] = useState<boolean>(false);
+  const [showDebugOverlay, setShowDebugOverlay] = useState<boolean>(false);
 
   // Auto-load product->shelf mappings when a zone is selected (if not already loaded)
   useEffect(() => {
@@ -330,6 +331,68 @@ export default function StoreMap({
     startIsIntX && startIsIntY
       ? { x: parsedStartX + 0.5 * resNum, y: parsedStartY + 0.5 * resNum }
       : { x: parsedStartX, y: parsedStartY };
+
+  // Client-side grid dimensions and helper for debug overlay
+  const gridCols = Math.max(1, Math.floor(storeW));
+  const gridRows = Math.max(1, Math.floor(storeH));
+  const gridResolution = 1;
+  const isCellBlockedLocal = (sx: number, sy: number) => {
+    for (const s of shelves) {
+      const origX0 = s.x - s.width / 2.0;
+      const origY0 = s.y - s.height / 2.0;
+      const origX1 = s.x + s.width / 2.0;
+      const origY1 = s.y + s.height / 2.0;
+      let shelfX0 = origX0;
+      let shelfY0 = origY0;
+      let shelfX1 = origX1;
+      let shelfY1 = origY1;
+      const shrink = 0.1;
+      if (shelfX1 - shelfX0 > 2.0 * shrink) {
+        shelfX0 += shrink;
+        shelfX1 -= shrink;
+      }
+      if (shelfY1 - shelfY0 > 2.0 * shrink) {
+        shelfY0 += shrink;
+        shelfY1 -= shrink;
+      }
+      const gx0Shelf = Math.max(
+        0,
+        Math.min(gridCols - 1, Math.floor(shelfX0 / gridResolution)),
+      );
+      const gy0Shelf = Math.max(
+        0,
+        Math.min(gridRows - 1, Math.floor(shelfY0 / gridResolution)),
+      );
+      const gx1Shelf = Math.max(
+        0,
+        Math.min(gridCols - 1, Math.floor(shelfX1 / gridResolution)),
+      );
+      const gy1Shelf = Math.max(
+        0,
+        Math.min(gridRows - 1, Math.floor(shelfY1 / gridResolution)),
+      );
+      if (sx >= gx0Shelf && sx <= gx1Shelf && sy >= gy0Shelf && sy <= gy1Shelf)
+        return true;
+    }
+    return false;
+  };
+
+  const clientGrid = Array.from({ length: gridCols }, () =>
+    Array(gridRows).fill(true),
+  );
+  for (let gx = 0; gx < gridCols; gx++) {
+    for (let gy = 0; gy < gridRows; gy++) {
+      clientGrid[gx][gy] = !isCellBlockedLocal(gx, gy);
+    }
+  }
+  const startIdxX = Math.max(
+    0,
+    Math.min(gridCols - 1, Math.floor(startMapped.x / gridResolution)),
+  );
+  const startIdxY = Math.max(
+    0,
+    Math.min(gridRows - 1, Math.floor(startMapped.y / gridResolution)),
+  );
 
   // Determine which products to show in the dropdown:
   // - Use `productsAll` if available
@@ -671,30 +734,200 @@ export default function StoreMap({
                 const startPosX = startIsIntXLocal ? sxNum + 0.5 : sxNum;
                 const startPosY = startIsIntYLocal ? syNum + 0.5 : syNum;
 
-                const body = {
+                // Helper: determine whether a grid cell (sx,sy) is blocked by any shelf
+                const gridResolution = 1;
+                const cols = Math.max(1, Math.floor(storeW));
+                const rows = Math.max(1, Math.floor(storeH));
+                const isCellBlocked = (sx: number, sy: number) => {
+                  for (const s of shelves) {
+                    // shelf positions in data are center-based (x,y), width/height in meters
+                    const origX0 = s.x - s.width / 2.0;
+                    const origY0 = s.y - s.height / 2.0;
+                    const origX1 = s.x + s.width / 2.0;
+                    const origY1 = s.y + s.height / 2.0;
+                    let shelfX0 = origX0;
+                    let shelfY0 = origY0;
+                    let shelfX1 = origX1;
+                    let shelfY1 = origY1;
+                    const shrink = 0.1;
+                    if (shelfX1 - shelfX0 > 2.0 * shrink) {
+                      shelfX0 += shrink;
+                      shelfX1 -= shrink;
+                    }
+                    if (shelfY1 - shelfY0 > 2.0 * shrink) {
+                      shelfY0 += shrink;
+                      shelfY1 -= shrink;
+                    }
+                    const gx0Shelf = Math.max(
+                      0,
+                      Math.min(cols - 1, Math.floor(shelfX0 / gridResolution)),
+                    );
+                    const gy0Shelf = Math.max(
+                      0,
+                      Math.min(rows - 1, Math.floor(shelfY0 / gridResolution)),
+                    );
+                    const gx1Shelf = Math.max(
+                      0,
+                      Math.min(cols - 1, Math.floor(shelfX1 / gridResolution)),
+                    );
+                    const gy1Shelf = Math.max(
+                      0,
+                      Math.min(rows - 1, Math.floor(shelfY1 / gridResolution)),
+                    );
+                    if (
+                      sx >= gx0Shelf &&
+                      sx <= gx1Shelf &&
+                      sy >= gy0Shelf &&
+                      sy <= gy1Shelf
+                    )
+                      return true;
+                  }
+                  return false;
+                };
+
+                // Prepare a client-side grid for debugging/overlay rendering
+                const clientGrid = Array.from({ length: cols }, () =>
+                  Array(rows).fill(true),
+                );
+                for (let gx = 0; gx < cols; gx++) {
+                  for (let gy = 0; gy < rows; gy++) {
+                    clientGrid[gx][gy] = !isCellBlocked(gx, gy);
+                  }
+                }
+
+                // If the chosen start cell is blocked, find the nearest free cell (BFS)
+                let sPx = startPosX;
+                let sPy = startPosY;
+                const startIdxX = Math.max(
+                  0,
+                  Math.min(cols - 1, Math.floor(sPx / gridResolution)),
+                );
+                const startIdxY = Math.max(
+                  0,
+                  Math.min(rows - 1, Math.floor(sPy / gridResolution)),
+                );
+                if (isCellBlocked(startIdxX, startIdxY)) {
+                  const visited = Array.from({ length: cols }, () =>
+                    Array(rows).fill(false),
+                  );
+                  const q: Array<{ x: number; y: number }> = [];
+                  q.push({ x: startIdxX, y: startIdxY });
+                  visited[startIdxX][startIdxY] = true;
+                  let found: { x: number; y: number } | null = null;
+                  while (q.length > 0) {
+                    const cur = q.shift()!;
+                    const neigh = [
+                      { x: cur.x + 1, y: cur.y },
+                      { x: cur.x - 1, y: cur.y },
+                      { x: cur.x, y: cur.y + 1 },
+                      { x: cur.x, y: cur.y - 1 },
+                    ];
+                    for (const n of neigh) {
+                      if (n.x < 0 || n.x >= cols || n.y < 0 || n.y >= rows)
+                        continue;
+                      if (visited[n.x][n.y]) continue;
+                      visited[n.x][n.y] = true;
+                      if (!isCellBlocked(n.x, n.y)) {
+                        found = n;
+                        q.length = 0;
+                        break;
+                      }
+                      q.push(n);
+                    }
+                  }
+                  if (found) {
+                    sPx = found.x + 0.5 * gridResolution;
+                    sPy = found.y + 0.5 * gridResolution;
+                    // reflect chosen start back to input fields so user can see the adjustment
+                    setStartX(String(found.x));
+                    setStartY(String(found.y));
+                    console.log(
+                      `Adjusted start to nearest free cell: (${found.x},${found.y})`,
+                    );
+                  } else {
+                    console.warn(
+                      "No reachable free start cell found; sending original start",
+                    );
+                  }
+                }
+
+                const sendRequest = async (bodyObj: any) => {
+                  console.log("Route request body:", bodyObj);
+                  const res = await fetch(
+                    "http://localhost:5035/api/routes/instructions",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(bodyObj),
+                    },
+                  );
+                  if (!res.ok) {
+                    console.warn("Route request failed status:", res.status);
+                    return null;
+                  }
+                  const json = await res.json();
+                  console.log("Route response:", json);
+                  return json.Path ?? json.path ?? null;
+                };
+
+                // Try initial request
+                let pathResponse = await sendRequest({
                   StoreId: currentStoreId,
                   ProductId: productId,
-                  StartPosition: {
-                    X: startPosX,
-                    Y: startPosY,
-                  },
+                  StartPosition: { X: sPx, Y: sPy },
                   GridResolutionMeters: 1,
-                };
-                console.log("Route request body:", body);
-                const res = await fetch(
-                  "http://localhost:5035/api/routes/instructions",
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body),
-                  },
-                );
-                if (!res.ok)
-                  throw new Error(`Route request failed: ${res.status}`);
-                const json = await res.json();
-                console.log("Route response:", json);
-                const pathResponse = json.Path ?? json.path ?? [];
-                setRoutePath(pathResponse);
+                });
+
+                // If no path returned, try searching nearby grid cells (by Manhattan distance)
+                if (!pathResponse || pathResponse.length === 0) {
+                  const sx0 = Math.max(
+                    0,
+                    Math.min(cols - 1, Math.floor(sPx / gridResolution)),
+                  );
+                  const sy0 = Math.max(
+                    0,
+                    Math.min(rows - 1, Math.floor(sPy / gridResolution)),
+                  );
+                  const maxRadius = Math.max(cols, rows);
+                  let foundPath: any[] | null = null;
+                  outer: for (let r = 1; r <= Math.min(10, maxRadius); r++) {
+                    for (let dx = -r; dx <= r; dx++) {
+                      const dy = r - Math.abs(dx);
+                      const candidates = [
+                        { x: sx0 + dx, y: sy0 + dy },
+                        { x: sx0 + dx, y: sy0 - dy },
+                      ];
+                      for (const c of candidates) {
+                        if (c.x < 0 || c.x >= cols || c.y < 0 || c.y >= rows)
+                          continue;
+                        if (isCellBlocked(c.x, c.y)) continue;
+                        const tryBody = {
+                          StoreId: currentStoreId,
+                          ProductId: productId,
+                          StartPosition: {
+                            X: c.x + 0.5 * gridResolution,
+                            Y: c.y + 0.5 * gridResolution,
+                          },
+                          GridResolutionMeters: 1,
+                        };
+                        const p = await sendRequest(tryBody);
+                        if (p && p.length > 0) {
+                          foundPath = p;
+                          // update inputs to reflect chosen start
+                          setStartX(String(c.x));
+                          setStartY(String(c.y));
+                          console.log(
+                            `Retried with start cell (${c.x},${c.y}) — success`,
+                          );
+                          break outer;
+                        }
+                      }
+                    }
+                  }
+                  if (foundPath) pathResponse = foundPath;
+                }
+
+                setRoutePath(pathResponse ?? []);
               } catch (err: any) {
                 console.error("Route request error", err);
                 setRoutePath([]);
@@ -715,6 +948,14 @@ export default function StoreMap({
             style={[styles.storeButton, styles.smallButton]}
           >
             <Text style={styles.storeButtonText}>Clear</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowDebugOverlay((s) => !s)}
+            style={[styles.storeButton, styles.smallButton, { marginLeft: 6 }]}
+          >
+            <Text style={styles.storeButtonText}>
+              {showDebugOverlay ? "Hide Debug" : "Show Debug"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -793,6 +1034,46 @@ export default function StoreMap({
               })()}
             </G>
 
+            {/* Debug overlay: blocked/walkable cells and chosen start cell */}
+            {showDebugOverlay && (
+              <G>
+                {(() => {
+                  const rects = [] as any[];
+                  for (let gx = 0; gx < gridCols; gx++) {
+                    for (let gy = 0; gy < gridRows; gy++) {
+                      const walkable = clientGrid[gx][gy];
+                      if (!walkable) {
+                        rects.push(
+                          <Rect
+                            key={`dbg-${gx}-${gy}`}
+                            x={gx}
+                            y={gy}
+                            width={1}
+                            height={1}
+                            fill="#ff5252"
+                            opacity={0.22}
+                          />,
+                        );
+                      }
+                    }
+                  }
+                  // start cell highlight
+                  rects.push(
+                    <Rect
+                      key={`dbg-start`}
+                      x={startIdxX}
+                      y={startIdxY}
+                      width={1}
+                      height={1}
+                      fill={"none"}
+                      stroke={"#000"}
+                      strokeWidth={0.04}
+                    />,
+                  );
+                  return rects;
+                })()}
+              </G>
+            )}
             {/* zones with friendly names (clickable: opens details panel) */}
             <G>
               {zones.map((z, idx) => {
