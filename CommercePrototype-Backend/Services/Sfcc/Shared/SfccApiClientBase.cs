@@ -90,12 +90,37 @@ public abstract class SfccApiClientBase
     }
 
     /// <summary>
+    /// Sends an HTTP PATCH request with an optional JSON payload.
+    /// </summary>
+    public Task<T?> PatchAsync<T>(string endpoint, object? payload = null, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Patch, BuildUrl(endpoint));
+        if (payload != null)
+        {
+            request.Content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                System.Text.Encoding.UTF8,
+                "application/json");
+        }
+
+        return SendAsync<T>(request, cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends an HTTP DELETE request and deserializes the JSON response (when present).
+    /// </summary>
+    public Task<T?> DeleteAsync<T>(string endpoint, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, BuildUrl(endpoint));
+        return SendAsync<T>(request, cancellationToken);
+    }
+
+    /// <summary>
     /// Sends an HTTP DELETE request.
     /// </summary>
     public async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
     {
-        var request = new HttpRequestMessage(HttpMethod.Delete, BuildUrl(endpoint));
-        await SendAsync<object>(request, cancellationToken);
+        await DeleteAsync<object>(endpoint, cancellationToken);
     }
 
     private async Task<T?> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -129,14 +154,39 @@ public abstract class SfccApiClientBase
                     (int)response.StatusCode,
                     error);
 
+                var reason = response.ReasonPhrase ?? response.StatusCode.ToString();
+                var errorSnippet = string.IsNullOrWhiteSpace(error)
+                    ? string.Empty
+                    : (error.Length <= 2000 ? error : error[..2000] + "...");
+
                 throw new HttpRequestException(
-                    $"SFCC API request failed: {response.StatusCode}",
+                    string.IsNullOrEmpty(errorSnippet)
+                        ? $"SFCC API request failed: {(int)response.StatusCode} {reason}"
+                        : $"SFCC API request failed: {(int)response.StatusCode} {reason} - {errorSnippet}",
                     null,
                     response.StatusCode);
             }
 
+            // Some SFCC endpoints return 204 No Content (especially DELETE). In that case there is no JSON to parse.
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return default;
+            }
+
+            var contentLength = response.Content.Headers.ContentLength;
+            if (contentLength is 0)
+            {
+                return default;
+            }
+
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             if (stream is null) return default;
+
+            // Some servers omit Content-Length but still return an empty body.
+            if (stream.CanSeek && stream.Length == 0)
+            {
+                return default;
+            }
 
             return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, cancellationToken);
         }

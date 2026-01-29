@@ -36,6 +36,7 @@ export type RootStackParamList = {
   Login: undefined;
   StoreMap: { storeId: string };
   LocateProduct: { id: string };
+  Register: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -295,6 +296,10 @@ export default function AppNavigation() {
             require("../screens/LocateProduct/LocateProduct").default
           }
         /> */}
+        <Stack.Screen
+          name="Register"
+          getComponent={() => require("../screens/Register").default}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

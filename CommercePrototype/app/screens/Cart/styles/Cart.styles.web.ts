@@ -65,6 +65,12 @@ export const styles = {
     fontSize: 32,
   },
 
+  itemProductImage: {
+    width: "100%" as const,
+    height: "100%" as const,
+    borderRadius: 4,
+  },
+
   itemContent: {
     flex: 1,
     gap: 4,
