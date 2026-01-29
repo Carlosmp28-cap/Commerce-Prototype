@@ -27,6 +27,8 @@ export function useCategories(
 ): UseCategoriesResult {
   const shouldLogErrors =
     typeof process !== "undefined" && process.env?.NODE_ENV !== "test";
+  // Do not include test-only fixtures here; tests should mock `useCategories`
+  // when they need deterministic data. Keep the hook simple for runtime.
   const [categories, setCategories] = useState<CategoryNodeDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

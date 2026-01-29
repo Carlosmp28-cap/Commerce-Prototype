@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
 import { Platform, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { IconButton, useTheme as usePaperTheme } from "react-native-paper";
 
 import type { RootStackParamList } from "./index";
-import { HeaderActions, HeaderHomeButton } from "./index";
+import { HeaderActions, HeaderHomeButton } from "./HeaderParts";
 import type { CategoryNodeDto } from "../models";
 import CategoryNavMenu from "./CategoryNavMenu/index";
 import { styles } from "./AppHeader.styles.ts";
@@ -28,7 +29,8 @@ export default function AppHeader(props: Props) {
   }, [navigation]);
 
   return (
-    <View
+    <SafeAreaView
+      edges={["top"]}
       style={[styles.root, { backgroundColor: paperTheme.colors.background }]}
     >
       <View style={styles.topRow}>
@@ -73,6 +75,6 @@ export default function AppHeader(props: Props) {
           />
         </View>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }

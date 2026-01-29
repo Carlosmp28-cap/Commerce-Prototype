@@ -4,9 +4,10 @@ import {
   type ImageStyle,
   type ViewStyle,
 } from "react-native";
-import type { CatalogProduct } from "../../../data/catalog";
+// The UI accepts backend-backed `Product` model; legacy `CatalogProduct` is
+// no longer used at runtime. Keep types broad enough for tests/fixtures.
 import type { Product } from "../../../models/Product";
-import { categories } from "../../../data/catalog";
+import { useCategories, findCategoryById } from "../../../hooks/useCategories";
 import { useTheme } from "../../../themes";
 import Card from "../../../components/Card";
 import Text from "../../../components/Text";
@@ -20,7 +21,7 @@ import { styles } from "./ProductCard.styles";
  * @property {any} containerStyle - Style object applied to the card container
  */
 type ProductCardProps = {
-  product: Product | CatalogProduct;
+  product: Product | any;
   onPress: () => void;
   imageStyle: ImageStyle;
   containerStyle: ViewStyle;
@@ -41,8 +42,9 @@ export default function ProductCard({
 }: ProductCardProps) {
   const theme = useTheme();
   const inStock = product.quantityAvailable > 0;
-  const categoryLabel =
-    categories.find((c) => c.id === product.categoryId)?.label || "Unknown";
+  const { categories: categoryTree } = useCategories();
+  const categoryNode = findCategoryById(categoryTree, product.categoryId);
+  const categoryLabel = categoryNode?.name || "Unknown";
 
   return (
     <TouchableOpacity

@@ -12,7 +12,7 @@ jest.mock("../app/hooks/useCart", () => ({
 
 jest.mock("../app/hooks/useProducts", () => {
   const actual = jest.requireActual("../app/hooks/useProducts");
-  const { products: catalogProducts } = require("../app/data/catalog");
+  const { products: catalogProducts } = require("./fixtures/catalogMock");
 
   return {
     ...actual,

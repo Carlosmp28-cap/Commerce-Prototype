@@ -1,5 +1,6 @@
-import type { CatalogProduct } from "../../data/catalog";
+// ProductHelpers operate on either backend `Product` or test fixtures.
 import type { Product } from "../../models/Product";
+type CatalogProduct = any;
 
 export type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
 
@@ -7,7 +8,9 @@ export type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
  * Sort products based on the selected option
  * Works with both Product and CatalogProduct types
  */
-export const sortProducts = <T extends Product | CatalogProduct>(
+type ProductLike = { name: string; price: number };
+
+export const sortProducts = <T extends ProductLike>(
   products: T[],
   sortBy: SortOption,
 ): T[] => {

@@ -74,11 +74,18 @@ export default function PLPScreen({ navigation, route }: Props) {
     loadMore,
     isLoadingMore,
     total: totalProducts,
+    offset,
+    goToPage,
   } = useProductsPaginated(
     categoryId || "",
     undefined, // q is used for category selection, not keyword search
     25, // Request 25 products per page (SFCC API limit)
   );
+
+  // Pagination helpers
+  const pageSize = 25;
+  const currentPage = Math.floor(offset / pageSize) + 1;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize));
 
   const products = useMemo(
     () => sortProducts(rawProducts, selectedSort),
@@ -255,45 +262,118 @@ export default function PLPScreen({ navigation, route }: Props) {
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={
           <View style={{ width: "100%", paddingVertical: 16 }}>
-            {hasMore && (
+            {/* Pagination controls: Prev, page numbers, Next */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                marginHorizontal: 16,
+                marginBottom: 12,
+              }}
+            >
               <Pressable
-                onPress={loadMore}
-                disabled={isLoadingMore}
+                onPress={() => {
+                  if (currentPage > 1) goToPage(currentPage - 1);
+                }}
+                disabled={currentPage === 1}
                 style={({ pressed }) => [
                   {
-                    padding: 12,
-                    borderRadius: 8,
-                    backgroundColor: pressed
-                      ? theme.colors.primaryContainer
-                      : theme.colors.primary,
-                    marginHorizontal: 16,
-                    marginBottom: 16,
-                    opacity: isLoadingMore ? 0.6 : 1,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    marginHorizontal: 6,
+                    borderRadius: 6,
+                    backgroundColor:
+                      currentPage === 1
+                        ? theme.colors.surface
+                        : pressed
+                          ? theme.colors.primaryContainer
+                          : theme.colors.primary,
+                    opacity: currentPage === 1 ? 0.5 : 1,
                   },
                 ]}
               >
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: theme.colors.onPrimary,
-                    fontSize: 16,
-                    fontWeight: "600",
-                  }}
-                >
-                  {isLoadingMore ? "Loading..." : "Load More Products"}
-                </Text>
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: theme.colors.onPrimary,
-                    fontSize: 12,
-                    opacity: 0.8,
-                  }}
-                >
-                  Showing {products.length} of {totalProducts}
-                </Text>
+                <Text style={{ color: theme.colors.onPrimary }}>Prev</Text>
               </Pressable>
-            )}
+
+              {/* Page number window (up to 5 pages centered on current) */}
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {(() => {
+                  const windowSize = 5;
+                  let start = Math.max(1, currentPage - 2);
+                  let end = Math.min(totalPages, start + windowSize - 1);
+                  if (end - start < windowSize - 1) {
+                    start = Math.max(1, end - windowSize + 1);
+                  }
+                  const pages = [];
+                  for (let p = start; p <= end; p++) pages.push(p);
+                  return pages.map((p) => (
+                    <Pressable
+                      key={p}
+                      onPress={() => goToPage(p)}
+                      style={({ pressed }) => [
+                        {
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          marginHorizontal: 4,
+                          borderRadius: 6,
+                          backgroundColor:
+                            p === currentPage
+                              ? theme.colors.primary
+                              : pressed
+                                ? theme.colors.primaryContainer
+                                : theme.colors.surface,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color:
+                            p === currentPage
+                              ? theme.colors.onPrimary
+                              : theme.colors.text,
+                          fontWeight: p === currentPage ? "700" : "400",
+                        }}
+                      >
+                        {p}
+                      </Text>
+                    </Pressable>
+                  ));
+                })()}
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  if (currentPage < totalPages) goToPage(currentPage + 1);
+                }}
+                disabled={currentPage === totalPages}
+                style={({ pressed }) => [
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    marginHorizontal: 6,
+                    borderRadius: 6,
+                    backgroundColor:
+                      currentPage === totalPages
+                        ? theme.colors.surface
+                        : pressed
+                          ? theme.colors.primaryContainer
+                          : theme.colors.primary,
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                  },
+                ]}
+              >
+                <Text style={{ color: theme.colors.onPrimary }}>Next</Text>
+              </Pressable>
+            </View>
+
+            <View style={{ alignItems: "center", marginBottom: 8 }}>
+              <Text style={{ color: theme.colors.text, fontSize: 12 }}>
+                Showing page {currentPage} of {totalPages} — {products.length}{" "}
+                of {totalProducts} products
+              </Text>
+            </View>
+
             <View style={{ marginHorizontal: -8 }}>
               <Footer />
             </View>

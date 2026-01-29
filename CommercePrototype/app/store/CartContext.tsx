@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useReducer } from "react";
 import type { ReactNode } from "react";
 import type { CartItem } from "../models/CartItem";
 import type { Product } from "../models/Product";
-import type { CategoryId } from "../data/catalog";
 import type { BasketDto, BasketItemDto } from "../models";
 import { api, getShopperSessionId, setShopperSessionId } from "../services/api";
 import { subscribeAuthEvents } from "../services/auth-events";
@@ -183,7 +182,7 @@ function mapBasketItems(items: BasketItemDto[]): CartItem[] {
       name: item.productName ?? "Item",
       price: item.price ?? item.basePrice ?? 0,
       quantityAvailable: MAX_QUANTITY,
-      categoryId: "new" as CategoryId,
+      categoryId: "new",
       image: item.imageUrl ? { uri: item.imageUrl } : undefined,
     },
     quantity: item.quantity,

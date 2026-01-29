@@ -3,7 +3,7 @@ import { fireEvent } from "@testing-library/react-native";
 import * as RN from "react-native";
 
 import PDPScreen from "../app/screens/PDP";
-import { getProductById, products } from "../app/data/catalog";
+import { getProductById, products } from "./fixtures/catalogMock";
 import { renderWithProviders } from "../test/testUtils";
 
 jest.mock("../app/hooks/useCart", () => ({
@@ -12,9 +12,32 @@ jest.mock("../app/hooks/useCart", () => ({
   }),
 }));
 
+jest.mock("../app/hooks/useCategories", () => {
+  const actual = jest.requireActual("../app/hooks/useCategories");
+  const { categories: fixtureCats } = require("./fixtures/catalogMock");
+
+  return {
+    ...actual,
+    useCategories: () => ({
+      categories: {
+        id: "root",
+        name: "root",
+        children: fixtureCats.map((c: any) => ({
+          id: c.id,
+          name: c.label,
+          children: [],
+        })),
+      },
+      loading: false,
+      error: null,
+      refetch: () => {},
+    }),
+  };
+});
+
 jest.mock("../app/hooks/useProducts", () => {
   const actual = jest.requireActual("../app/hooks/useProducts");
-  const { products: catalogProducts } = require("../app/data/catalog");
+  const { products: catalogProducts } = require("./fixtures/catalogMock");
 
   return {
     ...actual,

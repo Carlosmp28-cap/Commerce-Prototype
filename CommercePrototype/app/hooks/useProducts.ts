@@ -13,6 +13,7 @@ interface UseProductsResult {
 interface UseProductsPaginatedResult extends UseProductsResult {
   hasMore: boolean;
   loadMore: () => void;
+  goToPage: (pageIndex: number) => void;
   offset: number;
   total: number;
   isLoadingMore: boolean;
@@ -62,7 +63,9 @@ export function useProducts(
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch products";
       setError(errorMessage);
-      console.error("Error fetching products:", err);
+      if (typeof process !== "undefined" && process.env?.NODE_ENV !== "test") {
+        console.error("Error fetching products:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -144,7 +147,12 @@ export function useProductsPaginated(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch products";
         setError(errorMessage);
-        console.error("Error fetching products:", err);
+        if (
+          typeof process !== "undefined" &&
+          process.env?.NODE_ENV !== "test"
+        ) {
+          console.error("Error fetching products:", err);
+        }
       } finally {
         setLoading(false);
         setIsLoadingMore(false);
@@ -168,6 +176,18 @@ export function useProductsPaginated(
     }
   }, [offset, limit, total, fetchProducts]);
 
+  const goToPage = useCallback(
+    (pageIndex: number) => {
+      const targetOffset = Math.max(0, (pageIndex - 1) * limit);
+      // Only fetch if different offset
+      if (targetOffset !== offset) {
+        setOffset(targetOffset);
+        fetchProducts(targetOffset, false);
+      }
+    },
+    [limit, offset, fetchProducts],
+  );
+
   const hasMore = offset + limit < total;
 
   return {
@@ -177,6 +197,7 @@ export function useProductsPaginated(
     refetch: () => fetchProducts(0, false),
     hasMore,
     loadMore,
+    goToPage,
     offset,
     total,
     isLoadingMore,
@@ -213,7 +234,9 @@ export function useProductDetail(productId: string): UseProductDetailResult {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch product";
       setError(errorMessage);
-      console.error("Error fetching product:", err);
+      if (typeof process !== "undefined" && process.env?.NODE_ENV !== "test") {
+        console.error("Error fetching product:", err);
+      }
     } finally {
       setLoading(false);
     }

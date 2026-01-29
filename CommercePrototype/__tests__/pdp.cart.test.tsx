@@ -3,7 +3,7 @@ import { fireEvent, act } from "@testing-library/react-native";
 import * as RN from "react-native";
 
 import PDPScreen from "../app/screens/PDP";
-import { getProductById } from "../app/data/catalog";
+import { getProductById } from "./fixtures/catalogMock";
 import { renderWithProviders } from "../test/testUtils";
 
 const mockAddItem = jest.fn();
@@ -16,7 +16,7 @@ jest.mock("../app/hooks/useCart", () => ({
 
 jest.mock("../app/hooks/useProducts", () => {
   const actual = jest.requireActual("../app/hooks/useProducts");
-  const { products: catalogProducts } = require("../app/data/catalog");
+  const { products: catalogProducts } = require("./fixtures/catalogMock");
 
   return {
     ...actual,

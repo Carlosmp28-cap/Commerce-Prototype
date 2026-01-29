@@ -4,7 +4,6 @@ import { Platform } from "react-native";
 import type { RootStackParamList } from "../../navigation";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { categories, products, type CatalogProduct } from "../../data/catalog";
 import type { CategoryNodeDto } from "../../models";
 import { useCategories, getMainCategories } from "../../hooks/useCategories";
 import { useProducts } from "../../hooks/useProducts";
@@ -22,18 +21,18 @@ export type HomeViewModel = {
   isWideWeb: boolean;
 
   // Images / tiles
-  heroImage: CatalogProduct["image"] | undefined;
+  heroImage: Product["image"] | undefined;
   apiCategoryTiles: Array<{
     id: string;
     label: string;
     query: string;
-    image?: CatalogProduct["image"];
+    image?: Product["image"];
   }>;
   categoryTiles: Array<{
     id: string;
     label: string;
     query: string;
-    image: CatalogProduct["image"] | undefined;
+    image: Product["image"] | undefined;
   }>;
   featuredProducts: HomeFeaturedProduct[];
   mainCategoriesTree: CategoryNodeDto[];
@@ -46,7 +45,7 @@ export type HomeViewModel = {
   openProduct: (id: string) => void;
 
   // Data
-  categories: typeof categories;
+  // (no local fallback categories)
 };
 
 type Navigation = NativeStackNavigationProp<RootStackParamList, "Home">;
@@ -120,28 +119,25 @@ export function useHomeViewModel(
     12,
   );
 
-  // Use API products if available, fallback to mock data
-  const currentProducts = useMemo(() => {
-    return apiProducts.length > 0 ? apiProducts : products;
-  }, [apiProducts]);
-
   const heroImage = useMemo(() => {
-    return resizePicsumSource(
-      currentProducts[0]?.image,
-      heroSize.w,
-      heroSize.h,
-    );
-  }, [currentProducts, heroSize.h, heroSize.w, resizePicsumSource]);
+    return resizePicsumSource(apiProducts[0]?.image, heroSize.w, heroSize.h);
+  }, [apiProducts, heroSize.h, heroSize.w, resizePicsumSource]);
 
   const featuredProducts = useMemo((): HomeFeaturedProduct[] => {
-    const featured = currentProducts.slice(0, 10);
+    const featured = apiProducts.slice(0, 10);
     return featured
       .filter((p) => p.image !== undefined)
       .map((p) => ({
         ...p,
         image: resizePicsumSource(p.image, carouselSize.w, carouselSize.h)!,
       }));
-  }, [currentProducts, carouselSize.h, carouselSize.w, resizePicsumSource]);
+  }, [apiProducts, carouselSize.h, carouselSize.w, resizePicsumSource]);
+
+  // Keep runtime behavior simple: rely on API-provided featured products.
+  // Tests that need deterministic values should mock `useProducts()`.
+  const finalFeaturedProducts = useMemo((): HomeFeaturedProduct[] => {
+    return featuredProducts;
+  }, [featuredProducts]);
 
   // Build API category tiles from fetched categories (main categories only)
   // Format: { id, label, query, image } to match HomeCategoryGrid expectations
@@ -150,27 +146,28 @@ export function useHomeViewModel(
       id: cat.id,
       label: cat.name,
       query: cat.id, // Use category ID as the query
-      image: undefined as CatalogProduct["image"] | undefined,
+      image: undefined as Product["image"] | undefined,
     }));
   }, [mainCategories]);
 
-  // Fallback category tiles from mock data
   const representativeByCategory = useMemo(() => {
-    const map = new Map<string, Product | CatalogProduct>();
-    for (const product of currentProducts) {
+    const map = new Map<string, Product>();
+    for (const product of apiProducts) {
       if (!product?.categoryId) continue;
       if (!map.has(product.categoryId)) {
         map.set(product.categoryId, product);
       }
     }
     return map;
-  }, [currentProducts]);
+  }, [apiProducts]);
 
   const categoryTiles = useMemo(() => {
-    return categories.map((c) => {
-      const representative = representativeByCategory.get(c.id);
+    return mainCategories.map((cat) => {
+      const representative = representativeByCategory.get(cat.id);
       return {
-        ...c,
+        id: cat.id,
+        label: cat.name,
+        query: cat.id,
         image: resizePicsumSource(
           representative?.image,
           tileSize.w,
@@ -178,7 +175,13 @@ export function useHomeViewModel(
         ),
       };
     });
-  }, [representativeByCategory, resizePicsumSource, tileSize.h, tileSize.w]);
+  }, [
+    representativeByCategory,
+    resizePicsumSource,
+    tileSize.h,
+    tileSize.w,
+    mainCategories,
+  ]);
 
   const goToPLP = useCallback(() => navigation.navigate("PLP"), [navigation]);
   const goToSale = useCallback(
@@ -205,7 +208,7 @@ export function useHomeViewModel(
     heroImage,
     apiCategoryTiles,
     categoryTiles,
-    featuredProducts,
+    featuredProducts: finalFeaturedProducts,
     mainCategoriesTree: mainCategories,
 
     goToPLP,
@@ -213,7 +216,6 @@ export function useHomeViewModel(
     goToNew,
     selectCategory,
     openProduct,
-
-    categories,
+    // no local fallback categories
   };
 }

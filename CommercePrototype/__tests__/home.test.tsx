@@ -3,6 +3,41 @@ import { fireEvent } from "@testing-library/react-native";
 
 import HomeScreen from "../app/screens/Home";
 import { renderWithProviders } from "../test/testUtils";
+// fixture required inside jest mock factories to avoid out-of-scope access
+
+jest.mock("../app/hooks/useProducts", () => {
+  const fixture = require("./fixtures/catalogMock");
+  return {
+    useProducts: () => ({
+      products: fixture.products,
+      loading: false,
+      error: null,
+    }),
+  };
+});
+
+jest.mock("../app/hooks/useCategories", () => {
+  const actual = jest.requireActual("../app/hooks/useCategories");
+  const fixture = require("./fixtures/catalogMock");
+  const cats = fixture.categories;
+  return {
+    ...actual,
+    useCategories: () => ({
+      categories: {
+        id: "root",
+        name: "root",
+        children: cats.map((c: any) => ({
+          id: c.id,
+          name: c.label,
+          children: [],
+        })),
+      },
+      loading: false,
+      error: null,
+      refetch: () => {},
+    }),
+  };
+});
 
 describe("Home screen", () => {
   test("renders key sections and allows See all navigation", () => {
