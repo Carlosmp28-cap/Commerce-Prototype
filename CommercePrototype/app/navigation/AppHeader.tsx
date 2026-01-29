@@ -5,7 +5,7 @@ import { IconButton, useTheme as usePaperTheme } from "react-native-paper";
 
 import type { RootStackParamList } from "./index";
 import { HeaderActions, HeaderHomeButton } from "./index";
-import type { CategoryNodeDto } from "../services/api.types";
+import type { CategoryNodeDto } from "../models";
 import CategoryNavMenu from "./CategoryNavMenu/index";
 import { styles } from "./AppHeader.styles.ts";
 

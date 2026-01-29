@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useTheme } from "../../../themes";
 import Text from "../../../components/Text";
-import type { CategoryNodeDto } from "../../../services/api.types";
+import type { CategoryNodeDto } from "../../../models";
 
 type Props = {
   subcategories: CategoryNodeDto[];

@@ -5,7 +5,7 @@ import type { RootStackParamList } from "../../navigation";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { categories, products, type CatalogProduct } from "../../data/catalog";
-import type { CategoryNodeDto } from "../../services/api.types";
+import type { CategoryNodeDto } from "../../models";
 import { useCategories, getMainCategories } from "../../hooks/useCategories";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../../models/Product";

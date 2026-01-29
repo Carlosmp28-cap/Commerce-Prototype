@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { CartItem } from "../models/CartItem";
 import type { Product } from "../models/Product";
 import type { CategoryId } from "../data/catalog";
-import type { BasketDto, BasketItemDto } from "../services/api.types";
+import type { BasketDto, BasketItemDto } from "../models";
 import { api, getShopperSessionId, setShopperSessionId } from "../services/api";
 import { subscribeAuthEvents } from "../services/auth-events";
 import {
@@ -58,7 +58,7 @@ function reducer(state: State, action: CartAction): State {
   switch (action.type) {
     case "ADD_ITEM": {
       const existingItem = state.items.find(
-        (item) => item.product.id === action.product.id
+        (item) => item.product.id === action.product.id,
       );
 
       if (existingItem) {
@@ -71,10 +71,10 @@ function reducer(state: State, action: CartAction): State {
                   ...item,
                   quantity: Math.min(
                     item.quantity + action.quantity,
-                    action.product.quantityAvailable
+                    action.product.quantityAvailable,
                   ),
                 }
-              : item
+              : item,
           ),
         };
       } else {
@@ -87,7 +87,7 @@ function reducer(state: State, action: CartAction): State {
               product: action.product,
               quantity: Math.min(
                 action.quantity,
-                action.product.quantityAvailable
+                action.product.quantityAvailable,
               ),
             },
           ],
@@ -99,7 +99,7 @@ function reducer(state: State, action: CartAction): State {
       return {
         ...state,
         items: state.items.filter(
-          (item) => item.product.id !== action.productId
+          (item) => item.product.id !== action.productId,
         ),
       };
     }
@@ -109,7 +109,7 @@ function reducer(state: State, action: CartAction): State {
         return {
           ...state,
           items: state.items.filter(
-            (item) => item.product.id !== action.productId
+            (item) => item.product.id !== action.productId,
           ),
         };
       }
@@ -122,10 +122,10 @@ function reducer(state: State, action: CartAction): State {
                 ...item,
                 quantity: Math.min(
                   action.quantity,
-                  item.product.quantityAvailable
+                  item.product.quantityAvailable,
                 ),
               }
-            : item
+            : item,
         ),
       };
     }
@@ -256,7 +256,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             if (guest?.sessionId) {
               setShopperSessionId(guest.sessionId);
               dispatch({ type: "SET_SESSION", sessionId: guest.sessionId });
-              await saveBasketSession({ basketId: null, sessionId: guest.sessionId });
+              await saveBasketSession({
+                basketId: null,
+                sessionId: guest.sessionId,
+              });
             }
           } catch (error) {
             console.warn("Failed to create guest shopper session:", error);
@@ -391,7 +394,10 @@ export function useCart() {
   const findItem = (id: string) =>
     state.items.find((item) => item.itemId === id || item.product.id === id);
 
-  const totalQuantityFromItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalQuantityFromItems = state.items.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
 
   const addItem = async (product: Product, quantity: number) => {
     if (quantity <= 0) return;
@@ -435,7 +441,10 @@ export function useCart() {
           syncSessionFromApi();
           return;
         } catch (retryError) {
-          console.warn("Failed to add item after session recovery:", retryError);
+          console.warn(
+            "Failed to add item after session recovery:",
+            retryError,
+          );
           return;
         }
       }
@@ -470,14 +479,25 @@ export function useCart() {
     }
   };
 
-  const updateQuantity = async (productIdOrItemId: string, quantity: number) => {
+  const updateQuantity = async (
+    productIdOrItemId: string,
+    quantity: number,
+  ) => {
     if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") {
-      dispatch({ type: "UPDATE_QUANTITY", productId: productIdOrItemId, quantity });
+      dispatch({
+        type: "UPDATE_QUANTITY",
+        productId: productIdOrItemId,
+        quantity,
+      });
       return;
     }
 
     if (!state.basketId) {
-      dispatch({ type: "UPDATE_QUANTITY", productId: productIdOrItemId, quantity });
+      dispatch({
+        type: "UPDATE_QUANTITY",
+        productId: productIdOrItemId,
+        quantity,
+      });
       return;
     }
 
@@ -489,12 +509,18 @@ export function useCart() {
     const item = findItem(productIdOrItemId);
     const itemId = item?.itemId;
     if (!itemId) {
-      dispatch({ type: "UPDATE_QUANTITY", productId: productIdOrItemId, quantity });
+      dispatch({
+        type: "UPDATE_QUANTITY",
+        productId: productIdOrItemId,
+        quantity,
+      });
       return;
     }
 
     try {
-      const basket = await api.cart.updateItemQuantity(state.basketId, itemId, { quantity });
+      const basket = await api.cart.updateItemQuantity(state.basketId, itemId, {
+        quantity,
+      });
       dispatch({ type: "SET_BASKET", basket });
       syncSessionFromApi();
     } catch (error) {
@@ -541,7 +567,7 @@ export function useCart() {
       state.totals?.orderTotal ??
       state.items.reduce(
         (sum, item) => sum + item.product.price * item.quantity,
-        0
+        0,
       ),
     addItem,
     removeItem,

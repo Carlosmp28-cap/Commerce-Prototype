@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Divider, Text, useTheme as usePaperTheme } from "react-native-paper";
 
-import type { CategoryNodeDto } from "../../../../services/api.types";
+import type { CategoryNodeDto } from "../../../../models";
 import { isGiftCertificates } from "../../../../utils/categoryVisibility";
 
 import { styles } from "./NestedCategoryPicker.styles";

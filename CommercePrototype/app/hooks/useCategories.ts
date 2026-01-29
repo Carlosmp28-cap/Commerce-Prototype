@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
-import type { CategoryNodeDto } from "../services/api.types";
+import type { CategoryNodeDto } from "../models";
 
 export {
   flattenCategories,
@@ -36,10 +36,13 @@ export function useCategories(
       setLoading(true);
       setError(null);
 
-      const result = await api.categories.getTree({
-        rootId,
-        levels,
-      }, { signal });
+      const result = await api.categories.getTree(
+        {
+          rootId,
+          levels,
+        },
+        { signal },
+      );
 
       setCategories(result);
     } catch (err) {

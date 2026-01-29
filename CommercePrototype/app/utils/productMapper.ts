@@ -2,7 +2,8 @@ import type { Product } from "../models/Product";
 import type {
   ProductSummaryDto,
   ProductDetailDto,
-} from "../services/api.types";
+  ProductVariantDto,
+} from "../models";
 import type { CategoryId } from "../data/catalog";
 
 /**
