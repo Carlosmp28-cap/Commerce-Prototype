@@ -3,8 +3,13 @@ import { StyleSheet, View } from "react-native";
 import { Text, Chip } from "react-native-paper";
 import type { Product } from "../../../models/Product";
 import { useTheme } from "../../../themes";
+import HtmlDescription from "../../../utils/HtmlDescription";
 
-export default function PDPProductInfoDetail({ product }: { product: Product }) {
+export default function PDPProductInfoDetail({
+  product,
+}: {
+  product: Product;
+}) {
   const theme = useTheme();
   const features = product.features ?? [];
   const details = product.details;
@@ -16,15 +21,28 @@ export default function PDPProductInfoDetail({ product }: { product: Product }) 
       <View
         style={[
           styles.card,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
         ]}
       >
-        <Text style={[styles.title, { color: theme.colors.text }]}>{details.title}</Text>
-        {details.paragraphs.map((p, idx) => (
-          <Text key={idx} style={[styles.text, { color: theme.colors.mutedText }]}>
-            {p}
-          </Text>
-        ))}
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          {details.title}
+        </Text>
+        {details.paragraphs.map((p, idx) =>
+          // If the paragraph contains HTML tags (e.g. <ul>/<li>), render via HtmlDescription
+          /<[^>]+>/.test(p) ? (
+            <HtmlDescription key={idx} html={p} />
+          ) : (
+            <Text
+              key={idx}
+              style={[styles.text, { color: theme.colors.mutedText }]}
+            >
+              {p}
+            </Text>
+          ),
+        )}
       </View>
 
       {features.length > 0 && (
@@ -34,7 +52,10 @@ export default function PDPProductInfoDetail({ product }: { product: Product }) 
               key={i}
               style={[
                 styles.chip,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
               ]}
               textStyle={[styles.chipText, { color: theme.colors.text }]}
             >

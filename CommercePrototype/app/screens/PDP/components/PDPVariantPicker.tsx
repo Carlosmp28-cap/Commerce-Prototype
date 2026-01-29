@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useTheme } from "../../../themes";
 import Text from "../../../components/Text";
-import type { Product } from "../../models/Product";
+import type { Product } from "../../../models/Product";
 import { styles } from "../PDP.styles";
 
 type Props = {

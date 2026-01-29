@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Text, IconButton } from "react-native-paper";
+import HtmlDescription from "../../../utils/HtmlDescription";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { Product } from "../../../models/Product";
 import { useTheme } from "../../../themes";
@@ -45,6 +46,7 @@ export default function PDPProductInfoHeader({
           size={24}
           onPress={() => setIsFavorite(!isFavorite)}
           iconColor={isFavorite ? theme.colors.danger : theme.colors.text}
+          style={{ marginTop: 0 }}
         />
       </View>
 
@@ -84,11 +86,14 @@ export default function PDPProductInfoHeader({
         </Text>
       </View>
 
-      {product.description && (
-        <Text style={[styles.description, { color: theme.colors.mutedText }]}>
-          {product.description}
-        </Text>
-      )}
+      {product.description &&
+        (/<[^>]+>/.test(product.description) ? (
+          <HtmlDescription html={product.description} />
+        ) : (
+          <Text style={[styles.description, { color: theme.colors.mutedText }]}>
+            {product.description}
+          </Text>
+        ))}
     </View>
   );
 }
@@ -97,8 +102,8 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: -12,
+    alignItems: "baseline",
+    marginBottom: 8,
   },
   titleMobile: {
     fontSize: 24,

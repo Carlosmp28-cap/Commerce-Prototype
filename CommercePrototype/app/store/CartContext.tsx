@@ -402,13 +402,14 @@ export function useCart() {
     product: Product,
     quantity: number,
   ): Promise<boolean> => {
-    if (quantity <= 0) return;
+    if (quantity <= 0) return false;
 
     if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") {
       if (quantity <= product.quantityAvailable) {
         dispatch({ type: "ADD_ITEM", product, quantity });
+        return true;
       }
-      return;
+      return false;
     }
 
     const basketId = await ensureBasketId();
