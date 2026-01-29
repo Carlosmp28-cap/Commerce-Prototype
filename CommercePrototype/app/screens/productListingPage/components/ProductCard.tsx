@@ -64,11 +64,16 @@ export default function ProductCard({
         <Text style={styles.productName} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text
-          style={[styles.category, { color: theme.colors.text, opacity: 0.7 }]}
-        >
-          {categoryLabel}
-        </Text>
+        {categoryNode?.name ? (
+          <Text
+            style={[
+              styles.category,
+              { color: theme.colors.text, opacity: 0.7 },
+            ]}
+          >
+            {categoryLabel}
+          </Text>
+        ) : null}
         <Text style={styles.price}>€{product.price.toFixed(2)}</Text>
         <Text
           style={[
