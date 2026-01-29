@@ -565,8 +565,8 @@ export default function StoreMap({
               onChangeText={(t) => {
                 setProductSearch(t);
                 setShowProductDropdown(true);
-                // keep the current `productId` until user explicitly clears it
-                // so suggestions don't disappear while typing a replacement
+                // If the user cleared the input completely, also clear the selected product id
+                if ((t || "").trim() === "") setProductId("");
               }}
               onFocus={() => setShowProductDropdown(true)}
               placeholder="ProductId or name"
@@ -981,15 +981,7 @@ export default function StoreMap({
         />
       )}
 
-      {/* Show adjusted start suggestion if we changed start for routing but didn't overwrite inputs */}
-      {adjustedStart ? (
-        <View style={{ padding: 8 }}>
-          <Text style={{ color: "#b71c1c" }}>
-            Note: start adjusted to nearest free cell for routing:{" "}
-            {adjustedStart.x},{adjustedStart.y}
-          </Text>
-        </View>
-      ) : null}
+      {/* adjustedStart kept for internal use; UI debug note removed */}
 
       {/* layout: map on the left, details panel on the right */}
       <View style={styles.mapRow}>
