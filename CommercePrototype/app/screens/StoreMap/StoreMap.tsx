@@ -131,6 +131,10 @@ export default function StoreMap({
   const [routePath, setRoutePath] = useState<{ x: number; y: number }[]>([]);
   const [routeLoading, setRouteLoading] = useState<boolean>(false);
   const [showDebugOverlay, setShowDebugOverlay] = useState<boolean>(false);
+  const [adjustedStart, setAdjustedStart] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Auto-load product->shelf mappings when a zone is selected (if not already loaded)
   useEffect(() => {
@@ -333,8 +337,8 @@ export default function StoreMap({
       : { x: parsedStartX, y: parsedStartY };
 
   // Client-side grid dimensions and helper for debug overlay
-  const gridCols = Math.max(1, Math.floor(storeW));
-  const gridRows = Math.max(1, Math.floor(storeH));
+  const gridCols = Math.max(1, Math.ceil(storeW));
+  const gridRows = Math.max(1, Math.ceil(storeH));
   const gridResolution = 1;
   const isCellBlockedLocal = (sx: number, sy: number) => {
     for (const s of shelves) {
@@ -736,8 +740,8 @@ export default function StoreMap({
 
                 // Helper: determine whether a grid cell (sx,sy) is blocked by any shelf
                 const gridResolution = 1;
-                const cols = Math.max(1, Math.floor(storeW));
-                const rows = Math.max(1, Math.floor(storeH));
+                const cols = Math.max(1, Math.ceil(storeW));
+                const rows = Math.max(1, Math.ceil(storeH));
                 const isCellBlocked = (sx: number, sy: number) => {
                   for (const s of shelves) {
                     // shelf positions in data are center-based (x,y), width/height in meters
@@ -838,11 +842,10 @@ export default function StoreMap({
                   if (found) {
                     sPx = found.x + 0.5 * gridResolution;
                     sPy = found.y + 0.5 * gridResolution;
-                    // reflect chosen start back to input fields so user can see the adjustment
-                    setStartX(String(found.x));
-                    setStartY(String(found.y));
+                    // remember adjusted start but do NOT overwrite user inputs
+                    setAdjustedStart({ x: found.x, y: found.y });
                     console.log(
-                      `Adjusted start to nearest free cell: (${found.x},${found.y})`,
+                      `Adjusted start to nearest free cell (suggested): (${found.x},${found.y})`,
                     );
                   } else {
                     console.warn(
@@ -913,9 +916,8 @@ export default function StoreMap({
                         const p = await sendRequest(tryBody);
                         if (p && p.length > 0) {
                           foundPath = p;
-                          // update inputs to reflect chosen start
-                          setStartX(String(c.x));
-                          setStartY(String(c.y));
+                          // remember adjusted start for user information but DO NOT overwrite inputs
+                          setAdjustedStart({ x: c.x, y: c.y });
                           console.log(
                             `Retried with start cell (${c.x},${c.y}) — success`,
                           );
@@ -979,6 +981,16 @@ export default function StoreMap({
         />
       )}
 
+      {/* Show adjusted start suggestion if we changed start for routing but didn't overwrite inputs */}
+      {adjustedStart ? (
+        <View style={{ padding: 8 }}>
+          <Text style={{ color: "#b71c1c" }}>
+            Note: start adjusted to nearest free cell for routing:{" "}
+            {adjustedStart.x},{adjustedStart.y}
+          </Text>
+        </View>
+      ) : null}
+
       {/* layout: map on the left, details panel on the right */}
       <View style={styles.mapRow}>
         <View style={{ flex: 1 }}>
@@ -1008,8 +1020,8 @@ export default function StoreMap({
             {/* tiled square background for a clean e-commerce look */}
             <G>
               {(() => {
-                const cols = Math.max(1, Math.floor(storeW));
-                const rows = Math.max(1, Math.floor(storeH));
+                const cols = Math.max(1, Math.ceil(storeW));
+                const rows = Math.max(1, Math.ceil(storeH));
                 const cells = [] as any[];
                 for (let i = 0; i < cols; i++) {
                   for (let j = 0; j < rows; j++) {

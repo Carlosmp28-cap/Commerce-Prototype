@@ -479,6 +479,18 @@ namespace CommercePrototype_Backend.Services
             var zones = await _storeFileReader.LoadStoreZonesAsync(_mockDataDir, cancellationToken);
             var shelves = await _storeFileReader.LoadStoreShelvesAsync(_mockDataDir, cancellationToken);
             var productZones = await _storeFileReader.LoadStoreProductZonesAsync(_mockDataDir, cancellationToken);
+
+            // Filter zones/shelves/product-zone mappings to the requested store to avoid cross-store contamination
+            if (!string.IsNullOrWhiteSpace(routeDto.StoreId))
+            {
+                if (zones != null)
+                    zones = zones.Where(z => string.Equals(z.StoreId, routeDto.StoreId, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (shelves != null)
+                    shelves = shelves.Where(s => string.Equals(s.StoreId, routeDto.StoreId, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (productZones != null)
+                    productZones = productZones.Where(pz => string.Equals(pz.StoreId, routeDto.StoreId, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
             var store = stores?.FirstOrDefault(s => string.Equals(s.StoreId, routeDto.StoreId, StringComparison.OrdinalIgnoreCase));
             var product = products?.FirstOrDefault(p => string.Equals(p.ProductId, routeDto.ProductId, StringComparison.OrdinalIgnoreCase));
             return (store, product, zones, shelves, productZones);
