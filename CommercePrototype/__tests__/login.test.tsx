@@ -16,14 +16,14 @@ describe("Login (skeleton)", () => {
   });
 
   test("Back button calls navigation.goBack", () => {
-    const navigation: any = { goBack: jest.fn() };
+    const navigation: any = { navigate: jest.fn() };
     const route: any = { key: "Login", name: "Login" };
 
     const { getByLabelText } = renderWithProviders(
       <LoginScreen navigation={navigation} route={route} />,
     );
 
-    fireEvent.press(getByLabelText("Continue as guest"));
-    expect(navigation.goBack).toHaveBeenCalled();
+    fireEvent.press(getByLabelText("Create account"));
+    expect(navigation.navigate).toHaveBeenCalledWith("Register");
   });
 });

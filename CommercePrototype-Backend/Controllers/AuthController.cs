@@ -5,6 +5,7 @@ using CommercePrototype_Backend.Services.Auth;
 using CommercePrototype_Backend.Services.Sfcc.Shared;
 using CommercePrototype_Backend.Services.Sfcc.ShopApi;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace CommercePrototype_Backend.Controllers;
 
@@ -78,7 +79,18 @@ public sealed class AuthController : ControllerBase
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "SFCC registration failed");
-            return StatusCode(400, new { error = "Registration failed", details = ex.Message });
+
+            var statusCode = (int)(ex.StatusCode ?? HttpStatusCode.BadRequest);
+            var message = ex.Message;
+            if (message.Contains("AccessWithoutUserForbiddenException", StringComparison.OrdinalIgnoreCase))
+            {
+                message +=
+                    " | SFCC says an authenticated user is required. In this sandbox, POST /customers usually requires a trusted-system shopper token. " +
+                    "Ensure your OCAPI Shop API Settings include the confidential client_id (Sfcc:OAuthClientId) with access to /customers/auth/trustedsystem and /customers, " +
+                    "and that OAuth client-credentials is configured correctly (client_id:client_secret).";
+            }
+
+            return StatusCode(statusCode, new { error = "Registration failed", details = message });
         }
         catch (Exception ex)
         {
@@ -90,18 +102,13 @@ public sealed class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<ShopperSessionDto>> Login([FromBody] LoginRequestDto request, CancellationToken cancellationToken)
     {
-        if (request is null)
+        if (request is null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return BadRequest(new { error = "login/username and password are required" });
+            return BadRequest(new { error = "username and password are required" });
         }
 
-        var username = request.EffectiveUsername?.Trim();
+        var username = request.Username.Trim();
         var password = request.Password;
-
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-        {
-            return BadRequest(new { error = "login/username and password are required" });
-        }
 
         try
         {
@@ -155,6 +162,16 @@ public sealed class AuthController : ControllerBase
 
             var customerId = session.CustomerId ?? username;
             var jwt = _jwt.CreateToken(customerId ?? string.Empty, sessionId, username);
+
+            // Set cookie for 1 hour
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false, // use false for local HTTP, true for production HTTPS
+                SameSite = SameSiteMode.Lax, // Lax is more permissive for local dev
+                Expires = DateTime.UtcNow.AddHours(1)
+            };
+            Response.Cookies.Append("auth_token", jwt, cookieOptions);
 
             return Ok(new ShopperSessionDto(sessionId, session.CustomerId, "registered", mergedBasketId, jwt));
         }

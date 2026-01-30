@@ -1,0 +1,25 @@
+{
+  "_v": "21.9",
+  "clients": [
+    {
+      "client_id": "4f7c44b2-a1ae-4ddd-8e3a-2ff7670b5990",
+      "allowed_origins": [
+        "http://www.sitegenesis.com"
+      ],
+      "resources": [
+        {
+          "resource_id": "/customer_lists/*/customers",
+          "methods": ["post"],
+          "read_attributes": "(**)",
+          "write_attributes": "(**)"
+        },
+        {
+          "resource_id": "/customer_lists/*/customers/*",
+          "methods": ["get", "patch"],
+          "read_attributes": "(**)",
+          "write_attributes": "(**)"
+        }
+      ]
+    }
+  ]
+}
