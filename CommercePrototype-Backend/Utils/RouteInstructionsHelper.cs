@@ -2,85 +2,107 @@ namespace CommercePrototype_Backend.Utils
 {
     public static class RouteInstructionsHelper
     {
-        
         /// <summary>
-        /// Generates a list of direction sections (zone-based instructions) from a path of grid coordinates.
+        /// Generates human-friendly movement directions from a path of grid coordinates.
+        /// Produces Portuguese sentences like "Ande 9 m para a direita" or "Ande 2 m para baixo e direita".
         /// </summary>
         /// <param name="path">List of (x, y) grid coordinates representing the path.</param>
-        /// <param name="zones">List of ZoneDto representing store zones.</param>
-        /// <returns>List of DirectionSection objects with navigation instructions by zone.</returns>
+        /// <param name="zones">List of ZoneDto representing store zones (optional, used only to add area hints when available).</param>
+        /// <returns>List of DirectionSection objects with navigation instructions.</returns>
         public static List<Models.DirectionSection> GenerateDirections(List<(int x, int y)> path, List<Models.ZoneDto> zones)
         {
             var directions = new List<Models.DirectionSection>();
-            if (path == null || path.Count < 2 || zones == null || zones.Count == 0)
-                return directions;
+            if (path == null || path.Count < 2) return directions;
 
-            string? prevZoneId = null;
-            string? prevZoneName = null;
-            int steps = 0;
-            var from = path[0];
-            var segmentStart = path[0];
-
-            for (int i = 0; i < path.Count; i++)
+            // Build step deltas
+            var steps = new List<(int dx, int dy, double dist)>();
+            for (int i = 0; i < path.Count - 1; i++)
             {
-                var curr = path[i];
-                var zone = GetZoneForCoordinate(curr, zones);
-                if (zone == null)
-                    continue;
-                if (prevZoneId == null)
+                var dx = path[i + 1].x - path[i].x;
+                var dy = path[i + 1].y - path[i].y;
+                var dist = Math.Sqrt(dx * dx + dy * dy);
+                steps.Add((dx, dy, dist));
+            }
+
+            // Compress collinear segments (same primary direction)
+            var compressed = new List<(double dx, double dy, double dist)>();
+            foreach (var s in steps)
+            {
+                var norm = (double v) => Math.Abs(v) < 1e-9 ? 0.0 : v;
+                var dirX = Math.Sign(norm(s.dx));
+                var dirY = Math.Sign(norm(s.dy));
+                if (compressed.Count > 0)
                 {
-                    // First zone
-                    prevZoneId = zone.ZoneId;
-                    prevZoneName = zone.ZoneName ?? zone.ZoneId;
-                    steps = 1;
-                    segmentStart = curr;
-                }
-                else if (zone.ZoneId == prevZoneId)
-                {
-                    steps++;
-                }
-                else
-                {
-                    // Zone changed, add previous segment
-                    directions.Add(new Models.DirectionSection
+                    var last = compressed[^1];
+                    var lastDirX = Math.Sign(norm(last.dx));
+                    var lastDirY = Math.Sign(norm(last.dy));
+                    if (dirX == lastDirX && dirY == lastDirY)
                     {
-                        Type = "zone",
-                        Steps = steps,
-                        From = segmentStart,
-                        To = path[i - 1],
-                        Text = $"Proceed through {prevZoneName} ({steps} step(s))"
-                    });
-                    // Start new segment
-                    prevZoneId = zone.ZoneId;
-                    prevZoneName = zone.ZoneName ?? zone.ZoneId;
-                    steps = 1;
-                    segmentStart = curr;
+                        // merge
+                        compressed[^1] = (last.dx + s.dx, last.dy + s.dy, last.dist + s.dist);
+                        continue;
+                    }
                 }
+                compressed.Add((s.dx, s.dy, s.dist));
             }
-            // Add last segment
-            if (steps > 0 && prevZoneName != null)
+
+            string ToText(double dx, double dy)
             {
-                directions.Add(new Models.DirectionSection
+                var absX = Math.Abs(dx);
+                var absY = Math.Abs(dy);
+                var dirX = dx > 0 ? "direita" : dx < 0 ? "esquerda" : "";
+                var dirY = dy > 0 ? "baixo" : dy < 0 ? "cima" : "";
+                if (absX > 0 && absY > 0)
                 {
-                    Type = "zone",
-                    Steps = steps,
-                    From = segmentStart,
-                    To = path[^1],
-                    Text = $"Proceed through {prevZoneName} ({steps} step(s))"
-                });
+                    // diagonal: mention both
+                    var mainFirst = absX >= absY;
+                    return mainFirst ? $"para {dirX} e {dirY}" : $"para {dirY} e {dirX}";
+                }
+                if (absX > 0) return $"para {dirX}";
+                if (absY > 0) return $"para {dirY}";
+                return "em frente";
             }
-            // Arrival
-            if (path.Count > 1)
+
+            // Optionally add zone hint for destination
+            string? destArea = null;
+            if (zones != null && zones.Count > 0)
             {
-                directions.Add(new Models.DirectionSection
+                var dest = path[^1];
+                var zone = GetZoneForCoordinate(dest, zones);
+                if (zone != null)
+                    destArea = zone.ZoneName ?? zone.ZoneId;
+            }
+
+            foreach (var c in compressed)
+            {
+                var distM = Math.Round(c.dist); // each grid cell is 1 m
+                var text = $"Ande {distM} m {ToText(c.dx, c.dy)}";
+                var section = new Models.DirectionSection
                 {
-                    Type = "arrive",
+                    Type = "move",
                     Steps = 0,
-                    From = path[^2],
-                    To = path[^1],
-                    Text = "You have arrived at your destination"
-                });
+                    From = default,
+                    To = default,
+                    Text = text,
+                    DistanceMeters = (int)distM,
+                    Area = null
+                };
+                directions.Add(section);
             }
+
+            // Arrival hint: send only a text line, omit DistanceMeters and Area
+            string arrivalText = "Chegou ao seu destino";
+            directions.Add(new Models.DirectionSection
+            {
+                Type = "arrive",
+                Steps = 0,
+                From = default,
+                To = default,
+                Text = arrivalText,
+                DistanceMeters = null,
+                Area = null
+            });
+
             return directions;
         }
 
@@ -89,7 +111,6 @@ namespace CommercePrototype_Backend.Utils
         /// </summary>
         private static Models.ZoneDto? GetZoneForCoordinate((int x, int y) coord, List<Models.ZoneDto> zones)
         {
-            // This assumes grid coordinates map to zone bounding boxes (rounded to int)
             foreach (var zone in zones)
             {
                 if (zone.Position == null) continue;

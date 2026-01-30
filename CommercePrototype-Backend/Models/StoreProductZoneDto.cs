@@ -24,5 +24,17 @@ namespace CommercePrototype_Backend.Models
         /// Shelf identifier where the product is located (optional).
         /// </summary>
         public string? ShelfId { get; set; }
+
+        /// <summary>
+        /// Optional in-shelf coordinates (meters) for the product destination.
+        /// Must be inside the referenced shelf bounds if ShelfId is provided.
+        /// </summary>
+        public double? X { get; set; }
+        public double? Y { get; set; }
+
+        /// <summary>
+        /// Optional product name (useful for synthetic/demo products not listed in products.json).
+        /// </summary>
+        public string? ProductName { get; set; }
     }
 }

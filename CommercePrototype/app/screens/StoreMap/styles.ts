@@ -1,11 +1,13 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 export default StyleSheet.create({
   fullContainer: {
     flex: 1,
     width: "100%",
-    alignItems: "stretch",
+    alignItems: "center",
+    justifyContent: "flex-start",
     paddingHorizontal: 12,
+    paddingBottom: 56,
     backgroundColor: "#fff",
   },
   selectorRow: {
@@ -38,12 +40,12 @@ export default StyleSheet.create({
     flex: 1,
     alignSelf: "stretch",
     marginHorizontal: 6,
-    minHeight: 480,
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
+    minHeight: 0,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: "transparent",
+    borderRadius: 0,
+    overflow: "visible",
   },
   infoRow: {
     padding: 8,
@@ -67,13 +69,29 @@ export default StyleSheet.create({
   routeButton: { marginLeft: 6 },
   directionsPanel: { padding: 8, borderTopWidth: 1, borderTopColor: "#eee" },
   directionItem: { paddingVertical: 4 },
-  mapRow: { flexDirection: "row", flex: 1, alignItems: "stretch", gap: 12 },
+  mapRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    gap: Platform.OS === 'web' ? 6 : 8,
+    paddingTop: 12,
+    marginBottom: 56,
+    width: "100%",
+  },
   sidePanel: {
-    width: 300,
+    width: 320,
+    maxWidth: 420,
+    alignSelf: "flex-start",
     padding: 12,
     borderLeftWidth: 1,
     borderLeftColor: "#f3f3f3",
     backgroundColor: "#fafafa",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    marginBottom: 56,
+    marginRight: Platform.OS === 'web' ? 80 : 16,
   },
   // zone detail card styles
   zoneCard: {

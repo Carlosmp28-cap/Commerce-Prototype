@@ -211,12 +211,20 @@ namespace CommercePrototype_Backend.Services
                 var storeId = n.GetPropertyOrDefault("storeId") ?? string.Empty;
                 var zoneId = n.GetPropertyOrDefault("zoneId") ?? null;
                 var shelfId = n.GetPropertyOrDefault("shelfId") ?? n.GetPropertyOrDefault("shelf") ?? null;
+                // optional in-shelf coordinates
+                double? x = null, y = null;
+                if (n.TryGetProperty("x", out var xp) && xp.ValueKind == JsonValueKind.Number) x = xp.GetDouble();
+                if (n.TryGetProperty("y", out var yp) && yp.ValueKind == JsonValueKind.Number) y = yp.GetDouble();
+                var productName = n.GetPropertyOrDefault("productName");
                 list.Add(new StoreProductZoneDto
                 {
                     ProductId = productId,
                     StoreId = storeId,
                     ZoneId = zoneId,
-                    ShelfId = shelfId
+                    ShelfId = shelfId,
+                    X = x,
+                    Y = y,
+                    ProductName = productName
                 });
             }
             return list;

@@ -188,11 +188,17 @@ namespace CommercePrototype_Backend.Controllers
                     productId = pz.ProductId,
                     shelfId = pz.ShelfId,
                     zoneId = pz.ZoneId,
-                    productName = pn
+                    productName = pn ?? pz.ProductName,
+                    x = pz.X,
+                    y = pz.Y
                 };
             }).ToList();
 
-             return Ok(result);
-         }
+            // Synthetic product generation disabled
+            // Previously: add 4 synthetic products per shelf to result
+            // Now: only return actual mappings from data files
+
+            return Ok(result);
+        }
     }
 }

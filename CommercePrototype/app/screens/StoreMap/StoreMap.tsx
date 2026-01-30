@@ -1,49 +1,19 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-} from "react-native";
-import Svg, {
-  Rect,
-  G,
-  Polyline,
-  Polygon,
-  Defs,
-  LinearGradient,
-  Stop,
-  Text as SvgText,
-  Circle,
-} from "react-native-svg";
+import { View, Text, useWindowDimensions, Platform } from "react-native";
 import styles from "./styles";
+import MapCanvas from "./components/MapCanvas";
+import ZoneCard, { Zone as ZoneType, Shelf as ShelfType } from "./components/ZoneCard";
+import DirectionsCard from "./components/DirectionsCard";
+import SelectorsBar from "./components/SelectorsBar";
 
 // Types
 type Store = {
   storeId: string;
   gridDimensions: { width: number; height: number; unit?: string };
 };
-type Shelf = {
-  id: string;
-  storeId: string;
-  zoneId?: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-type Zone = {
-  storeId: string;
-  zoneId: string;
-  zoneName?: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  category?: string;
-};
+// Reuse shared types
+type Shelf = ShelfType;
+type Zone = ZoneType;
 
 interface Props {
   storeId: string;
@@ -56,13 +26,45 @@ interface Props {
 
 export default function StoreMap({
   storeId,
-  containerWidth = 360,
-  containerHeight = 360,
+  containerWidth = 1200,
+  containerHeight = 900,
   showGrid = true,
   path,
   baseUrl = "http://localhost:5035/api/StoreLayout/map",
 }: Props) {
   const [store, setStore] = useState<Store | null>(null);
+  const { width: winW, height: winH } = useWindowDimensions();
+  const [selectorH, setSelectorH] = useState(0);
+  const [infoH, setInfoH] = useState(0);
+  // Responsive behavior: on native (tablet/phone) with narrower widths, stack the panel below the map
+  const stackOnNative = Platform.OS !== 'web' && winW < 980;
+  // explicit sizing for the map container
+  // reserve ~340px for the side panel + margins (0 when stacked)
+  const sidePanelReserve = stackOnNative ? 0 : 340;
+  const horizontalGutters = 40; // paddings/margins around content
+  const verticalGutters = 64;   // paddings between sections
+  // Use safe estimates before actual onLayout measurements arrive
+  const estimatedSelectorH = selectorH || 96;
+  const estimatedInfoH = infoH || 56;
+  const bottomSafeSpace = 48;
+  const mapWidth = Math.max(
+    700,
+    Math.min(
+      containerWidth,
+      Math.max(320, winW - sidePanelReserve - horizontalGutters)
+    ),
+  );
+  const mapHeight = Math.max(
+    550,
+    Math.min(
+      containerHeight,
+      Math.max(
+        320,
+        winH - estimatedSelectorH - estimatedInfoH - verticalGutters - bottomSafeSpace
+      )
+    ),
+  );
+
   const [shelvesAll, setShelvesAll] = useState<any[]>([]);
   const [zonesAll, setZonesAll] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,6 @@ export default function StoreMap({
   // public products API which serves a different purpose.
   useEffect(() => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const data = require("../../../CommercePrototype-Backend/mockData/products.json");
       const hits = data.products ?? data ?? [];
       const mapped = (hits || [])
@@ -130,11 +131,8 @@ export default function StoreMap({
   const [startY, setStartY] = useState<string>("0");
   const [routePath, setRoutePath] = useState<{ x: number; y: number }[]>([]);
   const [routeLoading, setRouteLoading] = useState<boolean>(false);
+  const [directions, setDirections] = useState<any[] | null>(null);
   const [showDebugOverlay, setShowDebugOverlay] = useState<boolean>(false);
-  const [adjustedStart, setAdjustedStart] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
 
   // Auto-load product->shelf mappings when a zone is selected (if not already loaded)
   useEffect(() => {
@@ -268,8 +266,8 @@ export default function StoreMap({
   if (loading) return <Text>Loading map...</Text>;
   if (error) return <Text>Error loading map: {error}</Text>;
 
-  // Use single `store` state set by the fetch
   const currentStore: Store | null = store;
+  if (!currentStore) return <Text>Store not found</Text>;
 
   const shelves: Shelf[] = (shelvesAll || []).map((s: any) => ({
     id: s.Id ?? s.id,
@@ -280,7 +278,6 @@ export default function StoreMap({
     width: s.Width ?? s.width ?? 1,
     height: s.Height ?? s.height ?? 1,
   }));
-
   const zones: Zone[] = (zonesAll || []).map((z: any) => ({
     storeId: currentStoreId,
     zoneId: z.ZoneId ?? z.zoneId ?? z.Id ?? z.id,
@@ -292,24 +289,16 @@ export default function StoreMap({
     category: z.Category ?? z.category ?? undefined,
   }));
 
-  if (!currentStore) return <Text>Store not found</Text>;
-
   const storeW = currentStore.gridDimensions?.width ?? 10;
   const storeH = currentStore.gridDimensions?.height ?? 10;
 
   // Use SVG viewBox in store units so the SVG scales to fill container keeping coordinates in meters
-  const toPx = (v: number) => v; // coordinates used directly in viewBox units
+  // const toPx = (v: number) => v; // removed unused
 
-  // stronger, more saturated colors for zones
-  const zoneColors = [
-    "#ff5252",
-    "#00c853",
-    "#2979ff",
-    "#ffd600",
-    "#7c4dff",
-    "#00bfa5",
-    "#ff8a50",
-  ];
+  // stronger, more saturated colors for zones (moved inside MapCanvas)
+  // const zoneColors = ["#ff5252", "#00c853", "#2979ff", "#ffd600", "#7c4dff", "#00bfa5", "#ff8a50"]; // removed unused
+
+  // mapWidth and mapHeight computed near the top using window and reserved panel space
 
   // prefer routePath (from backend) but fall back to prop 'path' if provided
   const drawnPath =
@@ -381,9 +370,7 @@ export default function StoreMap({
     return false;
   };
 
-  const clientGrid = Array.from({ length: gridCols }, () =>
-    Array(gridRows).fill(true),
-  );
+  const clientGrid = Array.from({ length: gridCols }, () => Array(gridRows).fill(true));
   for (let gx = 0; gx < gridCols; gx++) {
     for (let gy = 0; gy < gridRows; gy++) {
       clientGrid[gx][gy] = !isCellBlockedLocal(gx, gy);
@@ -395,7 +382,7 @@ export default function StoreMap({
   );
   const startIdxY = Math.max(
     0,
-    Math.min(gridRows - 1, Math.floor(startMapped.y / gridResolution)),
+    Math.min(gridCols - 1, Math.floor(startMapped.y / gridResolution)),
   );
 
   // Determine which products to show in the dropdown:
@@ -478,950 +465,249 @@ export default function StoreMap({
     return base;
   };
 
+  // Helper: render a human-friendly Portuguese direction from the server-provided step
+  const formatDirectionSentence = (d: any, idx: number) => {
+    const txt = (d.summary ?? d.text ?? d.instruction ?? "").toString();
+    const dist = d.distanceMeters ?? d.distance ?? null;
+    const area = d.area ?? d.zone ?? d.zoneName ?? d.target ?? null;
+    const via = (d.via ?? d.viaName ?? "").toString();
+    const entranceHint = /entrada|entrance|door|porta/i.test(txt + " " + via) ? "pela entrada" : "";
+
+    // If server provided actionable text with distance, use it
+    if (dist != null && txt) {
+      const distRound = Math.round(Number(dist));
+      // If txt already contains a direction keyword, keep it
+      if (/direita|esquerda|cima|baixo|frente/i.test(txt)) {
+        return txt.startsWith("Ande") ? txt : `Ande ${distRound} m — ${txt}`;
+      }
+      // prefer destination hint only as suffix, but focus on movement
+      const suffix = area ? ` até a área ${area}` : "";
+      return `Ande ${distRound} m — ${txt}${suffix}`.trim();
+    }
+    // If only distance+area, it is not very helpful; fallback to geometric derivation below
+    if (dist != null && area && !txt) {
+      const distRound = Math.round(Number(dist));
+      return `Ande ${distRound} m ${entranceHint} até a área ${area}`.trim();
+    }
+    if (txt) return txt;
+    if (area) return `Dirija-se à área ${area}`;
+    return `Passo ${idx + 1}`;
+  };
+
   const displayedProducts = computeDisplayedProducts();
+
+  const handleGetRoute = async () => {
+    setRouteLoading(true);
+    try {
+      const sxNum = parseFloat(startX) || 0;
+      const syNum = parseFloat(startY) || 0;
+      const startIsIntXLocal = Math.abs(sxNum - Math.round(sxNum)) < 1e-6;
+      const startIsIntYLocal = Math.abs(syNum - Math.round(syNum)) < 1e-6;
+      const startPosX = startIsIntXLocal ? sxNum + 0.5 : sxNum;
+      const startPosY = startIsIntYLocal ? syNum + 0.5 : syNum;
+
+      const gridResolution = 1;
+      const cols = Math.max(1, Math.ceil(storeW));
+      const rows = Math.max(1, Math.ceil(storeH));
+      const isCellBlocked = (sx: number, sy: number) => {
+        for (const s of shelves) {
+          const origX0 = s.x - s.width / 2.0;
+          const origY0 = s.y - s.height / 2.0;
+          const origX1 = s.x + s.width / 2.0;
+          const origY1 = s.y + s.height / 2.0;
+          let shelfX0 = origX0; let shelfY0 = origY0; let shelfX1 = origX1; let shelfY1 = origY1;
+          const shrink = 0.1;
+          if (shelfX1 - shelfX0 > 2.0 * shrink) { shelfX0 += shrink; shelfX1 -= shrink; }
+          if (shelfY1 - shelfY0 > 2.0 * shrink) { shelfY0 += shrink; shelfY1 -= shrink; }
+          const gx0Shelf = Math.max(0, Math.min(cols - 1, Math.floor(shelfX0 / gridResolution)));
+          const gy0Shelf = Math.max(0, Math.min(rows - 1, Math.floor(shelfY0 / gridResolution)));
+          const gx1Shelf = Math.max(0, Math.min(cols - 1, Math.floor(shelfX1 / gridResolution)));
+          const gy1Shelf = Math.max(0, Math.min(rows - 1, Math.floor(shelfY1 / gridResolution)));
+          if (sx >= gx0Shelf && sx <= gx1Shelf && sy >= gy0Shelf && sy <= gy1Shelf) return true;
+        }
+        return false;
+      };
+      const clientGridLocal = Array.from({ length: cols }, () => Array(rows).fill(true));
+      for (let gx = 0; gx < cols; gx++) {
+        for (let gy = 0; gy < rows; gy++) {
+          clientGridLocal[gx][gy] = !isCellBlocked(gx, gy);
+        }
+      }
+      let sPx = startPosX; let sPy = startPosY;
+      const startIdxXLocal = Math.max(0, Math.min(cols - 1, Math.floor(sPx / gridResolution)));
+      const startIdxYLocal = Math.max(0, Math.min(rows - 1, Math.floor(sPy / gridResolution)));
+      if (isCellBlocked(startIdxXLocal, startIdxYLocal)) {
+        const visited = Array.from({ length: cols }, () => Array(rows).fill(false));
+        const q: { x: number; y: number }[] = [];
+        q.push({ x: startIdxXLocal, y: startIdxYLocal });
+        visited[startIdxXLocal][startIdxYLocal] = true;
+        let found: { x: number; y: number } | null = null;
+        while (q.length > 0) {
+          const cur = q.shift()!;
+          const neigh = [ { x: cur.x + 1, y: cur.y }, { x: cur.x - 1, y: cur.y }, { x: cur.x, y: cur.y + 1 }, { x: cur.x, y: cur.y - 1 } ];
+          for (const n of neigh) {
+            if (n.x < 0 || n.x >= cols || n.y < 0 || n.y >= rows) continue;
+            if (visited[n.x][n.y]) continue;
+            visited[n.x][n.y] = true;
+            if (!isCellBlocked(n.x, n.y)) { found = n; q.length = 0; break; }
+            q.push(n);
+          }
+        }
+        if (found) {
+          sPx = found.x + 0.5 * gridResolution; sPy = found.y + 0.5 * gridResolution;
+        }
+      }
+
+      const sendRequest = async (bodyObj: any) => {
+        const apiRoot = productsApiRoot || 'http://localhost:5035/api';
+        try {
+          const dirRes = await fetch(`${apiRoot}/routes/instructions/directions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) });
+          if (dirRes.ok) { const json = await dirRes.json(); return { path: json.Path ?? json.path ?? null, dirs: json.Directions ?? json.directions ?? null }; }
+        } catch (e) { console.warn('Directions endpoint failed, falling back', e); }
+        try {
+          const res = await fetch(`${apiRoot}/routes/instructions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) });
+          if (!res.ok) { console.warn('Route request failed status:', res.status); return { path: null, dirs: null }; }
+          const json = await res.json();
+          return { path: json.Path ?? json.path ?? null, dirs: json.Directions ?? json.directions ?? null };
+        } catch (e) { console.warn('Route request error', e); return { path: null, dirs: null }; }
+      };
+
+      let latestDirs: any[] | null = null; let pathResponse: any[] | null = null;
+      const initial = await sendRequest({ StoreId: currentStoreId, ProductId: productId, StartPosition: { X: sPx, Y: sPy }, GridResolutionMeters: 1 });
+      if (initial) { pathResponse = initial.path; latestDirs = initial.dirs ?? null; }
+      if (!pathResponse || pathResponse.length === 0) {
+        const sx0 = Math.max(0, Math.min(cols - 1, Math.floor(sPx / gridResolution)));
+        const sy0 = Math.max(0, Math.min(rows - 1, Math.floor(sPy / gridResolution)));
+        const maxRadius = Math.max(cols, rows);
+        let foundPath: any[] | null = null;
+        outer: for (let r = 1; r <= Math.min(10, maxRadius); r++) {
+          for (let dx = -r; dx <= r; dx++) {
+            const dy = r - Math.abs(dx);
+            const candidates = [ { x: sx0 + dx, y: sy0 + dy }, { x: sx0 + dx, y: sy0 - dy } ];
+            for (const c of candidates) {
+              if (c.x < 0 || c.x >= cols || c.y < 0 || c.y >= rows) continue;
+              if (isCellBlocked(c.x, c.y)) continue;
+              const tryBody = { StoreId: currentStoreId, ProductId: productId, StartPosition: { X: c.x + 0.5 * gridResolution, Y: c.y + 0.5 * gridResolution }, GridResolutionMeters: 1 };
+              const p = await sendRequest(tryBody);
+              if (p && p.path && p.path.length > 0) { foundPath = p.path; latestDirs = p.dirs ?? null; break outer; }
+            }
+          }
+        }
+        if (foundPath) pathResponse = foundPath;
+      }
+      setRoutePath(pathResponse ?? []);
+      setDirections(latestDirs ?? null);
+    } catch (err: any) {
+      console.error("Route request error", err);
+      setRoutePath([]);
+    } finally {
+      setRouteLoading(false);
+    }
+  };
 
   return (
     <View style={styles.fullContainer}>
-      <View style={styles.selectorRow}>
-        {/* Store dropdown with search */}
-        <View style={{ width: 160, position: "relative" }}>
-          <TextInput
-            value={storeSearch || currentStoreId}
-            onChangeText={(t) => {
-              setStoreSearch(t);
-              setShowStoreDropdown(true);
-            }}
-            onFocus={() => setShowStoreDropdown(true)}
-            placeholder="Select store"
-            style={[styles.routeInput, { width: 160 }]}
-          />
-          {showStoreDropdown && (
-            <View
-              onStartShouldSetResponder={() => true}
-              style={{
-                position: "absolute",
-                top: 44,
-                left: 0,
-                zIndex: 99999,
-                elevation: 50,
-                width: 160,
-                height: 200,
-                backgroundColor: "#fff",
-                borderColor: "#ddd",
-                borderWidth: 1,
-                shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-                overflow: "hidden",
-              }}
-            >
-              <ScrollView
-                style={{ height: 200 }}
-                contentContainerStyle={{ paddingVertical: 4 }}
-              >
-                {knownStores
-                  .filter((s) =>
-                    s.toLowerCase().includes((storeSearch || "").toLowerCase()),
-                  )
-                  .map((s) => (
-                    <TouchableOpacity
-                      key={s}
-                      onPress={() => {
-                        // when switching stores, clear inputs and selections to avoid cross-store bugs
-                        setCurrentStoreId(s);
-                        setStoreSearch("");
-                        setProductId("");
-                        setProductSearch("");
-                        setProductsAll([]);
-                        setSelectedZone(null);
-                        setProductZones(null);
-                        setRoutePath([]);
-                        setStartX("0");
-                        setStartY("0");
-                        setShowStoreDropdown(false);
-                      }}
-                      style={{ paddingVertical: 6, paddingHorizontal: 10 }}
-                    >
-                      <Text style={{ lineHeight: 20, fontSize: 14 }}>{s}</Text>
-                    </TouchableOpacity>
-                  ))}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-
-        {/* shelf display toggle removed per request */}
-
-        {/* Route request inputs */}
-        <View style={styles.routeControls}>
-          {/* Product searchable dropdown */}
-          <View style={{ width: 230, position: "relative" }}>
-            <TextInput
-              value={
-                productSearch ||
-                (productsAll.find((p) => p.productId === productId)?.name ??
-                  productId)
-              }
-              onChangeText={(t) => {
-                setProductSearch(t);
-                setShowProductDropdown(true);
-                // If the user cleared the input completely, also clear the selected product id
-                if ((t || "").trim() === "") setProductId("");
-              }}
-              onFocus={() => setShowProductDropdown(true)}
-              placeholder="ProductId or name"
-              style={[styles.routeInput, { width: 220 }]}
-            />
-            {showProductDropdown && (
-              <View
-                onStartShouldSetResponder={() => true}
-                style={{
-                  position: "absolute",
-                  top: 46,
-                  left: 0,
-                  zIndex: 99999,
-                  elevation: 50,
-                  width: 220,
-                  height: 240,
-                  backgroundColor: "#fff",
-                  borderColor: "#ddd",
-                  borderWidth: 1,
-                  shadowColor: "#000",
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
-                  overflow: "hidden",
-                }}
-              >
-                <View style={{ padding: 8 }}>
-                  {productId ? (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 6,
-                      }}
-                    >
-                      <Text style={{ fontWeight: "600" }}>
-                        Selected:{" "}
-                        {productsAll.find((p) => p.productId === productId)
-                          ?.name ?? productId}
-                      </Text>
-                      <View style={{ flexDirection: "row" }}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            // allow user to quickly clear the selection and type a new search
-                            setProductId("");
-                            setProductSearch("");
-                            // keep previously loaded product list so the dropdown can show
-                            // suggestions immediately; re-open the dropdown for typing
-                            setShowProductDropdown(true);
-                          }}
-                          style={{ marginLeft: 8, padding: 6 }}
-                        >
-                          <Text style={{ color: "#d32f2f" }}>Clear</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ) : null}
-                  <ScrollView
-                    style={{ maxHeight: 200 }}
-                    contentContainerStyle={{ paddingVertical: 4 }}
-                  >
-                    {displayedProducts
-                      .filter(
-                        (p) =>
-                          (p.productId ?? "")
-                            .toLowerCase()
-                            .includes((productSearch || "").toLowerCase()) ||
-                          (p.name ?? "")
-                            .toLowerCase()
-                            .includes((productSearch || "").toLowerCase()),
-                      )
-                      .slice(0, 50)
-                      .map((p) => (
-                        <TouchableOpacity
-                          key={p.productId}
-                          onPress={() => {
-                            setProductId(p.productId);
-                            setProductSearch(p.name ?? "");
-                            setShowProductDropdown(false);
-                            // if we have product->zone mappings, try to open the zone containing this product
-                            try {
-                              if (productZones && productZones.length > 0) {
-                                const mapping = productZones.find(
-                                  (m) =>
-                                    m.productId === p.productId ||
-                                    m.productId === p.productId,
-                                );
-                                if (mapping) {
-                                  const shelf = shelves.find(
-                                    (sh) =>
-                                      sh.id === mapping.shelfId ||
-                                      sh.id ===
-                                        (mapping.shelfId ?? mapping.shelfId),
-                                  );
-                                  if (shelf) {
-                                    const zone = zones.find(
-                                      (z) =>
-                                        z.zoneId === shelf.zoneId ||
-                                        z.zoneId ===
-                                          (shelf.zoneId ?? shelf.zoneId),
-                                    );
-                                    if (zone) setSelectedZone(zone);
-                                  }
-                                }
-                              }
-                            } catch (err) {
-                              /* ignore mapping errors */
-                            }
-                          }}
-                          style={{ paddingVertical: 6, paddingHorizontal: 10 }}
-                        >
-                          <View
-                            style={{
-                              borderBottomWidth: 1,
-                              borderBottomColor: "#f0f0f0",
-                              paddingBottom: 6,
-                            }}
-                          >
-                            <Text style={{ lineHeight: 20, fontSize: 14 }}>
-                              {p.name ?? "Produto desconhecido"}
-                            </Text>
-                            <Text
-                              style={{
-                                color: "#888",
-                                fontSize: 12,
-                                marginTop: 4,
-                              }}
-                            >
-                              {p.productId}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                  </ScrollView>
-                </View>
-              </View>
-            )}
-          </View>
-          <View style={{ flexDirection: "row" }}>
-            <TextInput
-              value={startX}
-              onChangeText={setStartX}
-              placeholder="startX"
-              style={[styles.routeInput, { width: 60, marginRight: 6 }]}
-              keyboardType="numeric"
-            />
-            <TextInput
-              value={startY}
-              onChangeText={setStartY}
-              placeholder="startY"
-              style={[styles.routeInput, { width: 60 }]}
-              keyboardType="numeric"
-            />
-          </View>
-          <TouchableOpacity
-            onPress={async () => {
-              // perform POST to /api/routes/instructions
-              setRouteLoading(true);
-              try {
-                // align start position sent to backend with the visual startMapped
-                // used for rendering: if the user entered integer grid indices
-                // treat them as cell indices and use cell centers (add 0.5).
-                const sxNum = parseFloat(startX) || 0;
-                const syNum = parseFloat(startY) || 0;
-                const startIsIntXLocal =
-                  Math.abs(sxNum - Math.round(sxNum)) < 1e-6;
-                const startIsIntYLocal =
-                  Math.abs(syNum - Math.round(syNum)) < 1e-6;
-                const startPosX = startIsIntXLocal ? sxNum + 0.5 : sxNum;
-                const startPosY = startIsIntYLocal ? syNum + 0.5 : syNum;
-
-                // Helper: determine whether a grid cell (sx,sy) is blocked by any shelf
-                const gridResolution = 1;
-                const cols = Math.max(1, Math.ceil(storeW));
-                const rows = Math.max(1, Math.ceil(storeH));
-                const isCellBlocked = (sx: number, sy: number) => {
-                  for (const s of shelves) {
-                    // shelf positions in data are center-based (x,y), width/height in meters
-                    const origX0 = s.x - s.width / 2.0;
-                    const origY0 = s.y - s.height / 2.0;
-                    const origX1 = s.x + s.width / 2.0;
-                    const origY1 = s.y + s.height / 2.0;
-                    let shelfX0 = origX0;
-                    let shelfY0 = origY0;
-                    let shelfX1 = origX1;
-                    let shelfY1 = origY1;
-                    const shrink = 0.1;
-                    if (shelfX1 - shelfX0 > 2.0 * shrink) {
-                      shelfX0 += shrink;
-                      shelfX1 -= shrink;
-                    }
-                    if (shelfY1 - shelfY0 > 2.0 * shrink) {
-                      shelfY0 += shrink;
-                      shelfY1 -= shrink;
-                    }
-                    const gx0Shelf = Math.max(
-                      0,
-                      Math.min(cols - 1, Math.floor(shelfX0 / gridResolution)),
-                    );
-                    const gy0Shelf = Math.max(
-                      0,
-                      Math.min(rows - 1, Math.floor(shelfY0 / gridResolution)),
-                    );
-                    const gx1Shelf = Math.max(
-                      0,
-                      Math.min(cols - 1, Math.floor(shelfX1 / gridResolution)),
-                    );
-                    const gy1Shelf = Math.max(
-                      0,
-                      Math.min(rows - 1, Math.floor(shelfY1 / gridResolution)),
-                    );
-                    if (
-                      sx >= gx0Shelf &&
-                      sx <= gx1Shelf &&
-                      sy >= gy0Shelf &&
-                      sy <= gy1Shelf
-                    )
-                      return true;
-                  }
-                  return false;
-                };
-
-                // Prepare a client-side grid for debugging/overlay rendering
-                const clientGrid = Array.from({ length: cols }, () =>
-                  Array(rows).fill(true),
-                );
-                for (let gx = 0; gx < cols; gx++) {
-                  for (let gy = 0; gy < rows; gy++) {
-                    clientGrid[gx][gy] = !isCellBlocked(gx, gy);
-                  }
-                }
-
-                // If the chosen start cell is blocked, find the nearest free cell (BFS)
-                let sPx = startPosX;
-                let sPy = startPosY;
-                const startIdxX = Math.max(
-                  0,
-                  Math.min(cols - 1, Math.floor(sPx / gridResolution)),
-                );
-                const startIdxY = Math.max(
-                  0,
-                  Math.min(rows - 1, Math.floor(sPy / gridResolution)),
-                );
-                if (isCellBlocked(startIdxX, startIdxY)) {
-                  const visited = Array.from({ length: cols }, () =>
-                    Array(rows).fill(false),
-                  );
-                  const q: Array<{ x: number; y: number }> = [];
-                  q.push({ x: startIdxX, y: startIdxY });
-                  visited[startIdxX][startIdxY] = true;
-                  let found: { x: number; y: number } | null = null;
-                  while (q.length > 0) {
-                    const cur = q.shift()!;
-                    const neigh = [
-                      { x: cur.x + 1, y: cur.y },
-                      { x: cur.x - 1, y: cur.y },
-                      { x: cur.x, y: cur.y + 1 },
-                      { x: cur.x, y: cur.y - 1 },
-                    ];
-                    for (const n of neigh) {
-                      if (n.x < 0 || n.x >= cols || n.y < 0 || n.y >= rows)
-                        continue;
-                      if (visited[n.x][n.y]) continue;
-                      visited[n.x][n.y] = true;
-                      if (!isCellBlocked(n.x, n.y)) {
-                        found = n;
-                        q.length = 0;
-                        break;
-                      }
-                      q.push(n);
-                    }
-                  }
-                  if (found) {
-                    sPx = found.x + 0.5 * gridResolution;
-                    sPy = found.y + 0.5 * gridResolution;
-                    // remember adjusted start but do NOT overwrite user inputs
-                    setAdjustedStart({ x: found.x, y: found.y });
-                    console.log(
-                      `Adjusted start to nearest free cell (suggested): (${found.x},${found.y})`,
-                    );
-                  } else {
-                    console.warn(
-                      "No reachable free start cell found; sending original start",
-                    );
-                  }
-                }
-
-                const sendRequest = async (bodyObj: any) => {
-                  console.log("Route request body:", bodyObj);
-                  const res = await fetch(
-                    "http://localhost:5035/api/routes/instructions",
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(bodyObj),
-                    },
-                  );
-                  if (!res.ok) {
-                    console.warn("Route request failed status:", res.status);
-                    return null;
-                  }
-                  const json = await res.json();
-                  console.log("Route response:", json);
-                  return json.Path ?? json.path ?? null;
-                };
-
-                // Try initial request
-                let pathResponse = await sendRequest({
-                  StoreId: currentStoreId,
-                  ProductId: productId,
-                  StartPosition: { X: sPx, Y: sPy },
-                  GridResolutionMeters: 1,
-                });
-
-                // If no path returned, try searching nearby grid cells (by Manhattan distance)
-                if (!pathResponse || pathResponse.length === 0) {
-                  const sx0 = Math.max(
-                    0,
-                    Math.min(cols - 1, Math.floor(sPx / gridResolution)),
-                  );
-                  const sy0 = Math.max(
-                    0,
-                    Math.min(rows - 1, Math.floor(sPy / gridResolution)),
-                  );
-                  const maxRadius = Math.max(cols, rows);
-                  let foundPath: any[] | null = null;
-                  outer: for (let r = 1; r <= Math.min(10, maxRadius); r++) {
-                    for (let dx = -r; dx <= r; dx++) {
-                      const dy = r - Math.abs(dx);
-                      const candidates = [
-                        { x: sx0 + dx, y: sy0 + dy },
-                        { x: sx0 + dx, y: sy0 - dy },
-                      ];
-                      for (const c of candidates) {
-                        if (c.x < 0 || c.x >= cols || c.y < 0 || c.y >= rows)
-                          continue;
-                        if (isCellBlocked(c.x, c.y)) continue;
-                        const tryBody = {
-                          StoreId: currentStoreId,
-                          ProductId: productId,
-                          StartPosition: {
-                            X: c.x + 0.5 * gridResolution,
-                            Y: c.y + 0.5 * gridResolution,
-                          },
-                          GridResolutionMeters: 1,
-                        };
-                        const p = await sendRequest(tryBody);
-                        if (p && p.length > 0) {
-                          foundPath = p;
-                          // remember adjusted start for user information but DO NOT overwrite inputs
-                          setAdjustedStart({ x: c.x, y: c.y });
-                          console.log(
-                            `Retried with start cell (${c.x},${c.y}) — success`,
-                          );
-                          break outer;
-                        }
-                      }
-                    }
-                  }
-                  if (foundPath) pathResponse = foundPath;
-                }
-
-                setRoutePath(pathResponse ?? []);
-              } catch (err: any) {
-                console.error("Route request error", err);
-                setRoutePath([]);
-              } finally {
-                setRouteLoading(false);
-              }
-            }}
-            style={[styles.storeButton, styles.routeButton]}
-          >
-            <Text style={styles.storeButtonText}>
-              {routeLoading ? "Routing..." : "Get Route"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setRoutePath([]);
-            }}
-            style={[styles.storeButton, styles.smallButton]}
-          >
-            <Text style={styles.storeButtonText}>Clear</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowDebugOverlay((s) => !s)}
-            style={[styles.storeButton, styles.smallButton, { marginLeft: 6 }]}
-          >
-            <Text style={styles.storeButtonText}>
-              {showDebugOverlay ? "Hide Debug" : "Show Debug"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.selectorRow} onLayout={(e) => setSelectorH(Math.round(e.nativeEvent.layout.height))}>
+        <SelectorsBar
+          knownStores={knownStores}
+          storeSearch={storeSearch}
+          setStoreSearch={setStoreSearch}
+          showStoreDropdown={showStoreDropdown}
+          setShowStoreDropdown={setShowStoreDropdown}
+          currentStoreId={currentStoreId}
+          setCurrentStoreId={(s) => { setCurrentStoreId(s); setProductsAll([]); setSelectedZone(null); setProductZones(null); setRoutePath([]); setStartX('0'); setStartY('0'); }}
+          productsAll={productsAll}
+          displayedProducts={displayedProducts}
+          productSearch={productSearch}
+          setProductSearch={setProductSearch}
+          showProductDropdown={showProductDropdown}
+          setShowProductDropdown={setShowProductDropdown}
+          productId={productId}
+          setProductId={setProductId}
+          productZones={productZones}
+          shelves={shelves}
+          zones={zones}
+          setSelectedZone={setSelectedZone as any}
+          startX={startX}
+          setStartX={setStartX}
+          startY={startY}
+          setStartY={setStartY}
+          routeLoading={routeLoading}
+          onGetRoute={handleGetRoute}
+          onClear={() => { setRoutePath([]); setDirections(null); }}
+          showDebugOverlay={showDebugOverlay}
+          setShowDebugOverlay={setShowDebugOverlay}
+        />
       </View>
 
-      {/* Overlay that closes dropdowns when clicking outside; placed after selectorRow so it sits above map but below dropdowns */}
       {(showStoreDropdown || showProductDropdown) && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 90000,
-          }}
-          onStartShouldSetResponder={() => true}
-          onResponderRelease={() => {
-            setShowStoreDropdown(false);
-            setShowProductDropdown(false);
-          }}
-        />
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90000 }} onStartShouldSetResponder={() => true} onResponderRelease={() => { setShowStoreDropdown(false); setShowProductDropdown(false); }} />
       )}
 
-      {/* adjustedStart kept for internal use; UI debug note removed */}
+      <View style={[
+        styles.mapRow,
+        {
+          justifyContent: 'flex-start',
+          alignItems: 'flex-start',
+          paddingVertical: 12,
+          flexDirection: stackOnNative ? 'column' : 'row'
+        }
+      ] }>
+        <View style={[styles.mapContainer, { width: mapWidth, height: mapHeight }]}> 
+          <MapCanvas
+            storeW={storeW}
+            storeH={storeH}
+            containerWidth={mapWidth}
+            containerHeight={mapHeight}
+            zones={zones}
+            shelves={shelves}
+            shelfDisplayScale={shelfDisplayScale}
+            selectedZone={selectedZone}
+            setSelectedZone={(z: Zone) => setSelectedZone(z)}
+            mappedPath={mappedPath}
+            resNum={resNum}
+            startMapped={startMapped}
+            showDebugOverlay={showDebugOverlay}
+            clientGrid={clientGrid}
+            gridCols={gridCols}
+            gridRows={gridRows}
+            startIdxX={startIdxX}
+            startIdxY={startIdxY}
+          />
+         </View>
 
-      {/* layout: map on the left, details panel on the right */}
-      <View style={styles.mapRow}>
-        <View style={{ flex: 1 }}>
-          <Svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${storeW} ${storeH}`}
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <Defs>
-              <LinearGradient id="shelfGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <Stop offset="0%" stopColor="#a65d2a" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#5a2f0a" stopOpacity={1} />
-              </LinearGradient>
-              <LinearGradient
-                id="shelfCapGrad"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <Stop offset="0%" stopColor="#c07a3b" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#8b4513" stopOpacity={1} />
-              </LinearGradient>
-            </Defs>
-
-            {/* tiled square background for a clean e-commerce look */}
-            <G>
-              {(() => {
-                const cols = Math.max(1, Math.ceil(storeW));
-                const rows = Math.max(1, Math.ceil(storeH));
-                const cells = [] as any[];
-                for (let i = 0; i < cols; i++) {
-                  for (let j = 0; j < rows; j++) {
-                    const light = (i + j) % 2 === 0;
-                    cells.push(
-                      // draw subtle checker with a faint 1m grid stroke to make cells visible
-                      <Rect
-                        key={`cell-${i}-${j}`}
-                        x={i}
-                        y={j}
-                        width={1}
-                        height={1}
-                        fill={light ? "#ffffff" : "#fbfbfd"}
-                        stroke={"#e8edf5"}
-                        strokeWidth={0.01}
-                        opacity={0.95}
-                      />,
-                    );
-                  }
-                }
-                return cells;
-              })()}
-            </G>
-
-            {/* Debug overlay: blocked/walkable cells and chosen start cell */}
-            {showDebugOverlay && (
-              <G>
-                {(() => {
-                  const rects = [] as any[];
-                  for (let gx = 0; gx < gridCols; gx++) {
-                    for (let gy = 0; gy < gridRows; gy++) {
-                      const walkable = clientGrid[gx][gy];
-                      if (!walkable) {
-                        rects.push(
-                          <Rect
-                            key={`dbg-${gx}-${gy}`}
-                            x={gx}
-                            y={gy}
-                            width={1}
-                            height={1}
-                            fill="#ff5252"
-                            opacity={0.22}
-                          />,
-                        );
-                      }
-                    }
-                  }
-                  // start cell highlight
-                  rects.push(
-                    <Rect
-                      key={`dbg-start`}
-                      x={startIdxX}
-                      y={startIdxY}
-                      width={1}
-                      height={1}
-                      fill={"none"}
-                      stroke={"#000"}
-                      strokeWidth={0.04}
-                    />,
-                  );
-                  return rects;
-                })()}
-              </G>
-            )}
-            {/* zones with friendly names (clickable: opens details panel) */}
-            <G>
-              {zones.map((z, idx) => {
-                const zoneName =
-                  z.zoneName ?? (z as any).name ?? z.zoneId ?? "";
-                const zoneColor = zoneColors[idx % zoneColors.length];
-                const labelWidth = Math.min(Math.max(2, z.width * 0.6), 8);
-                const labelHeight = 0.9;
-                const lx = z.x + z.width / 2 - labelWidth / 2;
-                const ly = z.y + 0.12;
-                const isSelected = selectedZone?.zoneId === z.zoneId;
-                return (
-                  <G key={z.zoneId ?? idx}>
-                    <Rect
-                      x={toPx(z.x)}
-                      y={toPx(z.y)}
-                      width={z.width}
-                      height={z.height}
-                      fill={zoneColor}
-                      // make non-selected zones more translucent and slightly dim the selected state
-                      opacity={isSelected ? 0.8 : 0.45}
-                      stroke="#cfd8e3"
-                      strokeWidth={0.02}
-                      rx={0.3}
-                      ry={0.3}
-                      onPress={() => setSelectedZone(z)}
-                    />
-                    {/* label pill with same zone color and white text for contrast */}
-                    <Rect
-                      x={lx}
-                      y={ly}
-                      width={labelWidth}
-                      height={labelHeight}
-                      rx={0.3}
-                      fill={zoneColor}
-                      opacity={0.96}
-                    />
-                    <SvgText
-                      fontFamily="Inter, Roboto, Helvetica, Arial, sans-serif"
-                      x={z.x + z.width / 2}
-                      y={ly + labelHeight / 2}
-                      fontSize={0.62}
-                      fill="#fff"
-                      textAnchor="middle"
-                      alignmentBaseline="middle"
-                    >
-                      {zoneName}
-                    </SvgText>
-                  </G>
-                );
-              })}
-            </G>
-
-            {/* shelves: grey, semi-transparent, minimal style (always center-origin). Clamp to zone to avoid overlaps when scaled */}
-            <G>
-              {shelves.map((s) => {
-                const scale = shelfDisplayScale;
-                // try to respect the zone so shelves don't visually overlap neighbors when scaled up
-                const zone = zones.find((z) => z.zoneId === s.zoneId);
-                const padding = 0.08;
-                let dispW = s.width * scale;
-                let dispH = s.height * scale;
-                if (zone) {
-                  // keep shelf not larger than zone minus padding
-                  dispW = Math.min(
-                    dispW,
-                    Math.max(0.1, zone.width - padding * 2),
-                  );
-                  dispH = Math.min(
-                    dispH,
-                    Math.max(0.1, zone.height - padding * 2),
-                  );
-                }
-                const cx = s.x;
-                const cy = s.y;
-                // always treat X/Y as center
-                const rInit = {
-                  x: cx - dispW / 2,
-                  y: cy - dispH / 2,
-                  w: dispW,
-                  h: dispH,
-                };
-                const r = { ...rInit };
-                if (zone) {
-                  const minX = zone.x + padding;
-                  const maxX = zone.x + zone.width - padding - r.w;
-                  const minY = zone.y + padding;
-                  const maxY = zone.y + zone.height - padding - r.h;
-                  r.x = Math.max(minX, Math.min(r.x, maxX));
-                  r.y = Math.max(minY, Math.min(r.y, maxY));
-                }
-                const rx = Math.min(0.6, Math.max(0.05, dispW * 0.08));
-                return (
-                  <G key={s.id}>
-                    <Rect
-                      x={r.x + 0.04}
-                      y={r.y + 0.04}
-                      width={r.w}
-                      height={r.h}
-                      rx={rx}
-                      ry={rx}
-                      fill="#000"
-                      opacity={0.06}
-                    />
-                    <Rect
-                      x={r.x}
-                      y={r.y}
-                      width={r.w}
-                      height={r.h}
-                      rx={rx}
-                      ry={rx}
-                      fill="#9e9e9e"
-                      opacity={0.6}
-                      stroke="#7a7a7a"
-                      strokeWidth={0.01}
-                    />
-                  </G>
-                );
-              })}
-            </G>
-
-            {/* start person icon (drawn on top of map) */}
-            <G>
-              {/* head */}
-              <Circle
-                cx={startMapped.x}
-                cy={startMapped.y - 0.25 * resNum}
-                r={0.22 * resNum}
-                fill="#222"
-                stroke="#fff"
-                strokeWidth={0.02}
-              />
-              {/* body */}
-              <Rect
-                x={startMapped.x - 0.22 * resNum}
-                y={startMapped.y - 0.05 * resNum}
-                width={0.44 * resNum}
-                height={0.56 * resNum}
-                rx={0.06 * resNum}
-                fill="#222"
-                stroke="#fff"
-                strokeWidth={0.02}
-              />
-            </G>
-
-            {mappedPath && mappedPath.length > 0 && (
-              <G>
-                <Polyline
-                  points={mappedPath.map((p) => `${p.x},${p.y}`).join(" ")}
-                  fill="none"
-                  stroke="#007bff"
-                  strokeWidth={0.1}
-                />
-                {mappedPath.map((p, i) => {
-                  const next = mappedPath[i + 1];
-                  if (!next) return null; // no arrow for last point
-                  const dx = next.x - p.x;
-                  const dy = next.y - p.y;
-                  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-                  const size = 0.45 * resNum; // arrow size (in store units) — scaled by resolution
-                  // use a slightly narrower base for a nicer arrow shape
-                  const half = size * 0.6;
-                  // triangle points pointing to the right, will be rotated by 'angle' and translated to a point slightly
-                  // ahead along the segment so the arrow appears 'inside' the line rather than on the node
-                  const pts = `0,0 ${-size},${-half} ${-size},${half}`;
-                  const posFactor = 0.6; // fraction along segment from current point towards next
-                  const tx = p.x + dx * posFactor;
-                  const ty = p.y + dy * posFactor;
-                  return (
-                    <Polygon
-                      key={`p-${i}`}
-                      points={pts}
-                      fill="#007bff"
-                      transform={`translate(${tx},${ty}) rotate(${angle})`}
-                    />
-                  );
-                })}
-                {/* Destination marker: pin + circular head at the final route point */}
-                {(() => {
-                  const dest = mappedPath[mappedPath.length - 1];
-                  if (!dest) return null;
-                  // triangle 'pin' pointing downwards slightly below the destination
-                  const pinWidth = 0.6 * resNum;
-                  const pinHeight = 1.0 * resNum;
-                  const pinPts = `${dest.x},${dest.y + pinHeight} ${dest.x - pinWidth / 2},${dest.y} ${dest.x + pinWidth / 2},${dest.y}`;
-                  return (
-                    <G key="destination-marker">
-                      <Polygon points={pinPts} fill="#d32f2f" opacity={1} />
-                      <Circle
-                        cx={dest.x}
-                        cy={dest.y - 0.15 * resNum}
-                        r={0.32 * resNum}
-                        fill="#fff"
-                        stroke="#d32f2f"
-                        strokeWidth={0.05}
-                      />
-                    </G>
-                  );
-                })()}
-              </G>
-            )}
-          </Svg>
-        </View>
-        <View style={styles.sidePanel}>
+        <View style={[
+          styles.sidePanel,
+          stackOnNative
+            ? { width: '100%', maxWidth: '100%', marginRight: 0, marginTop: 12 }
+            : { marginTop: 0, gap: 12 }
+        ] }>
           {!selectedZone ? (
-            <Text style={{ margin: 8 }}>
-              Clique numa zona para ver detalhes
-            </Text>
+            <Text style={{ margin: 8 }}>Clique numa zona para ver detalhes</Text>
           ) : (
-            <View style={styles.zoneCard}>
-              <View style={styles.zoneCardHeader}>
-                <Text style={styles.zoneCardTitle}>
-                  {selectedZone.zoneName ??
-                    (selectedZone as any).name ??
-                    selectedZone.zoneId}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setSelectedZone(null)}
-                  style={styles.zoneCardClose}
-                >
-                  <Text style={styles.zoneCardCloseText}>Fechar</Text>
-                </TouchableOpacity>
-              </View>
-              <ScrollView style={styles.zoneCardBody}>
-                <Text style={{ marginBottom: 4, color: "#666" }}>
-                  {selectedZone.zoneId}
-                </Text>
-                <Text style={{ marginBottom: 6 }}>
-                  Dimensões: {selectedZone.width}m × {selectedZone.height}m
-                </Text>
-                {/* shelves in zone */}
-                <Text style={{ fontWeight: "600", marginTop: 8 }}>
-                  Prateleiras
-                </Text>
-                {(() => {
-                  const zoneShelves = shelves.filter(
-                    (sh) => sh.zoneId === selectedZone.zoneId,
-                  );
-                  if (zoneShelves.length === 0)
-                    return <Text>Nenhuma prateleira nesta zona</Text>;
-                  return zoneShelves.map((sh) => (
-                    <View key={sh.id} style={{ paddingVertical: 6 }}>
-                      <Text style={{ fontWeight: "500" }}>{sh.id}</Text>
-                      <Text style={{ color: "#444" }}>
-                        Pos: {sh.x.toFixed(2)}, {sh.y.toFixed(2)} • {sh.width}m
-                        × {sh.height}m
-                      </Text>
-                    </View>
-                  ));
-                })()}
-
-                {/* products for the zone (loaded on demand) */}
-                <Text style={{ fontWeight: "600", marginTop: 8 }}>
-                  Produtos
-                </Text>
-                {!productZones ? (
-                  <TouchableOpacity
-                    onPress={async () => {
-                      try {
-                        const url = `${baseApi}/product-zones?storeId=${encodeURIComponent(currentStoreId)}`;
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error("Não disponível");
-                        const data = await res.json();
-                        setProductZones(data);
-                      } catch (e) {
-                        console.warn("Failed to load product-zones", e);
-                        setProductZones([]);
-                      }
-                    }}
-                    style={{
-                      padding: 8,
-                      backgroundColor: "#eee",
-                      borderRadius: 6,
-                      marginTop: 6,
-                    }}
-                  >
-                    <Text>
-                      Carregar mapeamento de produtos (se suportado pelo
-                      backend)
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  (() => {
-                    const shelfIds = new Set(
-                      shelves
-                        .filter((sh) => sh.zoneId === selectedZone.zoneId)
-                        .map((s) => s.id),
-                    );
-                    const productsInZone = (productZones || []).filter((pz) =>
-                      shelfIds.has(pz.shelfId),
-                    );
-                    if (productsInZone.length === 0)
-                      return <Text>Nenhum produto encontrado nesta zona</Text>;
-                    return productsInZone.map((pz) => (
-                      <TouchableOpacity
-                        key={pz.productId}
-                        onPress={() => {
-                          setProductId(pz.productId);
-                          setProductSearch(
-                            pz.productName ??
-                              productsAll.find(
-                                (pp) => pp.productId === pz.productId,
-                              )?.name ??
-                              "",
-                          );
-                          setShowProductDropdown(false);
-                          // attempt to open/select the zone containing this product's shelf
-                          try {
-                            const shelf = shelves.find(
-                              (sh) =>
-                                sh.id === pz.shelfId || sh.id === pz.ShelfId,
-                            );
-                            if (shelf) {
-                              const zone = zones.find(
-                                (z) =>
-                                  z.zoneId === shelf.zoneId ||
-                                  z.zoneId === shelf.ZoneId,
-                              );
-                              if (zone) setSelectedZone(zone);
-                            }
-                          } catch (err) {
-                            /* ignore */
-                          }
-                        }}
-                        style={{ paddingVertical: 6 }}
-                      >
-                        <Text>
-                          {pz.productName ??
-                            productsAll.find(
-                              (pp) => pp.productId === pz.productId,
-                            )?.name ??
-                            "Produto desconhecido"}
-                        </Text>
-                      </TouchableOpacity>
-                    ));
-                  })()
-                )}
-              </ScrollView>
-            </View>
+            <ZoneCard
+              selectedZone={selectedZone}
+              onClose={() => setSelectedZone(null)}
+              shelves={shelves}
+              zones={zones}
+              baseApi={baseApi}
+              currentStoreId={currentStoreId}
+              productZones={productZones}
+              setProductZones={(pz) => setProductZones(pz)}
+              productsAll={productsAll}
+              setProductId={setProductId}
+              setProductSearch={setProductSearch}
+              setShowProductDropdown={setShowProductDropdown}
+              setSelectedZone={(z) => setSelectedZone(z)}
+            />
           )}
+
+          {/* Directions separated into its own card as requested */}
+          <DirectionsCard directions={directions} formatDirectionSentence={formatDirectionSentence} />
         </View>
       </View>
 
-      <View style={styles.infoRow}>
+      <View style={[styles.infoRow, { marginTop: 8 }]} onLayout={(e) => setInfoH(Math.round(e.nativeEvent.layout.height))}>
         <Text>Store: {currentStoreId}</Text>
       </View>
     </View>

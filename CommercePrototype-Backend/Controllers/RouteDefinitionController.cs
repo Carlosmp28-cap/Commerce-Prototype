@@ -1,4 +1,3 @@
-
 using System;
 using System.Linq;
 using System.Threading;
@@ -89,6 +88,32 @@ namespace CommercePrototype_Backend.Controllers{
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting route instructions for product {ProductId} in store {StoreId}", routeDto?.ProductId, routeDto?.StoreId);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Endpoint that returns path plus rich directions (same as /instructions but explicit path).
+        /// </summary>
+        /// <param name="routeDto">RouteRequestDto containing storeId, productId, and initialPosition coordinates.</param>
+        /// <returns>Path and step-by-step navigation instructions.</returns>
+        [HttpPost("instructions/directions")]
+        public async Task<IActionResult> GetRouteInstructionsWithDirections([FromBody] RouteRequestDto routeDto)
+        {
+            var validation = ValidateParams(routeDto?.StoreId ?? string.Empty, routeDto?.ProductId ?? string.Empty);
+            if (validation != null) return validation;
+
+            try
+            {
+                var result = await _routeDefinitionService.GetRouteWithInstructionsAsync(routeDto!);
+                if (result == null)
+                    return NotFound("No route found.");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting route instructions with directions for product {ProductId} in store {StoreId}", routeDto?.ProductId, routeDto?.StoreId);
                 return StatusCode(500, "Internal server error");
             }
         }

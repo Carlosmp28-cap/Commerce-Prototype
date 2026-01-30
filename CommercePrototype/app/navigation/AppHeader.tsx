@@ -17,7 +17,9 @@ export default function AppHeader(props: Props) {
   const paperTheme = usePaperTheme();
   const { navigation, route } = props;
 
-  const showSecondaryMenu = route.name !== "Checkout";
+  // Hide secondary menu on Checkout and StoreMap only
+  const showSecondaryMenu =
+    route.name !== "Checkout" && route.name !== "StoreMap";
 
   const canGoBack = useMemo(() => {
     try {

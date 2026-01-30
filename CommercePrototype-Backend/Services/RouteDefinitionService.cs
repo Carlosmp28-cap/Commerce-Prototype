@@ -136,14 +136,13 @@ namespace CommercePrototype_Backend.Services
             try
             {
                 var (store, product, zones, shelves, productZones) = await LoadDataAsync(routeDto, cancellationToken);
-                if (store == null || product == null) return null;
+                if (store == null || zones == null)
+                    return null;
 
-                var productPos = GetProductPosition(product, store, productZones, shelves, zones);
+                var productPos = GetProductPosition(routeDto.ProductId, product, store, productZones, shelves, zones);
 
                 var gridResolution = Math.Max(1, routeDto.GridResolutionMeters);
-
                 var (grid, cols, rows) = BuildGrid(store, shelves, gridResolution);
-
                 var start = routeDto.StartPosition ?? new PositionDto(0, 0);
 
                 var (sx, sy, dx, dy) = GetGridIndices(start, productPos, gridResolution, cols, rows);
@@ -319,11 +318,11 @@ namespace CommercePrototype_Backend.Services
                             }
                         }
 
-                        // If corridor carve didn't find any cells (possible when shrunk shelf spans >0 cells but carveRow/Col had none),
+                        // If corridor carve didn't find any cells (possible when shrunk shelf spans >0 cells mas carveRow/Col had none),
                         // fall through to try narrower fallback below.
                     }
 
-                    // If targetShelf exists but shrunk footprint produced zero cells (narrow shelf), try carving a safe cell inside the original shelf footprint.
+                    // If targetShelf exists mas shrunk footprint produced zero cells (narrow shelf), try carving a safe cell inside the original shelf footprint.
                     if (targetShelf != null && carvedCells.Count == 0)
                     {
                         // compute original integer cell span for the shelf (no shrink) to find candidate cells
@@ -480,7 +479,6 @@ namespace CommercePrototype_Backend.Services
             var shelves = await _storeFileReader.LoadStoreShelvesAsync(_mockDataDir, cancellationToken);
             var productZones = await _storeFileReader.LoadStoreProductZonesAsync(_mockDataDir, cancellationToken);
 
-            // Filter zones/shelves/product-zone mappings to the requested store to avoid cross-store contamination
             if (!string.IsNullOrWhiteSpace(routeDto.StoreId))
             {
                 if (zones != null)
@@ -491,9 +489,55 @@ namespace CommercePrototype_Backend.Services
                     productZones = productZones.Where(pz => string.Equals(pz.StoreId, routeDto.StoreId, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
+            // Ensure productZones list is non-null for synthetic append
+            productZones ??= new List<StoreProductZoneDto>();
+            // Append synthetic product mappings for all shelves to support many new products
+            // AppendSyntheticProductZonesForShelves(routeDto.StoreId, shelves, productZones);
+            // Synthetic generation disabled
+            
             var store = stores?.FirstOrDefault(s => string.Equals(s.StoreId, routeDto.StoreId, StringComparison.OrdinalIgnoreCase));
             var product = products?.FirstOrDefault(p => string.Equals(p.ProductId, routeDto.ProductId, StringComparison.OrdinalIgnoreCase));
             return (store, product, zones, shelves, productZones);
+        }
+
+        private void AppendSyntheticProductZonesForShelves(string? storeId, List<ShelfDto>? shelves, List<StoreProductZoneDto>? productZones)
+        {
+            if (shelves == null) return;
+            if (productZones == null) return;
+            var shelvesForScope = string.IsNullOrWhiteSpace(storeId)
+                ? shelves
+                : shelves.Where(s => string.Equals(s.StoreId, storeId, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var shelf in shelvesForScope)
+            {
+                if (shelf == null || shelf.Position == null || string.IsNullOrWhiteSpace(shelf.Id) || string.IsNullOrWhiteSpace(shelf.StoreId)) continue;
+                double[] offs = new double[] { -0.3, -0.1, 0.1, 0.3 };
+                double[] xoffs = new double[] { -0.05, 0.05, -0.1, 0.1 };
+                for (int i = 0; i < 4; i++)
+                {
+                    var idx = i + 1;
+                    var pid = $"SKU_SYN_{shelf.Id}_{idx:D2}";
+                    // coordinates inside shelf bounds
+                    var px = shelf.Position.X;
+                    var py = shelf.Position.Y;
+                    if (shelf.Width > 0 && shelf.Height > 0)
+                    {
+                        var oy = offs[i] * Math.Max(0.4, shelf.Height / 2.0 - 0.1);
+                        var ox = xoffs[i] * Math.Max(0.4, shelf.Width / 2.0 - 0.05);
+                        py = Math.Clamp(shelf.Position.Y + oy, shelf.Position.Y - shelf.Height / 2.0 + 0.05, shelf.Position.Y + shelf.Height / 2.0 - 0.05);
+                        px = Math.Clamp(shelf.Position.X + ox, shelf.Position.X - shelf.Width / 2.0 + 0.05, shelf.Position.X + shelf.Width / 2.0 - 0.05);
+                    }
+                    productZones.Add(new StoreProductZoneDto
+                    {
+                        ProductId = pid,
+                        StoreId = shelf.StoreId,
+                        ShelfId = shelf.Id,
+                        ZoneId = shelf.ZoneId,
+                        X = px,
+                        Y = py,
+                        ProductName = $"Produto {shelf.Id} #{idx}"
+                    });
+                }
+            }
         }
 
         /// <summary>
@@ -505,13 +549,13 @@ namespace CommercePrototype_Backend.Services
         /// <param name="shelves">List of shelves in the store.</param>
         /// <param name="zones">List of zones in the store.</param>
         /// <returns>The determined position of the product.</returns>
-        private PositionDto GetProductPosition(ProductLocationDto product, StoreDto store, List<StoreProductZoneDto>? productZones, List<ShelfDto>? shelves, List<ZoneDto>? zones)
+        private PositionDto GetProductPosition(string productId, ProductLocationDto? product, StoreDto store, List<StoreProductZoneDto>? productZones, List<ShelfDto>? shelves, List<ZoneDto>? zones)
         {
-            if (product.Position is not null)
+            if (product?.Position is not null)
                 return product.Position;
             if (productZones != null)
             {
-                var mapping = productZones.FirstOrDefault(m => string.Equals(m.ProductId, product.ProductId, StringComparison.OrdinalIgnoreCase)
+                var mapping = productZones.FirstOrDefault(m => string.Equals(m.ProductId, productId, StringComparison.OrdinalIgnoreCase)
                                                            && string.Equals(m.StoreId, store.StoreId, StringComparison.OrdinalIgnoreCase));
                 if (mapping != null)
                 {
@@ -519,7 +563,24 @@ namespace CommercePrototype_Backend.Services
                     {
                         var shelf = shelves.FirstOrDefault(s => s.Id == mapping.ShelfId);
                         if (shelf != null && shelf.Position != null)
+                        {
+                            // if mapping has explicit X/Y, use them if they fall inside the shelf bounds
+                            if (mapping.X.HasValue && mapping.Y.HasValue)
+                            {
+                                var sx0 = shelf.Position.X - shelf.Width / 2.0;
+                                var sy0 = shelf.Position.Y - shelf.Height / 2.0;
+                                var sx1 = shelf.Position.X + shelf.Width / 2.0;
+                                var sy1 = shelf.Position.Y + shelf.Height / 2.0;
+                                var px = mapping.X.Value;
+                                var py = mapping.Y.Value;
+                                if (px >= sx0 && px <= sx1 && py >= sy0 && py <= sy1)
+                                {
+                                    return new PositionDto(px, py);
+                                }
+                            }
+                            // fallback: use shelf center
                             return shelf.Position;
+                        }
                     }
                     if (!string.IsNullOrEmpty(mapping.ZoneId) && zones != null)
                     {
@@ -582,7 +643,7 @@ namespace CommercePrototype_Backend.Services
         /// </summary>
         /// <param name="routeDto">The route request containing the store ID, product ID, and initial position.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <returns>An object with path and directions, or null if no route is found.</returns>
+        /// <returns>An object with Path, Directions and DebugMessages, or null if no route is found.</returns>
         public async Task<object?> GetRouteWithInstructionsAsync(RouteRequestDto routeDto, CancellationToken cancellationToken = default)
         {
             if (routeDto == null)
@@ -608,7 +669,7 @@ namespace CommercePrototype_Backend.Services
                     return null;
                 }
 
-                var productPos = GetProductPosition(product, store, productZones, shelves, zones);
+                var productPos = GetProductPosition(routeDto.ProductId, product, store, productZones, shelves, zones);
                 _logger.LogInformation("Product position determined: {X},{Y}", productPos?.X, productPos?.Y);
                 Console.WriteLine($"[RouteDef] Product position: {productPos?.X},{productPos?.Y}");
 
