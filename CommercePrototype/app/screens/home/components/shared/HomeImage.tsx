@@ -14,6 +14,7 @@ type Props = {
   style?: StyleProp<ImageStyle>;
   // Only set for the most important image on the page.
   priority?: "high" | "normal" | "low";
+  onError?: (error?: any) => void;
 };
 
 /**
@@ -21,7 +22,7 @@ type Props = {
  * - Web: uses `expo-image` for `<img>` attributes (alt, fetchPriority)
  * - Native/tests: falls back to `react-native`'s `Image`
  */
-export function HomeImage({ source, alt, style, priority }: Props) {
+export function HomeImage({ source, alt, style, priority, onError }: Props) {
   // Avoid importing expo-image in Jest (ESM) by requiring it only on web.
   const WebImage =
     Platform.OS === "web"
@@ -32,6 +33,8 @@ export function HomeImage({ source, alt, style, priority }: Props) {
         ).Image
       : null;
 
+  // On web, use `expo-image` for better control over <img> attributes
+  // (alt, fetchPriority) and to take advantage of its caching/decoding.
   if (Platform.OS === "web" && WebImage) {
     return (
       <WebImage
@@ -47,10 +50,13 @@ export function HomeImage({ source, alt, style, priority }: Props) {
         fetchPriority={priority === "high" ? "high" : "auto"}
         loading={priority === "high" ? "eager" : "lazy"}
         decoding="async"
+        onError={onError}
       />
     );
   }
 
   // Native/test fallback.
-  return <Image source={source} style={style} resizeMode="cover" />;
+  return (
+    <Image source={source} style={style} resizeMode="cover" onError={onError} />
+  );
 }

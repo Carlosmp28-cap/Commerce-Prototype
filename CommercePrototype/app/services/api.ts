@@ -32,7 +32,7 @@ declare module "axios" {
 /**
  * API Configuration
  */
-const API_BASE_URL =
+export const API_BASE_URL =
   (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
   "http://localhost:5035";
 const API_TIMEOUT = 30000; // 30 seconds
