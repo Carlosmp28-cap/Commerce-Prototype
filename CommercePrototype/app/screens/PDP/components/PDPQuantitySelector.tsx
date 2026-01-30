@@ -29,7 +29,25 @@ export default function PDPQuantitySelector({
   const anchorRef = useRef(null);
   const timeoutRef = useRef<any>(null);
 
+  // Auto-dismiss the toast after a short delay and clear any pending timer
+  useEffect(() => {
+    if (snackbarVisible) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setSnackbarVisible(false);
+      }, 8000);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [snackbarVisible]);
+
   const hasVariants = Boolean(product.variants && product.variants.length > 0);
+
   if (product.quantityAvailable === 0 && !hasVariants) return null;
 
   const handleAddToCart = async () => {
@@ -87,23 +105,6 @@ export default function PDPQuantitySelector({
       setIsAdding(false);
     }
   };
-
-  // Auto-dismiss the toast after a short delay and clear any pending timer
-  useEffect(() => {
-    if (snackbarVisible) {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setSnackbarVisible(false);
-      }, 8000);
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, [snackbarVisible]);
 
   return (
     <>
