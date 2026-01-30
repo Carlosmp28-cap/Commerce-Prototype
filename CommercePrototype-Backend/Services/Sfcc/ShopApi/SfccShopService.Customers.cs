@@ -19,11 +19,15 @@ public sealed partial class SfccShopService
         // - Data API /customer_lists/{id}/customers rejects `login` (UnknownPropertyException).
         var shopPayload = new
         {
-            login = request.Email,
-            email = request.Email,
-            password = request.Password,
-            first_name = request.FirstName,
-            last_name = request.LastName
+            customer = new
+            {
+                login = request.Email,
+                email = request.Email,
+                first_name = request.FirstName,
+                last_name = request.LastName,
+                // first_name não é obrigatório segundo a doc, mas pode ser enviado se necessário
+            },
+            password = request.Password
         };
 
         var dataPayload = new
