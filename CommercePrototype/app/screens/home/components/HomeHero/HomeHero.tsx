@@ -34,21 +34,10 @@ function HomeHeroComponent({
   const { width } = useWindowDimensions();
 
   // Choose remote SFCC image URL by device width (match provided CSS breakpoints)
-  const selectRemoteHeroUrl = (w: number) => {
-    // For web we always prefer the large image to ensure visual parity and
-    // avoid loading lower-resolution assets in desktop browsers.
-    if (Platform.OS === "web")
-      return "https://bcqk-007.dx.commercecloud.salesforce.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw8af2cc93/images/homepage/homepage-4/large.jpg";
-
-    // Match the CSS breakpoints on native devices: small (<=543), medium (544-768), large (>=992).
-    if (w <= 543)
-      return "https://bcqk-007.dx.commercecloud.salesforce.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw9a40425a/images/homepage/homepage-4/small.jpg";
-    if (w <= 768)
-      return "https://bcqk-007.dx.commercecloud.salesforce.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw22aa5fca/images/homepage/homepage-4/medium.jpg";
-    // For widths between 769 and 991 fall back to medium; 992+ use large.
-    if (w >= 992)
-      return "https://bcqk-007.dx.commercecloud.salesforce.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw8af2cc93/images/homepage/homepage-4/large.jpg";
-    return "https://bcqk-007.dx.commercecloud.salesforce.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw22aa5fca/images/homepage/homepage-4/medium.jpg";
+  const selectRemoteHeroUrl = (_w: number) => {
+    // Force the large SFCC hero image for all devices. This simplifies
+    // testing and ensures consistent visuals across web and native.
+    return "https://bcqk-007.dx.commercecloud.salesforce.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dw8af2cc93/images/homepage/homepage-4/large.jpg";
   };
 
   // Lock the initial image choice so a later backend prop doesn't override the
