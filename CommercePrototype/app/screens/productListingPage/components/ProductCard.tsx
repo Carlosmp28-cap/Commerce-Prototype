@@ -8,10 +8,12 @@ import {
 // no longer used at runtime. Keep types broad enough for tests/fixtures.
 import type { Product } from "../../../types";
 import { useCategories, findCategoryById } from "../../../hooks/useCategories";
+import { useWindowDimensions } from "react-native";
 import { useTheme } from "../../../themes";
 import Card from "../../../components/Card";
 import Text from "../../../components/Text";
 import { styles } from "./ProductCard.styles";
+import { getAvailabilityLabel, isAvailable } from "../../../utils/stock";
 
 /**
  * Props for ProductCard
@@ -41,7 +43,9 @@ export default function ProductCard({
   containerStyle,
 }: ProductCardProps) {
   const theme = useTheme();
-  const inStock = product.quantityAvailable > 0;
+  const inStock = isAvailable(product.quantityAvailable);
+  const { width } = useWindowDimensions();
+  const isWide = width >= 768; // treat tablet/desktop as wide
   const { categories: categoryTree } = useCategories();
   const categoryNode = findCategoryById(categoryTree, product.categoryId);
   const categoryLabel = categoryNode?.name || "Unknown";
@@ -61,7 +65,15 @@ export default function ProductCard({
           accessible={true}
           accessibilityLabel={`Product image of ${product.name}`}
         />
-        <Text style={styles.productName} numberOfLines={2}>
+        <Text
+          style={[
+            styles.productName,
+            isWide
+              ? { marginBottom: 4, minHeight: 36 }
+              : { marginBottom: 6, minHeight: 44 },
+          ]}
+          numberOfLines={2}
+        >
           {product.name}
         </Text>
         {categoryNode?.name ? (
@@ -79,12 +91,15 @@ export default function ProductCard({
           style={[
             styles.stock,
             {
-              color: inStock ? theme.colors.primary : theme.colors.text,
-              opacity: inStock ? 1 : 0.7,
+              color: inStock ? theme.colors.success : theme.colors.danger,
+              opacity: 0.7,
             },
           ]}
         >
-          {inStock ? "Available" : "Out of stock"}
+          {getAvailabilityLabel(product.quantityAvailable).replace(
+            "Available",
+            "In stock",
+          )}
         </Text>
       </Card>
     </TouchableOpacity>

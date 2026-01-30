@@ -4,6 +4,40 @@ import { logger } from "../utils/logger";
 import type { Product } from "../models/Product";
 import { mapProductSummary, mapProductDetail } from "../utils/productMapper";
 
+const DETAIL_ENRICH_LIMIT = 10; // avoid firing too many per-item detail requests
+
+const enrichSummaries = async (
+  items: { id: string }[],
+  summaries: Product[],
+  signal?: AbortSignal,
+): Promise<Product[]> => {
+  if (!items?.length) return summaries;
+  const toEnrich = items.slice(0, DETAIL_ENRICH_LIMIT);
+  try {
+    const detailPromises = toEnrich.map((i) =>
+      api.products.getById(i.id, { signal }),
+    );
+    const settled = await Promise.allSettled(detailPromises);
+    if (signal?.aborted) return summaries;
+    const qtyMap = new Map<string, number>();
+    settled.forEach((s) => {
+      if (s.status === "fulfilled") {
+        qtyMap.set(s.value.id, s.value.quantityAvailable);
+      }
+    });
+
+    return summaries.map((p) => ({
+      ...p,
+      quantityAvailable: qtyMap.has(p.id)
+        ? (qtyMap.get(p.id) as number)
+        : p.quantityAvailable,
+    }));
+  } catch (err) {
+    logger.warn("Failed to enrich product summaries with details", err);
+    return summaries;
+  }
+};
+
 interface UseProductsResult {
   products: Product[];
   loading: boolean;
@@ -35,52 +69,64 @@ export function useProducts(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = async (signal?: AbortSignal) => {
-    if (!categoryId) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const result = await api.products.search(
-        {
-          categoryId,
-          q: query,
-          limit,
-        },
-        { signal },
-      );
-
-      const mappedProducts = result.items.map(mapProductSummary);
-      setProducts(mappedProducts);
-    } catch (err) {
-      if (err instanceof Error && err.name === "CanceledError") {
+  const fetchProducts = useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      if (!categoryId) {
+        setProducts([]);
+        setLoading(false);
         return;
       }
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch products";
-      setError(errorMessage);
-      logger.error("Error fetching products:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await api.products.search(
+          {
+            categoryId,
+            q: query,
+            limit,
+          },
+          { signal },
+        );
+        const mappedProducts = result.items.map(mapProductSummary);
+        const enriched = await enrichSummaries(
+          result.items,
+          mappedProducts,
+          signal,
+        );
+        if (signal?.aborted) return;
+        setProducts(enriched);
+      } catch (err) {
+        if (err instanceof Error && err.name === "CanceledError") {
+          return;
+        }
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch products";
+        setError(errorMessage);
+        logger.error("Error fetching products:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [categoryId, query, limit],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchProducts(controller.signal);
+    fetchProducts(controller.signal).catch((e) => {
+      if (!(e instanceof Error && e.name === "CanceledError")) {
+        logger.error("useProducts fetch failed:", e);
+      }
+    });
     return () => controller.abort();
-  }, [categoryId, query, limit]);
+  }, [categoryId, query, limit, fetchProducts]);
 
   return {
     products,
     loading,
     error,
-    refetch: fetchProducts,
+    refetch: () => fetchProducts(),
   };
 }
 
@@ -131,10 +177,23 @@ export function useProductsPaginated(
 
         const mappedProducts = result.items.map(mapProductSummary);
 
+        // Enrich summaries with per-item details (stock) where possible.
+        let enriched = mappedProducts;
+        try {
+          enriched = await enrichSummaries(
+            result.items,
+            mappedProducts,
+            signal,
+          );
+          if (signal?.aborted) return;
+        } catch (err) {
+          logger.warn("Failed to enrich paginated summaries", err);
+        }
+
         if (append) {
-          setProducts((prev) => [...prev, ...mappedProducts]);
+          setProducts((prev) => [...prev, ...enriched]);
         } else {
-          setProducts(mappedProducts);
+          setProducts(enriched);
           setOffset(result.offset || 0);
         }
 
