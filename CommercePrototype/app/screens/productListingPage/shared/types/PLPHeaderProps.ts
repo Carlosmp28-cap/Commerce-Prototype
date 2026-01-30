@@ -1,5 +1,5 @@
 import type { ViewStyle, TextStyle } from "react-native";
-import type { SortOption } from "../../../../scripts/helpers/productHelpers";
+import type { SortOption } from "../../../../types";
 
 /**
  * Shared props for PLPHeader component

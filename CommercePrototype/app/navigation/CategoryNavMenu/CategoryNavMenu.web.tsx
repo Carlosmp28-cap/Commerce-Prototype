@@ -1,7 +1,7 @@
-import React, { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Divider, Text, useTheme as usePaperTheme } from "react-native-paper";
-import type { CategoryNodeDto } from "../../services/api.types";
+import type { CategoryNodeDto } from "../../models";
 
 import { styles } from "./CategoryNavMenu.styles";
 import {
@@ -126,23 +126,20 @@ export default function CategoryNavMenuWeb({
                 onPress={() => openForParent(parent.id)}
                 style={[
                   styles.webTopItem,
-                  {
-                    backgroundColor: isActive
-                      ? paperTheme.colors.primary
-                      : paperTheme.colors.surface,
-                    borderColor: paperTheme.colors.outline ?? "#00000022",
-                  },
+                  isActive ? styles.webTopItemActive : null,
                 ]}
               >
                 <Text
                   style={{
                     color: isActive
-                      ? paperTheme.colors.onPrimary
+                      ? paperTheme.colors.primary
                       : paperTheme.colors.onSurface,
-                    fontWeight: 700,
                   }}
                 >
-                  {parent.name} <Text aria-hidden>{"▾"}</Text>
+                  <Text style={styles.webTopItemText}>{parent.name}</Text>{" "}
+                  <Text aria-hidden style={{ opacity: 0.7 }}>
+                    {"▾"}
+                  </Text>
                 </Text>
               </Pressable>
             );

@@ -4,13 +4,16 @@ import {
   type ImageStyle,
   type ViewStyle,
 } from "react-native";
-import type { CatalogProduct } from "../../../data/catalog";
-import type { Product } from "../../../models/Product";
-import { categories } from "../../../data/catalog";
+// The UI accepts backend-backed `Product` model; legacy `CatalogProduct` is
+// no longer used at runtime. Keep types broad enough for tests/fixtures.
+import type { Product } from "../../../types";
+import { useCategories, findCategoryById } from "../../../hooks/useCategories";
+import { useWindowDimensions } from "react-native";
 import { useTheme } from "../../../themes";
 import Card from "../../../components/Card";
 import Text from "../../../components/Text";
 import { styles } from "./ProductCard.styles";
+import { getAvailabilityLabel, isAvailable } from "../../../utils/stock";
 
 /**
  * Props for ProductCard
@@ -20,7 +23,7 @@ import { styles } from "./ProductCard.styles";
  * @property {any} containerStyle - Style object applied to the card container
  */
 type ProductCardProps = {
-  product: Product | CatalogProduct;
+  product: Product;
   onPress: () => void;
   imageStyle: ImageStyle;
   containerStyle: ViewStyle;
@@ -40,9 +43,12 @@ export default function ProductCard({
   containerStyle,
 }: ProductCardProps) {
   const theme = useTheme();
-  const inStock = product.quantityAvailable > 0;
-  const categoryLabel =
-    categories.find((c) => c.id === product.categoryId)?.label || "Unknown";
+  const inStock = isAvailable(product.quantityAvailable);
+  const { width } = useWindowDimensions();
+  const isWide = width >= 768; // treat tablet/desktop as wide
+  const { categories: categoryTree } = useCategories();
+  const categoryNode = findCategoryById(categoryTree, product.categoryId);
+  const categoryLabel = categoryNode?.name || "Unknown";
 
   return (
     <TouchableOpacity
@@ -59,25 +65,41 @@ export default function ProductCard({
           accessible={true}
           accessibilityLabel={`Product image of ${product.name}`}
         />
-        <Text style={styles.productName} numberOfLines={2}>
+        <Text
+          style={[
+            styles.productName,
+            isWide
+              ? { marginBottom: 4, minHeight: 36 }
+              : { marginBottom: 6, minHeight: 44 },
+          ]}
+          numberOfLines={2}
+        >
           {product.name}
         </Text>
-        <Text
-          style={[styles.category, { color: theme.colors.text, opacity: 0.7 }]}
-        >
-          {categoryLabel}
-        </Text>
+        {categoryNode?.name ? (
+          <Text
+            style={[
+              styles.category,
+              { color: theme.colors.text, opacity: 0.7 },
+            ]}
+          >
+            {categoryLabel}
+          </Text>
+        ) : null}
         <Text style={styles.price}>€{product.price.toFixed(2)}</Text>
         <Text
           style={[
             styles.stock,
             {
-              color: inStock ? theme.colors.primary : theme.colors.text,
-              opacity: inStock ? 1 : 0.7,
+              color: inStock ? theme.colors.success : theme.colors.danger,
+              opacity: 0.7,
             },
           ]}
         >
-          {inStock ? "Available" : "Out of stock"}
+          {getAvailabilityLabel(product.quantityAvailable).replace(
+            "Available",
+            "In stock",
+          )}
         </Text>
       </Card>
     </TouchableOpacity>

@@ -1,4 +1,3 @@
-import React from "react";
 import type { PropsWithChildren } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 

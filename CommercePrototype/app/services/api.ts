@@ -3,6 +3,7 @@ import axios, {
   type AxiosError,
   type AxiosRequestConfig,
 } from "axios";
+import { logger } from "../utils/logger";
 import type {
   ProductSearchResultDto,
   ProductDetailDto,
@@ -14,15 +15,13 @@ import type {
   UpdateBasketItemQuantityRequestDto,
   LoginRequestDto,
   ShopperSessionDto,
-} from "./api.types";
-import type {
   CustomerProfileDto,
   CustomerAddressDto,
   CustomerOrderDto,
   RegisterCustomerRequestDto,
   UpdateCustomerProfileRequestDto,
   AddCustomerAddressRequestDto,
-} from "./customers.types";
+} from "../models";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -33,7 +32,7 @@ declare module "axios" {
 /**
  * API Configuration
  */
-const API_BASE_URL =
+export const API_BASE_URL =
   (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
   "http://localhost:5035";
 const API_TIMEOUT = 30000; // 30 seconds
@@ -76,7 +75,9 @@ let shopperSessionId: string | null = null;
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let refreshHandler:
-  | ((token: string | null) => Promise<{ accessToken: string; refreshToken?: string } | null>)
+  | ((
+      token: string | null,
+    ) => Promise<{ accessToken: string; refreshToken?: string } | null>)
   | null = null;
 
 export const setShopperSessionId = (sessionId: string | null) => {
@@ -85,10 +86,12 @@ export const setShopperSessionId = (sessionId: string | null) => {
 
 export const getShopperSessionId = () => shopperSessionId;
 
-export const setAuthTokens = (tokens: {
-  accessToken: string;
-  refreshToken?: string | null;
-} | null) => {
+export const setAuthTokens = (
+  tokens: {
+    accessToken: string;
+    refreshToken?: string | null;
+  } | null,
+) => {
   accessToken = tokens?.accessToken ?? null;
   refreshToken = tokens?.refreshToken ?? null;
 };
@@ -100,7 +103,9 @@ export const clearAuthTokens = () => {
 
 export const setTokenRefreshHandler = (
   handler:
-    | ((token: string | null) => Promise<{ accessToken: string; refreshToken?: string } | null>)
+    | ((
+        token: string | null,
+      ) => Promise<{ accessToken: string; refreshToken?: string } | null>)
     | null,
 ) => {
   refreshHandler = handler;
@@ -133,7 +138,8 @@ apiClient.interceptors.response.use(
   (response) => {
     const headerKey = SHOPPER_SESSION_HEADER.toLowerCase();
     const headerValue =
-      response.headers?.[headerKey] ?? response.headers?.[SHOPPER_SESSION_HEADER];
+      response.headers?.[headerKey] ??
+      response.headers?.[SHOPPER_SESSION_HEADER];
     if (typeof headerValue === "string" && headerValue.trim().length > 0) {
       shopperSessionId = headerValue;
     }
@@ -143,7 +149,12 @@ apiClient.interceptors.response.use(
     const config = error.config as RetryConfig | undefined;
     const responseStatus = error.response?.status;
 
-    if (responseStatus === 401 && config && !config.metadata?.isAuthRetry && refreshHandler) {
+    if (
+      responseStatus === 401 &&
+      config &&
+      !config.metadata?.isAuthRetry &&
+      refreshHandler
+    ) {
       config.metadata = { ...(config.metadata ?? {}), isAuthRetry: true };
       try {
         const refreshed = await refreshHandler(refreshToken);
@@ -154,9 +165,7 @@ apiClient.interceptors.response.use(
           return apiClient.request(config);
         }
       } catch (refreshError) {
-        if (SHOULD_LOG_ERRORS) {
-          console.error("Token refresh failed:", refreshError);
-        }
+        logger.error("Token refresh failed:", refreshError);
       }
     }
 
@@ -177,23 +186,17 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error
       const apiError = error.response.data;
-      if (SHOULD_LOG_ERRORS) {
-        console.error("API Error:", apiError);
-      }
+      logger.error("API Error:", apiError);
       return Promise.reject(new Error(apiError.error || "An error occurred"));
     } else if (error.request) {
       // Request made but no response
-      if (SHOULD_LOG_ERRORS) {
-        console.error("Network Error:", error.message);
-      }
+      logger.error("Network Error:", error.message);
       return Promise.reject(
         new Error("Network error. Please check your connection."),
       );
     } else {
       // Something else happened
-      if (SHOULD_LOG_ERRORS) {
-        console.error("Request Error:", error.message);
-      }
+      logger.error("Request Error:", error.message);
       return Promise.reject(new Error(error.message));
     }
   },
@@ -201,7 +204,10 @@ apiClient.interceptors.response.use(
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const shouldRetryRequest = (error: AxiosError<ApiError>, config: RetryConfig) => {
+const shouldRetryRequest = (
+  error: AxiosError<ApiError>,
+  config: RetryConfig,
+) => {
   if (!config) return false;
 
   const method = (config.method ?? "get").toLowerCase();
@@ -303,10 +309,10 @@ export const api = {
      */
     search: async (
       params: {
-      categoryId: string;
-      q?: string;
-      limit?: number;
-      offset?: number;
+        categoryId: string;
+        q?: string;
+        limit?: number;
+        offset?: number;
       },
       options?: RequestOptions,
     ): Promise<ProductSearchResultDto> => {
@@ -354,8 +360,8 @@ export const api = {
      */
     getTree: async (
       params?: {
-      rootId?: string;
-      levels?: number;
+        rootId?: string;
+        levels?: number;
       },
       options?: RequestOptions,
     ): Promise<CategoryNodeDto> => {
@@ -379,18 +385,25 @@ export const api = {
       body?: CreateBasketRequestDto,
       options?: RequestOptions,
     ): Promise<BasketDto> => {
-      const response = await apiClient.post<BasketDto>("/api/cart", body ?? {}, {
-        signal: options?.signal,
-        metadata: {
-          retryLimit: options?.retry ?? 0,
-          retryDelayMs: options?.retryDelayMs ?? 300,
-          retryOnAnyMethod: options?.retryOnAnyMethod ?? true,
+      const response = await apiClient.post<BasketDto>(
+        "/api/cart",
+        body ?? {},
+        {
+          signal: options?.signal,
+          metadata: {
+            retryLimit: options?.retry ?? 0,
+            retryDelayMs: options?.retryDelayMs ?? 300,
+            retryOnAnyMethod: options?.retryOnAnyMethod ?? true,
+          },
         },
-      });
+      );
       return response.data;
     },
 
-    get: async (basketId: string, options?: RequestOptions): Promise<BasketDto> => {
+    get: async (
+      basketId: string,
+      options?: RequestOptions,
+    ): Promise<BasketDto> => {
       const response = await apiClient.get<BasketDto>(`/api/cart/${basketId}`, {
         signal: options?.signal,
         metadata: {
@@ -461,22 +474,25 @@ export const api = {
       return response.data;
     },
 
-    clear: async (basketId: string, options?: RequestOptions): Promise<void> => {
-      await apiClient.delete(`/api/cart/${basketId}`,
-        {
-          signal: options?.signal,
-          metadata: {
-            retryLimit: options?.retry ?? 0,
-            retryDelayMs: options?.retryDelayMs ?? 300,
-            retryOnAnyMethod: options?.retryOnAnyMethod ?? true,
-          },
+    clear: async (
+      basketId: string,
+      options?: RequestOptions,
+    ): Promise<void> => {
+      await apiClient.delete(`/api/cart/${basketId}`, {
+        signal: options?.signal,
+        metadata: {
+          retryLimit: options?.retry ?? 0,
+          retryDelayMs: options?.retryDelayMs ?? 300,
+          retryOnAnyMethod: options?.retryOnAnyMethod ?? true,
         },
-      );
+      });
     },
   },
 
   customers: {
-    getProfile: async (options?: RequestOptions): Promise<CustomerProfileDto> => {
+    getProfile: async (
+      options?: RequestOptions,
+    ): Promise<CustomerProfileDto> => {
       const response = await apiClient.get<CustomerProfileDto>(
         "/api/customers/me",
         {
@@ -507,7 +523,9 @@ export const api = {
       );
       return response.data;
     },
-    getOrders: async (options?: RequestOptions): Promise<CustomerOrderDto[]> => {
+    getOrders: async (
+      options?: RequestOptions,
+    ): Promise<CustomerOrderDto[]> => {
       const response = await apiClient.get<CustomerOrderDto[]>(
         "/api/customers/me/orders",
         {
@@ -520,7 +538,9 @@ export const api = {
       );
       return response.data;
     },
-    getAddresses: async (options?: RequestOptions): Promise<CustomerAddressDto[]> => {
+    getAddresses: async (
+      options?: RequestOptions,
+    ): Promise<CustomerAddressDto[]> => {
       const response = await apiClient.get<CustomerAddressDto[]>(
         "/api/customers/me/addresses",
         {

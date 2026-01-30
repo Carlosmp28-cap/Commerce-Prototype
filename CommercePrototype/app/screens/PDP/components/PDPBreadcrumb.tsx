@@ -1,9 +1,8 @@
-import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../../navigation";
 import type { Product } from "../../../models/Product";
-import { categories } from "../../../data/catalog";
+import { useCategories, findCategoryById } from "../../../hooks/useCategories";
 import Text from "../../../components/Text";
 import { useTheme } from "../../../themes";
 
@@ -12,10 +11,14 @@ interface PDPBreadcrumbProps {
   navigation: NativeStackNavigationProp<RootStackParamList, "PDP">;
 }
 
-export default function PDPBreadcrumb({ product, navigation }: PDPBreadcrumbProps) {
+export default function PDPBreadcrumb({
+  product,
+  navigation,
+}: PDPBreadcrumbProps) {
   const theme = useTheme();
-  const category = categories.find((c) => c.id === product.categoryId);
-  const categoryLabel = category?.label || "Products";
+  const { categories: categoryTree } = useCategories();
+  const category = findCategoryById(categoryTree, product.categoryId);
+  const categoryLabel = category?.name || "Products";
 
   return (
     <View style={styles.container}>
@@ -24,20 +27,24 @@ export default function PDPBreadcrumb({ product, navigation }: PDPBreadcrumbProp
         accessibilityLabel="Go home"
         onPress={() => navigation.navigate("Home")}
       >
-        <Text style={[styles.link, { color: theme.colors.mutedText }]}>Home</Text>
+        <Text style={[styles.link, { color: theme.colors.mutedText }]}>
+          Home
+        </Text>
       </TouchableOpacity>
       <Text style={[styles.sep, { color: theme.colors.subtleText }]}> › </Text>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel={`Open category ${categoryLabel}`}
-        onPress={() => navigation.navigate("PLP", { q: category?.query })}
+        onPress={() => navigation.navigate("PLP", { q: category?.id })}
       >
         <Text style={[styles.link, { color: theme.colors.mutedText }]}>
           {categoryLabel}
         </Text>
       </TouchableOpacity>
       <Text style={[styles.sep, { color: theme.colors.subtleText }]}> › </Text>
-      <Text style={[styles.link, { color: theme.colors.mutedText }]}>{product.name}</Text>
+      <Text style={[styles.link, { color: theme.colors.mutedText }]}>
+        {product.name}
+      </Text>
     </View>
   );
 }

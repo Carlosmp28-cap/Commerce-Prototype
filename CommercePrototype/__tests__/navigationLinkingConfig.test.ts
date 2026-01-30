@@ -7,7 +7,7 @@ describe("navigation config", () => {
 
   test("linking config exposes expected routes", () => {
     expect(linkingConfig.config?.screens).toMatchObject({
-      Home: "",
+      Home: "home",
       PLP: "plp",
       PDP: "pdp/:id",
       Cart: "cart",

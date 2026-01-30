@@ -1,4 +1,3 @@
-import React from "react";
 import type { PropsWithChildren } from "react";
 import { ScrollView, type StyleProp, View, type ViewStyle } from "react-native";
 

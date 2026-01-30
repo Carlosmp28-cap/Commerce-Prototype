@@ -4,7 +4,7 @@ import {
   getProductById,
   getProductsByQuery,
   products,
-} from "../app/data/catalog";
+} from "./fixtures/catalogMock";
 
 describe("catalog", () => {
   test("has 5 categories", () => {
@@ -14,7 +14,7 @@ describe("catalog", () => {
       "men",
       "women",
       "sale",
-      "new arrivals"
+      "new arrivals",
     ]);
   });
 
@@ -46,7 +46,7 @@ describe("catalog", () => {
     const sneakers = getProductsByQuery("sneaker");
     expect(sneakers.length).toBeGreaterThan(0);
     expect(sneakers.some((p) => p.name.toLowerCase().includes("sneaker"))).toBe(
-      true
+      true,
     );
   });
 

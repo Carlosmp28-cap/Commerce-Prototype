@@ -1,4 +1,3 @@
-import React from "react";
 import { fireEvent } from "@testing-library/react-native";
 
 import LoginScreen from "../app/screens/Login";
@@ -10,7 +9,7 @@ describe("Login (skeleton)", () => {
     const route: any = { key: "Login", name: "Login" };
 
     const { getByText } = renderWithProviders(
-      <LoginScreen navigation={navigation} route={route} />
+      <LoginScreen navigation={navigation} route={route} />,
     );
 
     expect(getByText("Sign in")).toBeTruthy();
@@ -21,7 +20,7 @@ describe("Login (skeleton)", () => {
     const route: any = { key: "Login", name: "Login" };
 
     const { getByLabelText } = renderWithProviders(
-      <LoginScreen navigation={navigation} route={route} />
+      <LoginScreen navigation={navigation} route={route} />,
     );
 
     fireEvent.press(getByLabelText("Continue as guest"));

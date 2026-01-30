@@ -76,6 +76,21 @@ CommercePrototype/
 └── README.md
 ```
 
+## Models / DTO conventions
+
+This project keeps frontend TypeScript definitions that mirror backend DTOs under `app/models/dtos/`.
+
+Key conventions:
+
+- Structure: DTOs are split by domain in `app/models/dtos/<domain>/` (for example `app/models/dtos/products/product.ts`). A barrel file at `app/models/index.ts` re-exports DTOs for convenient imports.
+- Naming: Suffix DTO types with `Dto` (for example `ProductSummaryDto`). Prefer `interface` for object shapes and `type` for unions/aliases.
+- Nullability: Prefer explicit nullability when backend may return `null` (`prop: T | null`) and use optional properties (`prop?: T`) when a field may be omitted. Keep `strictNullChecks` enabled.
+- Ownership: Models/DTOs live in `app/models` and are the single source of truth for data shapes. The HTTP layer (`app/services`) should import DTOs from there and remain focused on transport logic.
+- Mapping & validation: Add mappers (e.g. `app/models/mappers` or `app/utils/mappers`) to convert API DTOs into UI models. Consider runtime validators (`zod`/`io-ts`) for critical endpoints — TypeScript types are compile-time only.
+- Migration: During migration a small compatibility re-export in `app/services` may be used temporarily, but remove it when all callers are updated.
+
+See `app/models/README.md` for more details and examples.
+
 ## Navigation
 
 Navigation is implemented in `app/navigation` and exposes the main stack used by the app:

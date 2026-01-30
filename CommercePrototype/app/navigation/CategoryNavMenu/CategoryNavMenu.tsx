@@ -1,6 +1,5 @@
-import React from "react";
 import { Platform } from "react-native";
-import type { CategoryNodeDto } from "../../services/api.types";
+import type { CategoryNodeDto } from "../../models";
 
 import CategoryNavMenuWeb from "./CategoryNavMenu.web";
 import CategoryNavMenuNative from "./CategoryNavMenu.native";

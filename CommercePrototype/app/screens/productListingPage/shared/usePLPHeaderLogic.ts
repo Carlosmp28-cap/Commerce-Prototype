@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { SORT_OPTIONS, type SortOption } from "../../../scripts/helpers/productHelpers";
+import { SORT_OPTIONS, type SortOption } from "../../../types";
 import { capitalizeFirst } from "../../../scripts/helpers/stringHelpers";
 
 export function usePLPHeaderLogic(
@@ -7,24 +7,24 @@ export function usePLPHeaderLogic(
   productCount: number,
   selectedSort: SortOption,
   onSortChange: (sort: SortOption) => void,
-  onCategorySelect: (query: string) => void
+  onCategorySelect: (query: string) => void,
 ) {
   const [sortVisible, setSortVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
 
   const title = useMemo(
     () => (query ? capitalizeFirst(query) : "All Products"),
-    [query]
+    [query],
   );
 
   const countText = useMemo(
     () => `${productCount} ${productCount === 1 ? "product" : "products"}`,
-    [productCount]
+    [productCount],
   );
 
   const selectedOption = useMemo(
     () => SORT_OPTIONS.find((opt) => opt.value === selectedSort),
-    [selectedSort]
+    [selectedSort],
   );
 
   const openSortMenu = useCallback(() => setSortVisible(true), []);
@@ -37,7 +37,7 @@ export function usePLPHeaderLogic(
       onSortChange(value);
       closeSortMenu();
     },
-    [onSortChange, closeSortMenu]
+    [onSortChange, closeSortMenu],
   );
 
   const handleFilterSelect = useCallback(
@@ -45,7 +45,7 @@ export function usePLPHeaderLogic(
       onCategorySelect(filterQuery);
       closeFilterMenu();
     },
-    [onCategorySelect, closeFilterMenu]
+    [onCategorySelect, closeFilterMenu],
   );
 
   return {

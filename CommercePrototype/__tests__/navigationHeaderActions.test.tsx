@@ -1,4 +1,3 @@
-import React from "react";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 
 import { HeaderActions, HeaderHomeButton } from "../app/navigation";

@@ -2,8 +2,8 @@ import type { Product } from "../models/Product";
 import type {
   ProductSummaryDto,
   ProductDetailDto,
-} from "../services/api.types";
-import type { CategoryId } from "../data/catalog";
+  ProductVariantDto,
+} from "../models";
 
 /**
  * Map backend ProductSummaryDto to frontend Product model
@@ -14,7 +14,7 @@ export function mapProductSummary(dto: ProductSummaryDto): Product {
     name: dto.name,
     price: dto.price,
     quantityAvailable: 0, // Not provided in summary, will show as unavailable
-    categoryId: (dto.categoryId as CategoryId) || "new",
+    categoryId: (dto.categoryId as string) || "new",
     image: dto.imageUrl ? { uri: dto.imageUrl } : undefined,
     rating: dto.rating ?? undefined,
     reviewCount: dto.reviewCount ?? undefined,
@@ -30,7 +30,7 @@ export function mapProductDetail(dto: ProductDetailDto): Product {
     name: dto.name,
     price: dto.price,
     quantityAvailable: dto.quantityAvailable,
-    categoryId: (dto.categoryId as CategoryId) || "new",
+    categoryId: (dto.categoryId as string) || "new",
     image: dto.imageUrl ? { uri: dto.imageUrl } : undefined,
     images: dto.gallery?.map((url) => ({ uri: url })),
     description: dto.description ?? undefined,

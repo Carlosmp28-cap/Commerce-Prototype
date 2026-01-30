@@ -1,5 +1,4 @@
-
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { ScreenScroll } from "../layout/Screen";
@@ -19,11 +18,13 @@ export default function LoginScreen({ navigation }: Props) {
   const [submitting, setSubmitting] = useState(false);
   // Mensagens agora são exibidas via alert()
 
-  const subtitle = useMemo(() =>
-    isAuthenticated ? `Signed in as ${user?.email ?? "user"}` : "Use your credentials to sign in.",
-    [isAuthenticated, user]
+  const subtitle = useMemo(
+    () =>
+      isAuthenticated
+        ? `Signed in as ${user?.email ?? "user"}`
+        : "Use your credentials to sign in.",
+    [isAuthenticated, user],
   );
-
 
   const handleSignIn = async () => {
     setSubmitting(true);
@@ -79,7 +80,6 @@ export default function LoginScreen({ navigation }: Props) {
               onChangeText={setPassword}
             />
 
-
             {!isAuthenticated ? (
               <>
                 <Button
@@ -108,8 +108,6 @@ export default function LoginScreen({ navigation }: Props) {
                 Sign out
               </Button>
             )}
-
-
 
             {!isAuthenticated ? (
               <Button

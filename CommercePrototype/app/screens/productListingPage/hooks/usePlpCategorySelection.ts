@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { CategoryNodeDto } from "../../../services/api.types";
+import type { CategoryNodeDto } from "../../../models";
 import {
   findCategoryById,
   findCategoryByName,
