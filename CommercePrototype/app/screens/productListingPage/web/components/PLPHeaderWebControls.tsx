@@ -5,8 +5,7 @@ import { useTheme } from "../../../../themes";
 import { styles } from "../styles/PLPHeader.web.styles";
 import { FilterMenuWeb } from "./FilterMenuWeb";
 import { SortMenuWeb } from "./SortMenuWeb";
-import type { SortOption } from "../../../../scripts/helpers/productHelpers";
-
+import type { SortOption } from "../../../../types";
 
 interface PLPHeaderWebControlsProps {
   filterVisible: boolean;
@@ -42,7 +41,9 @@ export function PLPHeaderWebControls({
 
   return (
     <View style={styles.controlsContainer}>
-      <Text style={[styles.label, { color: theme.colors.text }]}>Filter By:</Text>
+      <Text style={[styles.label, { color: theme.colors.text }]}>
+        Filter By:
+      </Text>
       <FilterMenuWeb
         visible={filterVisible}
         onDismiss={closeFilterMenu}

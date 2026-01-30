@@ -1,4 +1,3 @@
-import React from "react";
 import { View } from "react-native";
 import type { Product } from "../../../models/Product";
 import PDPProductInfoHeader from "./PDPProductInfoHeader";
@@ -9,7 +8,10 @@ interface PDPProductInfoProps {
   isDesktop: boolean;
 }
 
-export default function PDPProductInfo({ product, isDesktop }: PDPProductInfoProps) {
+export default function PDPProductInfo({
+  product,
+  isDesktop,
+}: PDPProductInfoProps) {
   return (
     <View>
       <PDPProductInfoHeader product={product} isDesktop={isDesktop} />

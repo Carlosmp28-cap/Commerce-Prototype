@@ -1,8 +1,18 @@
-import { useCallback, useEffect, useState, createContext, useContext } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+} from "react";
 import type { ReactNode } from "react";
 import { api, setAuthTokens, setShopperSessionId } from "../services/api";
-import type { AuthTokens } from "../services/auth.types";
-import { loadAuthTokens, saveAuthTokens, clearAuthTokens } from "../services/auth-storage";
+import type { AuthTokens } from "../models";
+import {
+  loadAuthTokens,
+  saveAuthTokens,
+  clearAuthTokens,
+} from "../services/auth-storage";
 import { loadBasketSession } from "../utils/storage";
 import { emitAuthEvent } from "../services/auth-events";
 

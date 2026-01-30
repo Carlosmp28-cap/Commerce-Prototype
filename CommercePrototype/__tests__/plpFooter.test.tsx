@@ -1,5 +1,3 @@
-import React from "react";
-
 import PLPScreen from "../app/screens/PLP";
 import { renderWithProviders } from "../test/testUtils";
 

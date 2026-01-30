@@ -1,6 +1,6 @@
 import { memo, useMemo, useState } from "react";
 import { Platform } from "react-native";
-import type { CategoryNodeDto } from "../../../../services/api.types";
+import type { CategoryNodeDto } from "../../../../models";
 
 import { NestedCategoryPickerNative } from "./NestedCategoryPicker.Native";
 import { NestedCategoryPickerWebMenu } from "./NestedCategoryPicker.WebMenu";

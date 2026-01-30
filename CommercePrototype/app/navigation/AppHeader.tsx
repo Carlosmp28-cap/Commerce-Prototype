@@ -1,11 +1,12 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Platform, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { IconButton, useTheme as usePaperTheme } from "react-native-paper";
 
-import type { RootStackParamList } from "./index";
-import { HeaderActions, HeaderHomeButton } from "./index";
-import type { CategoryNodeDto } from "../services/api.types";
+import type { RootStackParamList } from "../types";
+import { HeaderActions, HeaderHomeButton } from "./HeaderParts";
+import type { CategoryNodeDto } from "../models";
 import CategoryNavMenu from "./CategoryNavMenu/index";
 import { styles } from "./AppHeader.styles.ts";
 
@@ -28,7 +29,8 @@ export default function AppHeader(props: Props) {
   }, [navigation]);
 
   return (
-    <View
+    <SafeAreaView
+      edges={["top"]}
       style={[styles.root, { backgroundColor: paperTheme.colors.background }]}
     >
       <View style={styles.topRow}>
@@ -44,12 +46,12 @@ export default function AppHeader(props: Props) {
         </View>
 
         <View style={styles.center}>
-          <HeaderHomeButton navigation={navigation as any} />
+          <HeaderHomeButton navigation={navigation} />
         </View>
 
         <View style={styles.right}>
           <HeaderActions
-            navigation={navigation as any}
+            navigation={navigation}
             routeName={route.name as keyof RootStackParamList}
           />
         </View>
@@ -68,11 +70,11 @@ export default function AppHeader(props: Props) {
           <CategoryNavMenu
             categories={props.mainCategories}
             onSelectCategory={(categoryId) =>
-              (navigation as any).navigate("PLP", { q: categoryId })
+              navigation.navigate("PLP", { q: categoryId })
             }
           />
         </View>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }

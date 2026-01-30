@@ -1,7 +1,10 @@
 import { Modal, TouchableOpacity, View, ScrollView } from "react-native";
 import Text from "../../../../components/Text";
 import { useTheme } from "../../../../themes";
-import { categories } from "../../../../data/catalog";
+import {
+  useCategories,
+  flattenCategories,
+} from "../../../../hooks/useCategories";
 import { styles } from "./FilterModal.styles";
 
 /**
@@ -30,8 +33,15 @@ interface FilterModalProps {
  * @param {FilterModalProps} props - Component properties
  * @returns {JSX.Element} Modal component with category filter options
  */
-export default function FilterModal({ visible, onClose, onSelect, selectedQuery }: FilterModalProps) {
+export default function FilterModal({
+  visible,
+  onClose,
+  onSelect,
+  selectedQuery,
+}: FilterModalProps) {
   const theme = useTheme();
+  const { categories: categoryTree } = useCategories();
+  const flat = flattenCategories(categoryTree);
 
   return (
     <Modal
@@ -52,10 +62,18 @@ export default function FilterModal({ visible, onClose, onSelect, selectedQuery 
       >
         <View
           pointerEvents="box-none"
-          style={[styles.modalContentCenter, { backgroundColor: theme.colors.background }]}
+          style={[
+            styles.modalContentCenter,
+            { backgroundColor: theme.colors.background },
+          ]}
           accessible={true}
         >
-          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.text }]}>
+          <View
+            style={[
+              styles.modalHeader,
+              { borderBottomColor: theme.colors.text },
+            ]}
+          >
             <Text
               style={[styles.modalTitle, { color: theme.colors.text }]}
               accessible={true}
@@ -71,7 +89,9 @@ export default function FilterModal({ visible, onClose, onSelect, selectedQuery 
               accessibilityRole="button"
               accessibilityHint="Double tap to close"
             >
-              <Text style={[styles.closeText, { color: theme.colors.text }]}>✕</Text>
+              <Text style={[styles.closeText, { color: theme.colors.text }]}>
+                ✕
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -80,30 +100,40 @@ export default function FilterModal({ visible, onClose, onSelect, selectedQuery 
             accessible={true}
             accessibilityRole="list"
           >
-            {categories.map((category, index) => (
+            {flat.map((category, index) => (
               <TouchableOpacity
                 key={category.id}
                 style={[
-                  index === categories.length - 1
+                  index === flat.length - 1
                     ? styles.modalItemLast
                     : styles.modalItem,
-                  { borderBottomColor: theme.colors.text }
+                  { borderBottomColor: theme.colors.text },
                 ]}
-                onPress={() => onSelect(category.query)}
+                onPress={() => onSelect(category.id)}
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel={`Filter by ${category.label}`}
-                accessibilityState={{ selected: selectedQuery === category.query }}
-                accessibilityHint={selectedQuery === category.query ? "Currently selected" : "Double tap to apply filter"}
+                accessibilityLabel={`Filter by ${category.name}`}
+                accessibilityState={{ selected: selectedQuery === category.id }}
+                accessibilityHint={
+                  selectedQuery === category.id
+                    ? "Currently selected"
+                    : "Double tap to apply filter"
+                }
               >
                 <Text
                   style={[
-                    selectedQuery === category.query
-                      ? [styles.modalItemTextSelected, { color: theme.colors.primary }]
-                      : [styles.modalItemTextDefault, { color: theme.colors.text }]
+                    selectedQuery === category.id
+                      ? [
+                          styles.modalItemTextSelected,
+                          { color: theme.colors.primary },
+                        ]
+                      : [
+                          styles.modalItemTextDefault,
+                          { color: theme.colors.text },
+                        ],
                   ]}
                 >
-                  {category.label}
+                  {category.name}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -111,7 +141,11 @@ export default function FilterModal({ visible, onClose, onSelect, selectedQuery 
             <View
               style={[
                 styles.modalItem,
-                { borderBottomColor: theme.colors.text, paddingVertical: 0, height: 1 }
+                {
+                  borderBottomColor: theme.colors.text,
+                  paddingVertical: 0,
+                  height: 1,
+                },
               ]}
             />
 
@@ -122,13 +156,23 @@ export default function FilterModal({ visible, onClose, onSelect, selectedQuery 
               accessibilityRole="button"
               accessibilityLabel="Show all products"
               accessibilityState={{ selected: !selectedQuery }}
-              accessibilityHint={!selectedQuery ? "Currently selected" : "Double tap to remove filter"}
+              accessibilityHint={
+                !selectedQuery
+                  ? "Currently selected"
+                  : "Double tap to remove filter"
+              }
             >
               <Text
                 style={[
                   !selectedQuery
-                    ? [styles.modalItemTextSelected, { color: theme.colors.primary }]
-                    : [styles.modalItemTextDefault, { color: theme.colors.text }]
+                    ? [
+                        styles.modalItemTextSelected,
+                        { color: theme.colors.primary },
+                      ]
+                    : [
+                        styles.modalItemTextDefault,
+                        { color: theme.colors.text },
+                      ],
                 ]}
               >
                 All Products

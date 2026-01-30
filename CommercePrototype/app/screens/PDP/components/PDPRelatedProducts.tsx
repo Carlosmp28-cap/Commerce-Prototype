@@ -1,5 +1,10 @@
-import React from "react";
-import { StyleSheet, View, Image, ScrollView, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { Text, Card } from "react-native-paper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,7 +26,9 @@ export default function PDPRelatedProducts({
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.title, { color: theme.colors.text }]}>Related Products</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>
+        Related Products
+      </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -35,22 +42,40 @@ export default function PDPRelatedProducts({
             onPress={() => navigation.push("PDP", { id: item.id })}
             style={styles.item}
           >
-            <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}> 
+            <Card
+              style={[styles.card, { backgroundColor: theme.colors.surface }]}
+            >
               <Image
                 source={item.image}
-                style={[styles.image, { backgroundColor: theme.colors.background }]}
+                style={[
+                  styles.image,
+                  { backgroundColor: theme.colors.background },
+                ]}
                 resizeMode="cover"
               />
               <View style={styles.info}>
-                <Text style={[styles.name, { color: theme.colors.text }]} numberOfLines={2}>
+                <Text
+                  style={[styles.name, { color: theme.colors.text }]}
+                  numberOfLines={2}
+                >
                   {item.name}
                 </Text>
                 <Text style={[styles.price, { color: theme.colors.primary }]}>
                   € {item.price.toFixed(2)}
                 </Text>
                 {item.rating && (
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <MaterialIcons name="star" size={12} color={theme.colors.warning} />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <MaterialIcons
+                      name="star"
+                      size={12}
+                      color={theme.colors.warning}
+                    />
                     <Text style={[styles.rating, { color: theme.colors.text }]}>
                       {item.rating}
                     </Text>

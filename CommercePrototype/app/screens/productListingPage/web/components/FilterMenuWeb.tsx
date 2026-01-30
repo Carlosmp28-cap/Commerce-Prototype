@@ -1,7 +1,10 @@
 import { View } from "react-native";
 import { Menu, Button, Divider } from "react-native-paper";
 import { useTheme } from "../../../../themes";
-import { categories } from "../../../../data/catalog";
+import {
+  useCategories,
+  flattenCategories,
+} from "../../../../hooks/useCategories";
 import { styles } from "../styles/PLPHeader.web.styles";
 
 interface FilterMenuWebProps {
@@ -12,8 +15,17 @@ interface FilterMenuWebProps {
   handleFilterSelect: (query: string) => void;
 }
 
-export function FilterMenuWeb({ visible, onDismiss, onOpen, selectedCategory, handleFilterSelect }: FilterMenuWebProps) {
+export function FilterMenuWeb({
+  visible,
+  onDismiss,
+  onOpen,
+  selectedCategory,
+  handleFilterSelect,
+}: FilterMenuWebProps) {
   const theme = useTheme();
+  const { categories: categoryTree } = useCategories();
+  const flat = flattenCategories(categoryTree);
+
   return (
     <Menu
       visible={visible}
@@ -32,18 +44,18 @@ export function FilterMenuWeb({ visible, onDismiss, onOpen, selectedCategory, ha
       contentStyle={styles.menuContent}
       statusBarHeight={60}
     >
-      {categories.map((category: any, index: number) => (
+      {flat.map((category: { id: string; name: string }, index: number) => (
         <View key={category.id}>
           <Menu.Item
-            onPress={() => handleFilterSelect(category.query)}
-            title={category.label}
+            onPress={() => handleFilterSelect(category.id)}
+            title={category.name}
             titleStyle={
-              selectedCategory === category.query
+              selectedCategory === category.id
                 ? [styles.menuItemTitleBold, { color: theme.colors.primary }]
                 : undefined
             }
           />
-          {index < categories.length - 1 && <Divider />}
+          {index < flat.length - 1 && <Divider />}
         </View>
       ))}
       <Divider />

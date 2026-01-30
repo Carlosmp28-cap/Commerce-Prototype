@@ -25,8 +25,8 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.28)",
   },
   heroContent: {
-    paddingTop: 26,
-    paddingBottom: 22,
+    paddingTop: 22,
+    paddingBottom: 16,
   },
   heroKicker: {
     color: "rgba(255,255,255,0.9)",

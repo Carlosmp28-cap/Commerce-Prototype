@@ -16,6 +16,8 @@ import {
   Title,
   useTheme as usePaperTheme,
 } from "react-native-paper";
+import type { CartItem } from "../../models/CartItem";
+import type { GeocodeResult } from "../../services/locationService";
 
 import type { RootStackParamList } from "../../navigation";
 import { useTheme } from "../../themes";
@@ -38,8 +40,8 @@ export default function CheckoutScreen({ route, navigation }: Props) {
     typeof totalTaxParam === "number" && Number.isFinite(totalTaxParam)
       ? totalTaxParam
       : typeof totalPrice === "number" && Number.isFinite(totalPrice)
-      ? totalPrice
-      : 0;
+        ? totalPrice
+        : 0;
 
   // 1) Guard incoming params
   const safeItems = Array.isArray(items) ? items : [];
@@ -102,7 +104,9 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   });
 
   // suggestions (local mock logic moved to ShippingForm but parent keeps selected data)
-  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<GeocodeResult[]>(
+    [],
+  );
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,7 +123,7 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       }
       meta.setAttribute(
         "content",
-        "Finalizar encomenda — pagamento seguro e envio rápido."
+        "Finalizar encomenda — pagamento seguro e envio rápido.",
       );
 
       const ensure = (name: string, content: string) => {
@@ -135,7 +139,7 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       ensure("og:title", "Checkout — CommercePrototype");
       ensure(
         "og:description",
-        "Finalizar encomenda — pagamento seguro e envio rápido."
+        "Finalizar encomenda — pagamento seguro e envio rápido.",
       );
     }
   }, []);
@@ -144,10 +148,10 @@ export default function CheckoutScreen({ route, navigation }: Props) {
     const basicEmailValid = (e: string) => /\S+@\S+\.\S+/.test(e);
     return Boolean(
       fullName.trim() &&
-        address.trim() &&
-        city.trim() &&
-        postalCode.trim() &&
-        basicEmailValid(email)
+      address.trim() &&
+      city.trim() &&
+      postalCode.trim() &&
+      basicEmailValid(email),
     );
   };
 
@@ -155,9 +159,9 @@ export default function CheckoutScreen({ route, navigation }: Props) {
     if (paymentMethod === "paypal") return true;
     return Boolean(
       cardName.trim() &&
-        cardNumber.length >= 12 &&
-        expiry.length === 5 &&
-        cvv.length === 3
+      cardNumber.length >= 12 &&
+      expiry.length === 5 &&
+      cvv.length === 3,
     );
   };
 
@@ -190,7 +194,15 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   }, [step, navigation]);
 
   // access cart actions (matches hook used in Cart.tsx)
-  const { clearCart, items: cartItems = [], removeItem } = useCart() as any;
+  const {
+    clearCart,
+    items: cartItems = [],
+    removeItem,
+  } = useCart() as unknown as {
+    clearCart?: () => void;
+    items?: CartItem[];
+    removeItem?: (id: string) => void;
+  };
 
   // place order: finalize locally and navigate back
   const placeOrder = async () => {
@@ -205,8 +217,8 @@ export default function CheckoutScreen({ route, navigation }: Props) {
       if (typeof clearCart === "function") {
         clearCart();
       } else if (Array.isArray(cartItems) && typeof removeItem === "function") {
-        cartItems.forEach((ci: any) => {
-          if (ci?.product?.id) removeItem(ci.product.id);
+        cartItems.forEach((ci: CartItem) => {
+          if (ci?.product?.id) removeItem?.(ci.product.id);
         });
       }
 
@@ -225,9 +237,10 @@ export default function CheckoutScreen({ route, navigation }: Props) {
   useEffect(() => {
     // Add page visibility handlers only on web where window.events are meaningful.
     if (typeof window === "undefined" || !window.addEventListener) return;
-    const onPageShow = (e: any) => {
+    const onPageShow = (e: unknown) => {
       // restore state if persisted in bfcache
-      if (e?.persisted) {
+      const evt = e as { persisted?: boolean } | undefined;
+      if (evt?.persisted) {
         // TODO: restore any transient UI state if needed
       }
     };

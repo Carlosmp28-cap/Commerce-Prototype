@@ -1,12 +1,12 @@
-import { View } from "react-native";
+import { View, type TextStyle } from "react-native";
 import Text from "../../../../components/Text";
 import { styles } from "../styles/PLPHeader.web.styles";
 
 interface PLPHeaderWebTitleProps {
   title: string;
   countText: string;
-  titleStyle: any;
-  countStyle: any;
+  titleStyle?: TextStyle | TextStyle[];
+  countStyle?: TextStyle | TextStyle[];
 }
 
 /**
