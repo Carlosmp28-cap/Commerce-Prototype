@@ -25,6 +25,8 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { useCategories, getMainCategories } from "../hooks/useCategories";
 import HomeScreen from "../screens/Home";
+import LoginScreen from "../screens/Login";
+import RegisterScreen from "../screens/Register";
 import AppHeader from "./AppHeader";
 import { HeaderActions, HeaderHomeButton } from "./HeaderParts";
 
@@ -115,14 +117,8 @@ export default function AppNavigation() {
           name="Checkout"
           getComponent={() => require("../screens/Checkout/Checkout").default}
         />
-        <Stack.Screen
-          name="Login"
-          getComponent={() => require("../screens/Login").default}
-        />
-        <Stack.Screen
-          name="Register"
-          getComponent={() => require("../screens/Register").default}
-        />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
