@@ -1,4 +1,3 @@
-import React from "react";
 import {
   render,
   screen,
@@ -67,7 +66,7 @@ describe("CartContext - Add to Cart", () => {
       render(
         <CartProvider>
           <TestComponent />
-        </CartProvider>
+        </CartProvider>,
       );
 
       const addButton = screen.getByTestId("add-btn");
@@ -83,7 +82,7 @@ describe("CartContext - Add to Cart", () => {
       render(
         <CartProvider>
           <TestComponent />
-        </CartProvider>
+        </CartProvider>,
       );
 
       const addButton = screen.getByTestId("add-btn");
@@ -106,7 +105,7 @@ describe("CartContext - Add to Cart", () => {
       render(
         <CartProvider>
           <TestComponent />
-        </CartProvider>
+        </CartProvider>,
       );
 
       const addButton = screen.getByTestId("add-btn");

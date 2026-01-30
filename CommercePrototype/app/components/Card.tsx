@@ -1,4 +1,4 @@
-import React from "react";
+import type * as React from "react";
 import { View, StyleSheet } from "react-native";
 
 // Reusable Card component for product tiles, etc.

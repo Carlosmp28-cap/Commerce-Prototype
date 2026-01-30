@@ -30,5 +30,8 @@ export const styles = StyleSheet.create({
   secondaryRow: {
     borderTopWidth: 1,
     alignItems: "center",
+    paddingVertical: 8,
+    width: "100%",
+    justifyContent: "center",
   },
 });

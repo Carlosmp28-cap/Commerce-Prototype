@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import {
   NavigationContainer,
   type LinkingOptions,
@@ -26,6 +26,10 @@ import { useAuth } from "../hooks/useAuth";
 import { useCategories, getMainCategories } from "../hooks/useCategories";
 import HomeScreen from "../screens/Home";
 import AppHeader from "./AppHeader";
+import { HeaderActions, HeaderHomeButton } from "./HeaderParts";
+
+// Re-export header parts for backwards compatibility (tests and other modules)
+export { HeaderActions, HeaderHomeButton };
 export type RootStackParamList = {
   // Keep these params in one place so navigation remains type-safe across screens.
   Home: undefined;
@@ -41,100 +45,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const HOME_TITLE = "Commerce Prototype";
 
-export function HeaderHomeButton({
-  navigation,
-}: {
-  navigation: {
-    navigate: (screen: keyof RootStackParamList, params?: any) => void;
-    popToTop?: () => void;
-  };
-}) {
-  const paperTheme = useTheme();
-  const { width } = useWindowDimensions();
-  const textColor = paperTheme.colors.onSurface;
-
-  // Native headers center the title independently of the right actions.
-  // Constrain width on small screens so the title never overlaps headerRight icons.
-  const isNative = Platform.OS !== "web";
-  // Most phones end up truncating "Commerce Prototype" to "Commerce Proto…".
-  // Prefer a stacked 2-line title on native/mobile sizes to avoid ellipsis.
-  const useTwoLineTitle = isNative && width < 500;
-  const maxTitleWidth = isNative ? Math.max(140, width - 200) : undefined;
-  const fontSize =
-    Platform.OS === "web" ? 16 : useTwoLineTitle ? (width < 380 ? 12 : 13) : 15;
-  const lineHeight = Math.round(fontSize * 1.15);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="Go to Home"
-      onPress={() => {
-        // If the stack has Home as the first route (it does), this reliably returns there.
-        if (typeof navigation.popToTop === "function") {
-          navigation.popToTop();
-          return;
-        }
-        navigation.navigate("Home");
-      }}
-      hitSlop={10}
-      style={({ pressed }) => [
-        styles.headerHomeButton,
-        useTwoLineTitle ? { paddingVertical: 2 } : null,
-        maxTitleWidth ? { maxWidth: maxTitleWidth } : null,
-        pressed ? styles.headerHomeButtonPressed : null,
-      ]}
-    >
-      {useTwoLineTitle ? (
-        <View style={styles.headerHomeButtonTextStack}>
-          <Text
-            numberOfLines={1}
-            style={[
-              styles.headerHomeButtonText,
-              {
-                color: textColor,
-                fontSize,
-                lineHeight,
-              },
-            ]}
-          >
-            Commerce
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={[
-              styles.headerHomeButtonText,
-              {
-                color: textColor,
-                fontSize,
-                lineHeight,
-              },
-            ]}
-          >
-            Prototype
-          </Text>
-        </View>
-      ) : (
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={[
-            styles.headerHomeButtonText,
-            { color: textColor, fontSize, lineHeight },
-          ]}
-        >
-          {HOME_TITLE}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
-
 export const linkingConfig: LinkingOptions<RootStackParamList> = {
   // Enables web URL sync and deep links (e.g. /pdp/sku123) without expo-router.
   prefixes: [Linking.createURL("/")],
   config: {
     screens: {
-      Home: "",
+      Home: "home",
       PLP: "plp",
       PDP: "pdp/:id",
       Cart: "cart",
@@ -144,105 +60,28 @@ export const linkingConfig: LinkingOptions<RootStackParamList> = {
   },
 };
 
-export function HeaderActions({
-  navigation,
-  routeName,
-}: {
-  navigation: {
-    navigate: (screen: keyof RootStackParamList, params?: any) => void;
-  };
-  routeName: keyof RootStackParamList;
-}) {
-  const { width } = useWindowDimensions();
-  const isNative = Platform.OS !== "web";
-  const isCompact = isNative && width < 390;
-  const iconSize = isNative ? (isCompact ? 20 : 22) : 24;
-
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [isSearchMissingOpen, setIsSearchMissingOpen] = React.useState(false);
-
-  const closeSearch = React.useCallback(() => setIsSearchOpen(false), []);
-  const openSearch = React.useCallback(() => setIsSearchOpen(true), []);
-
-  const submitSearch = React.useCallback(() => {
-    closeSearch();
-    if (searchQuery.trim().length > 0) {
-      setIsSearchMissingOpen(true);
-    }
-  }, [closeSearch, searchQuery]);
-
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center" }}>
-      <IconButton
-        icon="magnify"
-        size={iconSize}
-        onPress={openSearch}
-        accessibilityLabel="Search"
-      />
-
-      <Portal>
-        <Dialog visible={isSearchOpen} onDismiss={closeSearch}>
-          <Dialog.Title>Search products</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              mode="outlined"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search products"
-              autoFocus
-              returnKeyType="search"
-              onSubmitEditing={submitSearch}
-              accessibilityLabel="Search products"
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={closeSearch}>Cancel</Button>
-            <Button onPress={submitSearch}>Search</Button>
-          </Dialog.Actions>
-        </Dialog>
-
-        <Dialog
-          visible={isSearchMissingOpen}
-          onDismiss={() => setIsSearchMissingOpen(false)}
-        >
-          <Dialog.Title>Search not implemented</Dialog.Title>
-          <Dialog.Content>
-            <Text>
-              Missing implementation: search suggestions should use GET
-              /search_suggestion.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setIsSearchMissingOpen(false)}>OK</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      <IconButton
-        icon="account"
-        size={iconSize}
-        onPress={() => navigation.navigate("Login")}
-        accessibilityLabel="Account"
-      />
-
-      {routeName === "Cart" ? null : (
-        <IconButton
-          icon="cart"
-          size={iconSize}
-          onPress={() => navigation.navigate("Cart")}
-          accessibilityLabel="Cart"
-        />
-      )}
-    </View>
-  );
-}
+// HeaderHomeButton and HeaderActions are provided by HeaderParts to avoid require cycles
 
 export default function AppNavigation() {
   const { isAuthenticated } = useAuth();
   const { categories: categoryTree } = useCategories("root", 3);
 
   const mainCategories = getMainCategories(categoryTree);
+
+  // Web: if user hits root `/`, replace URL to `/home` so the app URL is consistent
+  // with the routing config and mirrors expected deep-linking behaviour.
+  React.useEffect(() => {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      try {
+        const pathname = window.location.pathname || "/";
+        if (pathname === "/") {
+          window.history.replaceState(null, "", "/home");
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   return (
     <NavigationContainer linking={linkingConfig}>

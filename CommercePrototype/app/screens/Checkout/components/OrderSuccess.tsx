@@ -1,6 +1,11 @@
-import React from "react";
 import { View, StyleSheet } from "react-native";
-import { Title, Paragraph, Button, Avatar, useTheme as usePaperTheme } from "react-native-paper";
+import {
+  Title,
+  Paragraph,
+  Button,
+  Avatar,
+  useTheme as usePaperTheme,
+} from "react-native-paper";
 
 type Props = {
   onReturnHome: () => void;
@@ -18,9 +23,18 @@ export default function OrderSuccess({ onReturnHome, orderId }: Props) {
         style={{ backgroundColor: paper.colors.primary, marginBottom: 16 }}
         accessibilityLabel="Order success icon"
       />
-      <Title style={{ textAlign: "center", marginBottom: 8 }}>Order completed</Title>
-      <Paragraph style={{ textAlign: "center", color: paper.colors.onSurfaceVariant, marginBottom: 16 }}>
-        Thank you for your purchase. Your order {orderId ? `(${orderId}) ` : ""} has been placed successfully.
+      <Title style={{ textAlign: "center", marginBottom: 8 }}>
+        Order completed
+      </Title>
+      <Paragraph
+        style={{
+          textAlign: "center",
+          color: paper.colors.onSurfaceVariant,
+          marginBottom: 16,
+        }}
+      >
+        Thank you for your purchase. Your order {orderId ? `(${orderId}) ` : ""}{" "}
+        has been placed successfully.
       </Paragraph>
 
       <Button

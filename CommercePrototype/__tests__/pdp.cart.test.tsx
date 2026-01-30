@@ -1,9 +1,8 @@
-import React from "react";
 import { fireEvent, act } from "@testing-library/react-native";
 import * as RN from "react-native";
 
 import PDPScreen from "../app/screens/PDP";
-import { getProductById } from "../app/data/catalog";
+import { getProductById } from "./fixtures/catalogMock";
 import { renderWithProviders } from "../test/testUtils";
 
 const mockAddItem = jest.fn();
@@ -16,7 +15,7 @@ jest.mock("../app/hooks/useCart", () => ({
 
 jest.mock("../app/hooks/useProducts", () => {
   const actual = jest.requireActual("../app/hooks/useProducts");
-  const { products: catalogProducts } = require("../app/data/catalog");
+  const { products: catalogProducts } = require("./fixtures/catalogMock");
 
   return {
     ...actual,
@@ -49,8 +48,7 @@ describe("PDP - cart", () => {
       scale: 1,
       fontScale: 1,
     });
-    // PDPQuantitySelector uses alert()
-    (global as unknown as { alert?: jest.Mock }).alert = jest.fn();
+    // previous implementation used alert(); now we show a Snackbar instead
   });
 
   afterEach(() => {
@@ -81,9 +79,8 @@ describe("PDP - cart", () => {
       expect.objectContaining({ id: product!.id }),
       1,
     );
-    expect(
-      (global as unknown as { alert?: jest.Mock }).alert,
-    ).toHaveBeenCalled();
+    // Snackbar with success message should be visible
+    expect(getByText(/added to cart/)).toBeTruthy();
   });
 
   test("can select quantity and add to cart", async () => {

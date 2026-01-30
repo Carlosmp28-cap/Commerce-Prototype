@@ -1,4 +1,4 @@
-import type { CategoryNodeDto } from "../services/api.types";
+import type { CategoryNodeDto } from "../models";
 
 /**
  * Pure category-tree helpers.

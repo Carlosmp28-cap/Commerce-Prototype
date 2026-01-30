@@ -39,8 +39,9 @@ productListingPage/
   - Common styles are in `styles/PLPHeader.shared.styles.ts`.
   - Platform-specific overrides are in their respective folders.
 
-- **Single Source of Truth:**
-  - Data (ex: categories) is imported from a single location (`data/catalog.ts`).
+-- **Single Source of Truth:**
+
+- Data (ex: categories) should come from API-backed hooks like `useCategories()` or test fixtures; the old `data/catalog.ts` has been removed.
 
 - **Componentization:**
   - Each UI element (header, controls, modals) is a standalone component.

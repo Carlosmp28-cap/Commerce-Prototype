@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
-import type { CategoryNodeDto } from "../services/api.types";
+import type { CategoryNodeDto } from "../models";
 
 export {
   flattenCategories,
@@ -27,6 +27,8 @@ export function useCategories(
 ): UseCategoriesResult {
   const shouldLogErrors =
     typeof process !== "undefined" && process.env?.NODE_ENV !== "test";
+  // Do not include test-only fixtures here; tests should mock `useCategories`
+  // when they need deterministic data. Keep the hook simple for runtime.
   const [categories, setCategories] = useState<CategoryNodeDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +38,13 @@ export function useCategories(
       setLoading(true);
       setError(null);
 
-      const result = await api.categories.getTree({
-        rootId,
-        levels,
-      }, { signal });
+      const result = await api.categories.getTree(
+        {
+          rootId,
+          levels,
+        },
+        { signal },
+      );
 
       setCategories(result);
     } catch (err) {

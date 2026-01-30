@@ -1,4 +1,3 @@
-import React from "react";
 import { fireEvent } from "@testing-library/react-native";
 import PaymentForm from "../app/screens/Checkout/components/PaymentForm";
 import { renderWithProviders } from "../test/testUtils";
@@ -41,9 +40,18 @@ describe("PaymentForm", () => {
     const { getByLabelText } = renderWithProviders(<PaymentForm {...props} />);
 
     // use actual accessibility labels rendered by the component
-    fireEvent.changeText(getByLabelText("Enter your name on the card"), "Test User");
-    fireEvent.changeText(getByLabelText("Enter your card number"), "4242 4242 4242 4242");
-    fireEvent.changeText(getByLabelText("Enter your card expiry date"), "12/30");
+    fireEvent.changeText(
+      getByLabelText("Enter your name on the card"),
+      "Test User",
+    );
+    fireEvent.changeText(
+      getByLabelText("Enter your card number"),
+      "4242 4242 4242 4242",
+    );
+    fireEvent.changeText(
+      getByLabelText("Enter your card expiry date"),
+      "12/30",
+    );
     fireEvent.changeText(getByLabelText("Enter your card CVV"), "123");
 
     expect(setCardName).toHaveBeenCalledWith("Test User");

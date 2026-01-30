@@ -1,4 +1,4 @@
-import type { AuthTokens } from "./auth.types";
+import type { AuthTokens } from "../models";
 import { getItem, setItem, removeItem } from "../utils/storage";
 
 const AUTH_TOKENS_KEY = "@commerce_auth_tokens";

@@ -1,6 +1,7 @@
-import { sortProducts, type SortOption } from "../app/scripts/helpers/productHelpers";
-import { getProductsByQuery } from "../app/data/catalog";
-import type { CatalogProduct } from "../app/data/catalog";
+import { sortProducts } from "../app/scripts/helpers/productHelpers";
+import type { SortOption } from "../app/types";
+import { getProductsByQuery } from "./fixtures/catalogMock";
+import type { CatalogProduct } from "./fixtures/catalogMock";
 
 describe("PLP logic", () => {
   test("sortProducts sorts by name ascending", () => {
@@ -40,14 +41,14 @@ describe("PLP logic", () => {
   test("getProductsByQuery returns empty for unknown category", () => {
     const result = getProductsByQuery("unknown-category");
     expect(result).toEqual([]);
-    });
+  });
 
-    test("sortProducts is stable for equal values", () => {
-        const products = [
-            { id: "1", name: "A", price: 10 },
-            { id: "2", name: "A", price: 10 }
-        ] as any;
-        const sorted = sortProducts(products, "name-asc");
-        expect(sorted).toEqual(products);
-        });
+  test("sortProducts is stable for equal values", () => {
+    const products = [
+      { id: "1", name: "A", price: 10 },
+      { id: "2", name: "A", price: 10 },
+    ] as any;
+    const sorted = sortProducts(products, "name-asc");
+    expect(sorted).toEqual(products);
+  });
 });

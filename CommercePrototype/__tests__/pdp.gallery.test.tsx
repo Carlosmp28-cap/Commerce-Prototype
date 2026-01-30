@@ -1,4 +1,3 @@
-import React from "react";
 import { fireEvent } from "@testing-library/react-native";
 
 import PDPImageGallery from "../app/screens/PDP/components/PDPImageGallery";
@@ -12,7 +11,7 @@ describe("PDP - image gallery", () => {
     ];
 
     const { getByLabelText, queryByLabelText } = renderWithProviders(
-      <PDPImageGallery images={images} isDesktop={false} />
+      <PDPImageGallery images={images} isDesktop={false} />,
     );
 
     expect(queryByLabelText("Close image zoom")).toBeNull();
@@ -32,7 +31,7 @@ describe("PDP - image gallery", () => {
     ];
 
     const { getByLabelText } = renderWithProviders(
-      <PDPImageGallery images={images} isDesktop={false} />
+      <PDPImageGallery images={images} isDesktop={false} />,
     );
 
     fireEvent.press(getByLabelText("Select image 2"));

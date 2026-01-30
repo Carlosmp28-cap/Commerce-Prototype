@@ -80,17 +80,20 @@ export const clearCartStorage = async (): Promise<void> => {
 /**
  * Generic storage helpers
  */
-export const getItem = async (key: string): Promise<any> => {
+export const getItem = async <T = unknown>(key: string): Promise<T | null> => {
   try {
     const value = await getFromStorage(key);
-    return value ? JSON.parse(value) : null;
+    return value ? (JSON.parse(value) as T) : null;
   } catch (error) {
     console.warn(`Error getting item '${key}' from storage:`, error);
     return null;
   }
 };
 
-export const setItem = async (key: string, value: any): Promise<void> => {
+export const setItem = async <T = unknown>(
+  key: string,
+  value: T,
+): Promise<void> => {
   try {
     await setInStorage(key, JSON.stringify(value));
   } catch (error) {
@@ -111,9 +114,10 @@ type BasketSessionSnapshot = {
   sessionId: string | null;
 };
 
-export const loadBasketSession = async (): Promise<BasketSessionSnapshot | null> => {
-  return getItem(BASKET_SESSION_KEY);
-};
+export const loadBasketSession =
+  async (): Promise<BasketSessionSnapshot | null> => {
+    return getItem(BASKET_SESSION_KEY);
+  };
 
 export const saveBasketSession = async (
   snapshot: BasketSessionSnapshot,

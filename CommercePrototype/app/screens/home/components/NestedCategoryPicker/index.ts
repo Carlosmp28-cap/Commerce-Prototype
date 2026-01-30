@@ -1,1 +1,1 @@
-export { NestedCategoryPicker } from "./NestedCategoryPicker";
+export { NestedCategoryPicker } from "./NestedCategoryPicker.tsx";

@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "react-native-paper";
 import { StyleSheet } from "react-native";
 import { useTheme } from "../themes/index";
@@ -35,8 +34,14 @@ export default function CustomButton({
 
   const sizeStyles = {
     small: { paddingVertical: theme.spacing.xs, fontSize: 12 },
-    medium: { paddingVertical: theme.spacing.sm, fontSize: theme.typography.body.fontSize },
-    large: { paddingVertical: theme.spacing.md, fontSize: theme.typography.title.fontSize },
+    medium: {
+      paddingVertical: theme.spacing.sm,
+      fontSize: theme.typography.body.fontSize,
+    },
+    large: {
+      paddingVertical: theme.spacing.md,
+      fontSize: theme.typography.title.fontSize,
+    },
   };
 
   const variantColors = {
@@ -53,7 +58,10 @@ export default function CustomButton({
       disabled={disabled}
       style={[
         styles.button,
-        { backgroundColor: mode === "contained" ? variantColors[variantType] : "transparent" },
+        {
+          backgroundColor:
+            mode === "contained" ? variantColors[variantType] : "transparent",
+        },
         { paddingVertical: sizeStyles[size].paddingVertical },
       ]}
       labelStyle={{

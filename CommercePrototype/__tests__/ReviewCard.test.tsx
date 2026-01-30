@@ -3,7 +3,7 @@ import ReviewCard from "../app/screens/Checkout/components/ReviewCard";
 import { renderWithProviders } from "../test/testUtils";
 
 describe("ReviewCard", () => {
-  const mockItems: CartLine[] = [
+  const mockItems = [
     {
       product: {
         id: "1",
@@ -20,7 +20,7 @@ describe("ReviewCard", () => {
       },
       quantity: 1,
     },
-  ];
+  ] as unknown as CartLine[];
 
   it("renders customer, items and totals", () => {
     const { getByText, queryByText, getAllByText } = renderWithProviders(
@@ -38,7 +38,7 @@ describe("ReviewCard", () => {
         subtotal={25.5}
         shippingCost={5}
         total={30.5}
-      />
+      />,
     );
 
     getByText("John Doe");

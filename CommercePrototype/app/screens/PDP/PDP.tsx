@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   ScrollView,
   useWindowDimensions,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTheme } from "../../themes";
 import type { RootStackParamList } from "../../navigation";
@@ -22,6 +22,7 @@ import {
   PDPProductInfoHeader,
   PDPProductInfoDetail,
   PDPQuantitySelector,
+  PDPVariantPicker,
   PDPRelatedProducts,
 } from "./components";
 
@@ -48,7 +49,9 @@ export default function PDPScreen({ navigation, route }: Props) {
   // Fetch product details from API
   const { product, loading, error } = useProductDetail(id);
 
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    null,
+  );
 
   // Hybrid behavior:
   // - If there's exactly one orderable variant, auto-select it.
@@ -98,17 +101,20 @@ export default function PDPScreen({ navigation, route }: Props) {
   const handleAddToCart = (quantity: number) => {
     if (!product) return;
 
-    const hasVariants = Boolean(product.variants && product.variants.length > 0);
+    const hasVariants = Boolean(
+      product.variants && product.variants.length > 0,
+    );
     if (hasVariants && !selectedVariantId) {
-      alert("Please select a variant (e.g. size/color) before adding to cart.");
-      return;
+      throw new Error(
+        "Please select a variant (e.g. size/color) before adding to cart.",
+      );
     }
 
     const productForCart: Product = selectedVariantId
       ? { ...product, id: selectedVariantId }
       : product;
 
-    addItem(productForCart, quantity);
+    return addItem(productForCart, quantity);
   };
 
   // SEO: Meta tags dinâmicas para cada produto
@@ -190,44 +196,21 @@ export default function PDPScreen({ navigation, route }: Props) {
     >
       <PDPBreadcrumb product={product} navigation={navigation} />
 
-      {product.variants && product.variants.length > 0 && (
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{ color: theme.colors.text, fontWeight: "700", marginBottom: 6 }}>
-            Choose variant
-          </Text>
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              borderRadius: 8,
-              overflow: "hidden",
-              backgroundColor: theme.colors.surface,
-            }}
-          >
-            <Picker
-              selectedValue={selectedVariantId ?? ""}
-              onValueChange={(value) => setSelectedVariantId(value ? String(value) : null)}
-            >
-              <Picker.Item label="Select…" value="" />
-              {product.variants.map((v) => {
-                const label = v.variationValues
-                  ? Object.entries(v.variationValues)
-                      .map(([k, val]) => `${k}: ${val}`)
-                      .join(" • ")
-                  : v.id;
-                return <Picker.Item key={v.id} label={label} value={v.id} />;
-              })}
-            </Picker>
-          </View>
-        </View>
-      )}
-
       {isDesktop ? (
         <View style={styles.contentRow}>
           <PDPImageGallery images={galleryImages} isDesktop={true} />
 
           <View style={styles.rightColumn}>
             <PDPProductInfo product={product} isDesktop={true} />
+
+            {product.variants && product.variants.length > 0 && (
+              <PDPVariantPicker
+                variants={product.variants}
+                selectedVariantId={selectedVariantId}
+                onSelect={(id) => setSelectedVariantId(id)}
+              />
+            )}
+
             <PDPQuantitySelector
               product={product}
               onAddToCart={handleAddToCart}
@@ -239,6 +222,15 @@ export default function PDPScreen({ navigation, route }: Props) {
           <PDPProductInfoHeader product={product} />
           <PDPImageGallery images={galleryImages} isDesktop={false} />
           <PDPProductInfoDetail product={product} />
+
+          {product.variants && product.variants.length > 0 && (
+            <PDPVariantPicker
+              variants={product.variants}
+              selectedVariantId={selectedVariantId}
+              onSelect={(id) => setSelectedVariantId(id)}
+            />
+          )}
+
           <PDPQuantitySelector
             product={product}
             onAddToCart={handleAddToCart}

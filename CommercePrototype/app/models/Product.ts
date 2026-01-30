@@ -1,5 +1,4 @@
 import type { ImageSourcePropType } from "react-native";
-import type { CategoryId } from "../data/catalog";
 
 /**
  * Product shape used by the UI.
@@ -14,7 +13,7 @@ export type Product = {
   /** Stock available to sell (inventory). */
   quantityAvailable: number;
   /** Category this product belongs to (used for PLP filtering). */
-  categoryId: CategoryId;
+  categoryId: string;
   /** Image for RN <Image source={...} />; supports both local require() and remote URLs. */
   image?: ImageSourcePropType;
   /** Multiple images for gallery */
