@@ -1,4 +1,4 @@
-import React from "react";
+import type * as React from "react";
 import { render } from "@testing-library/react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 import { NavigationContainer } from "@react-navigation/native";
@@ -18,7 +18,7 @@ export function renderWithProviders(ui: React.ReactElement) {
           </CartProvider>
         </PaperProvider>
       </ThemeProvider>
-    </AuthProvider>
+    </AuthProvider>,
   );
 }
 

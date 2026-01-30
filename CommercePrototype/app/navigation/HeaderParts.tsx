@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { Platform, Pressable, View, useWindowDimensions } from "react-native";
 import {
   IconButton,

@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useTheme } from "../../../themes";
 import Text from "../../../components/Text";

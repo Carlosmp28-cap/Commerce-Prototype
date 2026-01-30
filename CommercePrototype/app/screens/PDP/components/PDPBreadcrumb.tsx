@@ -1,4 +1,3 @@
-import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../../navigation";

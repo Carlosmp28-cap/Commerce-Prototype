@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Pressable, ScrollView } from "react-native";
 import { Text, useTheme as usePaperTheme } from "react-native-paper";
 import type { CategoryNodeDto } from "../../models";

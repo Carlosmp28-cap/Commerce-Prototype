@@ -1,4 +1,3 @@
-import React from "react";
 import { fireEvent } from "@testing-library/react-native";
 import CheckoutScreen from "../app/screens/Checkout/Checkout";
 import { renderWithProviders } from "../test/testUtils";
@@ -12,7 +11,7 @@ describe("Shipping (via Checkout screen)", () => {
     const route: any = { params: undefined };
 
     const { getByLabelText, getByText, findByLabelText } = renderWithProviders(
-      <CheckoutScreen navigation={navigation} route={route} />
+      <CheckoutScreen navigation={navigation} route={route} />,
     );
 
     // invalid email shows helper text

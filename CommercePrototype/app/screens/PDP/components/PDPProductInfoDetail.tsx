@@ -1,4 +1,3 @@
-import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text, Chip } from "react-native-paper";
 import type { Product } from "../../../models/Product";
