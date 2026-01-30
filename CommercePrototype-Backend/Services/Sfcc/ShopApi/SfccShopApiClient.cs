@@ -44,18 +44,34 @@ public sealed class SfccShopApiClient : SfccApiClientBase, ISfccShopApiClient
     /// <inheritdoc />
     protected override async ValueTask ApplyRequestHeadersAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        // Shop API (public) access is typically via x-dw-client-id.
-        var clientId = _sfccOptions.CurrentValue.ClientId;
+        var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+        var needsShopper = path.Contains("/baskets", StringComparison.OrdinalIgnoreCase)
+                           || path.Contains("/customers", StringComparison.OrdinalIgnoreCase)
+                           || path.Contains("/orders", StringComparison.OrdinalIgnoreCase);
+
+        static string? FirstNonEmpty(params string?[] values)
+        {
+            foreach (var v in values)
+            {
+                if (!string.IsNullOrWhiteSpace(v)) return v;
+            }
+
+            return null;
+        }
+
+        // Use the public client id by default. If we are doing authenticated/customer flows and a confidential
+        // OAuth client id is configured, use it instead (some sandboxes require the x-dw-client-id to match the bearer).
+        var clientId = needsShopper
+            ? FirstNonEmpty(
+                _sfccOptions.CurrentValue.OAuthClientId,
+                _sfccOptions.CurrentValue.ClientId)
+            : _sfccOptions.CurrentValue.ClientId;
+
         if (!string.IsNullOrWhiteSpace(clientId))
         {
             request.Headers.Remove("x-dw-client-id");
             request.Headers.Add("x-dw-client-id", clientId);
         }
-
-        var path = request.RequestUri?.AbsolutePath ?? string.Empty;
-        var needsShopper = path.Contains("/baskets", StringComparison.OrdinalIgnoreCase)
-                           || path.Contains("/customers", StringComparison.OrdinalIgnoreCase)
-                           || path.Contains("/orders", StringComparison.OrdinalIgnoreCase);
         if (needsShopper)
         {
             var authToken = _requestContext.ShopperAuthToken;

@@ -42,6 +42,23 @@ public sealed class SfccOptions
     public string? ClientId { get; init; }
 
     /// <summary>
+    /// Optional confidential (server-side) client id used for OAuth client-credentials.
+    /// </summary>
+    /// <remarks>
+    /// Use this when your backend needs a bearer token (for example, customer operations).
+    /// If omitted, the code falls back to <see cref="ClientId"/>.
+    /// </remarks>
+    public string? OAuthClientId { get; init; }
+
+    /// <summary>
+    /// Optional confidential (server-side) client secret/password used for OAuth client-credentials.
+    /// </summary>
+    /// <remarks>
+    /// Never place this value in frontend code. Prefer user-secrets or environment variables.
+    /// </remarks>
+    public string? OAuthClientSecret { get; init; }
+
+    /// <summary>
     /// OAuth token endpoint URL (used by the auth client to retrieve an access token).
     /// </summary>
     /// <remarks>
@@ -70,4 +87,10 @@ public sealed class SfccOptions
     /// Optional trusted system password used by Shop API <c>/customers/auth/trustedsystem</c>.
     /// </summary>
     public string? TrustedSystemPassword { get; init; }
+
+    /// <summary>
+    /// Whether to include <c>login</c>/<c>password</c> fields when calling <c>/customers/auth/trustedsystem</c>.
+    /// Some sandboxes reject these fields; keep false unless required by your OCAPI settings.
+    /// </summary>
+    public bool TrustedSystemIncludeLogin { get; init; }
 }

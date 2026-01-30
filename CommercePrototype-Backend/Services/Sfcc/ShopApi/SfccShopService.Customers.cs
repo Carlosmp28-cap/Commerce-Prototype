@@ -34,30 +34,134 @@ public sealed partial class SfccShopService
             last_name = request.LastName
         };
 
-        // Some SFCC sandboxes require an authenticated context to create customers.
-        // Prefer trusted-system auth when configured; otherwise fall back to the OAuth client token.
+        // Some SFCC sandboxes require a *shopper* auth context to create customers.
+        // In practice, POST /customers often expects an Authorization token issued by Shop API (guest or trusted-system),
+        // not an OAuth client_credentials token.
+        //
+        // Strategy:
+        // 1) Prefer trusted-system shopper session when available (strongest).
+        // 2) Otherwise fall back to a guest shopper session.
+        // 3) As a last resort, keep the OAuth client token fallback (some sandboxes accept it).
         try
         {
             var trusted = await _authService.GetTrustedSystemShopperSessionAsync(cancellationToken);
-            _requestContext.ClientAuthToken = trusted.AuthToken;
+            if (!string.IsNullOrWhiteSpace(trusted.AuthToken))
+            {
+                _requestContext.ClientAuthToken = trusted.AuthToken;
+                _requestContext.ShopperAuthToken = trusted.AuthToken;
+            }
             _requestContext.ShopperCookieHeader = trusted.CookieHeader;
+
+            if (string.IsNullOrWhiteSpace(_requestContext.ClientAuthToken) && string.IsNullOrWhiteSpace(_requestContext.ShopperCookieHeader))
+            {
+                throw new InvalidOperationException("Trusted-system session did not return an auth token or cookie");
+            }
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("TrustedSystemLogin", StringComparison.OrdinalIgnoreCase))
+        catch (OperationCanceledException)
         {
-            // Fallback: attempt to use OAuth client-credentials token.
-            // If the sandbox still forbids customer creation, SFCC will respond with 401/403.
-            var clientToken = await _authService.GetAccessTokenAsync(cancellationToken);
-            _requestContext.ClientAuthToken = clientToken;
-            _requestContext.ShopperCookieHeader = null;
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Trusted-system auth unavailable; falling back to guest shopper session for customer registration");
+
+            try
+            {
+                var guest = await _authService.GetGuestShopperSessionAsync(cancellationToken);
+                _requestContext.ShopperAuthToken = guest.AuthToken;
+                _requestContext.ShopperCookieHeader = guest.CookieHeader;
+                _requestContext.ClientAuthToken = null;
+            }
+            catch (Exception guestEx)
+            {
+                _logger.LogWarning(guestEx, "Guest shopper session unavailable; falling back to OAuth client token for customer registration");
+                var clientToken = await _authService.GetAccessTokenAsync(cancellationToken);
+                _requestContext.ClientAuthToken = clientToken;
+                _requestContext.ShopperAuthToken = null;
+                _requestContext.ShopperCookieHeader = null;
+            }
         }
 
-        var json = await _apiClient.PostAsync<JsonElement>("/customers", shopPayload, cancellationToken);
-        if (json.ValueKind == JsonValueKind.Undefined)
+        try
         {
-            throw new InvalidOperationException("SFCC returned empty response for customer registration");
+            var json = await _apiClient.PostAsync<JsonElement>("/customers", shopPayload, cancellationToken);
+            if (json.ValueKind == JsonValueKind.Undefined)
+            {
+                throw new InvalidOperationException("SFCC returned empty response for customer registration");
+            }
+
+            return MapCustomerProfile(json);
+        }
+        catch (HttpRequestException ex) when (IsUnknownPropertyException(ex, "login"))
+        {
+            _logger.LogWarning(ex, "SFCC Shop API rejected 'login' property; retrying registration without login field");
+
+            try
+            {
+                var json = await _apiClient.PostAsync<JsonElement>("/customers", dataPayload, cancellationToken);
+                if (json.ValueKind == JsonValueKind.Undefined)
+                {
+                    throw new InvalidOperationException("SFCC returned empty response for customer registration");
+                }
+
+                return MapCustomerProfile(json);
+            }
+            catch (HttpRequestException innerEx)
+            {
+                var customerListId = _sfccOptions.CurrentValue.CustomerListId;
+                if (string.IsNullOrWhiteSpace(customerListId))
+                {
+                    throw;
+                }
+
+                _logger.LogWarning(innerEx, "SFCC Shop API registration failed; falling back to Data API customer list {CustomerListId}", customerListId);
+
+                var dataJson = await _dataApiClient.PostAsync<JsonElement>($"/customer_lists/{customerListId}/customers", dataPayload, cancellationToken);
+                if (dataJson.ValueKind == JsonValueKind.Undefined)
+                {
+                    throw new InvalidOperationException("SFCC Data API returned empty response for customer registration");
+                }
+
+                return MapCustomerProfile(dataJson);
+            }
+        }
+    }
+
+    private static bool IsUnknownPropertyException(HttpRequestException ex, string propertyName)
+    {
+        var message = ex.Message ?? string.Empty;
+        if (!message.Contains("UnknownPropertyException", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
         }
 
-        return MapCustomerProfile(json);
+        var jsonStart = message.IndexOf('{');
+        if (jsonStart >= 0)
+        {
+            var json = message[jsonStart..];
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("fault", out var fault)
+                    && fault.TryGetProperty("arguments", out var args)
+                    && args.TryGetProperty("property", out var prop)
+                    && prop.ValueKind == JsonValueKind.String)
+                {
+                    return string.Equals(prop.GetString(), propertyName, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            catch
+            {
+                // fall back to string checks below
+            }
+        }
+
+        if (message.Contains($"\"property\":\"{propertyName}\"", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return message.Contains($"'{propertyName}'", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<CustomerProfileDto?> GetCustomerProfileAsync(string customerId, CancellationToken cancellationToken = default)

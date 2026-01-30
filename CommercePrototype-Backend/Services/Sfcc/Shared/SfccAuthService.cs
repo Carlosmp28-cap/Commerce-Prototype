@@ -64,18 +64,45 @@ public class SfccAuthService : ISfccAuthService
             }
 
             var tokenUrl = _sfccOptions.CurrentValue.OAuthTokenUrl;
-            var clientId = _sfccOptions.CurrentValue.ClientId;
 
-            if (string.IsNullOrEmpty(tokenUrl) || string.IsNullOrEmpty(clientId))
+            // Use a confidential (server-side) OAuth client when provided.
+            // Backwards-compatible fallbacks:
+            // - If OAuthClientId/OAuthClientSecret are not set, fall back to TrustedSystemLogin/TrustedSystemPassword (older naming).
+            // - If still not set, fall back to ClientId with no secret (legacy behavior; many sandboxes will reject it).
+            static string? FirstNonEmpty(params string?[] values)
             {
-                throw new InvalidOperationException("Missing SFCC OAuth configuration (OAuthTokenUrl and ClientId required)");
+                foreach (var v in values)
+                {
+                    if (!string.IsNullOrWhiteSpace(v)) return v;
+                }
+
+                return null;
+            }
+
+            var oauthClientId = FirstNonEmpty(
+                _sfccOptions.CurrentValue.OAuthClientId,
+                _sfccOptions.CurrentValue.ClientId);
+
+            var oauthClientSecret =
+                _sfccOptions.CurrentValue.OAuthClientSecret
+                ?? _sfccOptions.CurrentValue.TrustedSystemPassword;
+
+            if (string.IsNullOrEmpty(tokenUrl) || string.IsNullOrEmpty(oauthClientId))
+            {
+                throw new InvalidOperationException("Missing SFCC OAuth configuration (OAuthTokenUrl and OAuthClientId/ClientId required)");
+            }
+
+            if (string.IsNullOrWhiteSpace(oauthClientSecret))
+            {
+                throw new InvalidOperationException(
+                    "Missing SFCC OAuth client secret. Configure Sfcc:OAuthClientSecret (preferred) or Sfcc:TrustedSystemPassword for client-credentials token retrieval.");
             }
 
             // Create request matching Postman configuration
             var request = new HttpRequestMessage(HttpMethod.Post, tokenUrl);
             
-            // Add Basic Auth header with clientId:clientId (both username and password are the clientId)
-            var authString = $"{clientId}:{clientId}";
+            // Add Basic Auth header with client_id:client_secret
+            var authString = $"{oauthClientId}:{oauthClientSecret}";
             var authBytes = Encoding.ASCII.GetBytes(authString);
             var authBase64 = Convert.ToBase64String(authBytes);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authBase64);
@@ -250,110 +277,31 @@ public class SfccAuthService : ISfccAuthService
         if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username is required", nameof(username));
         if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Password is required", nameof(password));
 
-        var clientId = _sfccOptions.CurrentValue.ClientId;
-
+        var clientId = _sfccOptions.CurrentValue.OAuthClientId ?? _sfccOptions.CurrentValue.ClientId;
         if (string.IsNullOrWhiteSpace(clientId))
         {
             throw new InvalidOperationException("Missing SFCC configuration (ClientId required)");
         }
 
-        var clientToken = await GetAccessTokenAsync(cancellationToken);
+        var request = new HttpRequestMessage(HttpMethod.Post, BuildShopUrl("/customers/auth"));
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Headers.Remove("x-dw-client-id");
+        request.Headers.Add("x-dw-client-id", clientId);
+        request.Headers.Add("Origin", "http://www.sitegenesis.com");
 
-        static string? TryParseUnknownProperty(string body)
+        // Adiciona Basic Auth com username e password do shopper
+        var basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", basicAuth);
+
+        // Body só com type: credentials
+        var payload = new Dictionary<string, string?>
         {
-            // Example body:
-            // {"fault":{"arguments":{"property":"login","document":"auth_request"},"type":"UnknownPropertyException",...}}
-            try
-            {
-                using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
-                if (doc.RootElement.TryGetProperty("fault", out var fault)
-                    && fault.TryGetProperty("type", out var type)
-                    && string.Equals(type.GetString(), "UnknownPropertyException", StringComparison.OrdinalIgnoreCase)
-                    && fault.TryGetProperty("arguments", out var args)
-                    && args.TryGetProperty("property", out var prop))
-                {
-                    return prop.GetString();
-                }
-            }
-            catch
-            {
-                // ignore parsing failures
-            }
+            ["type"] = "credentials"
+        };
+        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-            return null;
-        }
-
-        HttpRequestMessage CreateCredentialsRequest(string userField)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, BuildShopUrl("/customers/auth"));
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Headers.Remove("x-dw-client-id");
-            request.Headers.Add("x-dw-client-id", clientId);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
-
-            var payload = new Dictionary<string, string?>
-            {
-                ["type"] = "credentials",
-                [userField] = username,
-                ["password"] = password
-            };
-
-            request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-
-            return request;
-        }
-
-        async Task<(HttpResponseMessage Response, string Body)> SendCredentialsAuthAsync(string userField)
-        {
-            using var request = CreateCredentialsRequest(userField);
-
-            // Log only the shape (redacted password) to avoid secrets in logs.
-            var redacted = new Dictionary<string, string?>
-            {
-                ["type"] = "credentials",
-                [userField] = username,
-                ["password"] = "***"
-            };
-            _logger.LogInformation("Requesting SFCC registered shopper session via /customers/auth (credentials): {Payload}", JsonSerializer.Serialize(redacted));
-
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            return (response, body);
-        }
-
-        HttpResponseMessage? response = null;
-        string body = string.Empty;
-
-        // SFCC sandboxes differ on the accepted identifier field name for credentials.
-        // Common variants observed: `username`, `email`, `login`.
-        foreach (var userField in new[] { "username", "email", "login" })
-        {
-            response?.Dispose();
-            (response, body) = await SendCredentialsAuthAsync(userField);
-
-            if (response.IsSuccessStatusCode)
-            {
-                break;
-            }
-
-            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                var unknown = TryParseUnknownProperty(body);
-                if (!string.IsNullOrWhiteSpace(unknown))
-                {
-                    _logger.LogWarning("SFCC rejected credentials payload field '{Field}'; trying next option", unknown);
-                    continue;
-                }
-            }
-
-            // Non-retriable failure.
-            break;
-        }
-
-        if (response is null)
-        {
-            throw new InvalidOperationException("Failed to call SFCC /customers/auth (credentials): no response");
-        }
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -371,12 +319,17 @@ public class SfccAuthService : ISfccAuthService
             ?? root.TryGetStringPropertyCaseInsensitive("access_token")
             ?? root.TryGetStringPropertyCaseInsensitive("token");
 
-        if (string.IsNullOrWhiteSpace(authToken) && response.Headers.TryGetValues("Authorization", out var authHeaders2))
+        // Se não veio no body, tenta pegar do header Authorization
+        if (string.IsNullOrWhiteSpace(authToken) && response.Headers.TryGetValues("Authorization", out var authHeaders))
         {
-            var header = authHeaders2.FirstOrDefault();
+            var header = authHeaders.FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(header) && header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             {
                 authToken = header[7..].Trim();
+            }
+            else if (!string.IsNullOrWhiteSpace(header))
+            {
+                authToken = header.Trim();
             }
         }
 
@@ -400,7 +353,7 @@ public class SfccAuthService : ISfccAuthService
             var snippet = body.Length <= 400 ? body : body[..400] + "...";
             var headerNames = string.Join(", ", response.Headers.Select(h => h.Key));
             throw new InvalidOperationException(
-                $"SFCC /customers/auth (credentials) returned 200 but did not provide a shopper token (no auth_token/access_token and no Set-Cookie). " +
+                $"SFCC /customers/auth (credentials) returned 200 but did not provide a shopper token (no auth_token/access_token and no Set-Cookie/Authorization header). " +
                 $"Response headers: {headerNames}. Body snippet: {snippet}");
         }
 
@@ -417,7 +370,20 @@ public class SfccAuthService : ISfccAuthService
             return _cachedTrustedSystemSession;
         }
 
-        var clientId = _sfccOptions.CurrentValue.ClientId;
+        // Prefer the confidential OAuth client for trusted-system flows.
+        static string? FirstNonEmpty(params string?[] values)
+        {
+            foreach (var v in values)
+            {
+                if (!string.IsNullOrWhiteSpace(v)) return v;
+            }
+
+            return null;
+        }
+
+        var clientId = FirstNonEmpty(
+            _sfccOptions.CurrentValue.OAuthClientId,
+            _sfccOptions.CurrentValue.ClientId);
         if (string.IsNullOrWhiteSpace(clientId))
         {
             throw new InvalidOperationException("Missing SFCC configuration (ClientId required)");
@@ -426,29 +392,60 @@ public class SfccAuthService : ISfccAuthService
         // Trusted-system auth typically requires a client-credentials bearer token.
         var clientToken = await GetAccessTokenAsync(cancellationToken);
 
+        // Older config uses TrustedSystemLogin/TrustedSystemPassword.
+        // Depending on sandbox config, /customers/auth/trustedsystem may require additional fields.
+        // We keep these optional and try the minimal payload first, then fall back.
         var login = _sfccOptions.CurrentValue.TrustedSystemLogin;
         var password = _sfccOptions.CurrentValue.TrustedSystemPassword;
-        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+        var includeLogin = _sfccOptions.CurrentValue.TrustedSystemIncludeLogin;
+
+        HttpRequestMessage CreateRequest(object payloadObj)
         {
-            throw new InvalidOperationException(
-                "Missing configuration: Sfcc:TrustedSystemLogin and Sfcc:TrustedSystemPassword are required for /customers/auth/trustedsystem in this sandbox.");
+            var request = new HttpRequestMessage(HttpMethod.Post, BuildShopUrl("/customers/auth/trustedsystem"));
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Headers.Remove("x-dw-client-id");
+            request.Headers.Add("x-dw-client-id", clientId);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            var payloadJson = JsonSerializer.Serialize(payloadObj);
+            request.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+            return request;
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Post, BuildShopUrl("/customers/auth/trustedsystem"));
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        request.Headers.Remove("x-dw-client-id");
-        request.Headers.Add("x-dw-client-id", clientId);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
-
-        // SFCC expects a trusted_system_auth_request document.
-        // This sandbox requires at least client_id + login + password.
-        var payload = JsonSerializer.Serialize(new { client_id = clientId, login, password });
-        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+        async Task<(HttpResponseMessage Response, string Body)> SendAsync(object payloadObj)
+        {
+            using var request = CreateRequest(payloadObj);
+            var resp = await _httpClient.SendAsync(request, cancellationToken);
+            var respBody = await resp.Content.ReadAsStringAsync(cancellationToken);
+            return (resp, respBody);
+        }
 
         _logger.LogInformation("Requesting SFCC trusted-system shopper session via /customers/auth/trustedsystem");
 
-        var response = await _httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        // Try minimal payload first.
+        var (response, body) = await SendAsync(new { client_id = clientId });
+
+        if (!response.IsSuccessStatusCode && TryGetFaultInfo(body, out var faultType, out var faultPath, out var faultProperty))
+        {
+            var requiresLogin =
+                (!string.IsNullOrWhiteSpace(faultProperty) && faultProperty.Equals("login", StringComparison.OrdinalIgnoreCase))
+                || (!string.IsNullOrWhiteSpace(faultPath) && faultPath.Contains("$.login", StringComparison.OrdinalIgnoreCase))
+                || (faultType?.Contains("MissingProperty", StringComparison.OrdinalIgnoreCase) ?? false)
+                || (faultType?.Contains("RequiredProperty", StringComparison.OrdinalIgnoreCase) ?? false);
+
+            // Only attempt login-based payloads if the server indicates the login field is required.
+            if (includeLogin && requiresLogin && !string.IsNullOrWhiteSpace(login))
+            {
+                response.Dispose();
+                (response, body) = await SendAsync(new { client_id = clientId, login });
+
+                if (!response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(password))
+                {
+                    response.Dispose();
+                    (response, body) = await SendAsync(new { client_id = clientId, login, password });
+                }
+            }
+        }
 
         if (!response.IsSuccessStatusCode)
         {
@@ -505,6 +502,45 @@ public class SfccAuthService : ISfccAuthService
         var expiresAtUtc = ComputeShopperSessionExpiryUtc(authToken, fallbackMinutes: 25);
         _cachedTrustedSystemSession = new SfccShopperSession(authToken, cookieHeader, CustomerId: null, expiresAtUtc);
         return _cachedTrustedSystemSession;
+    }
+
+    private static bool TryGetFaultInfo(string body, out string? faultType, out string? faultPath, out string? faultProperty)
+    {
+        faultType = null;
+        faultPath = null;
+        faultProperty = null;
+
+        if (string.IsNullOrWhiteSpace(body)) return false;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (!doc.RootElement.TryGetProperty("fault", out var fault)) return false;
+
+            if (fault.TryGetProperty("type", out var typeNode) && typeNode.ValueKind == JsonValueKind.String)
+            {
+                faultType = typeNode.GetString();
+            }
+
+            if (fault.TryGetProperty("arguments", out var args))
+            {
+                if (args.TryGetProperty("path", out var pathNode) && pathNode.ValueKind == JsonValueKind.String)
+                {
+                    faultPath = pathNode.GetString();
+                }
+
+                if (args.TryGetProperty("property", out var propNode) && propNode.ValueKind == JsonValueKind.String)
+                {
+                    faultProperty = propNode.GetString();
+                }
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static DateTime ComputeShopperSessionExpiryUtc(string? authToken, int fallbackMinutes)
