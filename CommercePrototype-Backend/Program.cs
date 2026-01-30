@@ -28,9 +28,10 @@ builder.Services.AddCors(options =>
         if (builder.Environment.IsDevelopment())
         {
             policy
-                .AllowAnyOrigin()
+                .WithOrigins("http://localhost:3000", "http://localhost:8081","http://localhost:5035")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
+                .AllowCredentials()
                 // Expo Web (browser) can only read custom response headers if they are exposed.
                 .WithExposedHeaders("X-Shopper-Session-Id");
             return;

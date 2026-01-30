@@ -40,18 +40,6 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  const handleContinueAsGuest = async () => {
-    if (isAuthenticated) {
-      await signOut();
-    }
-    try {
-      await api.auth.guest();
-    } catch (e) {
-      // Se falhar, apenas ignora
-    }
-    navigation.replace("Home");
-  };
-
   return (
     <ScreenScroll contentContainerStyle={styles.content}>
       <CenteredContent maxWidth={520} contentStyle={styles.centeredContent}>
@@ -92,6 +80,7 @@ export default function LoginScreen({ navigation }: Props) {
                   Sign in
                 </Button>
                 {/* Mensagens agora são exibidas via alert() */}
+                {/* Botão 'Continue as guest' removido */}
               </>
             ) : (
               <Button
