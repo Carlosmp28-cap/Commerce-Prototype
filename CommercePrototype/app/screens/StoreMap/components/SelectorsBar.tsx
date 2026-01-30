@@ -181,9 +181,6 @@ const SelectorsBar: React.FC<SelectorsBarProps> = ({
         <TouchableOpacity onPress={onClear} style={{ marginLeft: 6, backgroundColor: '#607d8b', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 6 }}>
           <Text style={{ color: '#fff' }}>Clear</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowDebugOverlay(!showDebugOverlay)} style={{ marginLeft: 6, backgroundColor: '#607d8b', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 6 }}>
-          <Text style={{ color: '#fff' }}>{showDebugOverlay ? 'Hide Debug' : 'Show Debug'}</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
